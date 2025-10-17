@@ -259,7 +259,9 @@
               <option value="machine">Máquina</option>
               <option value="part">Part</option>
               <option value="kg_desc">Kg ↓</option>
-              <option value="kg_asc">Kg ↑</option>
+              <option value="kg_asc">Kg ↑</option> 
+              <option value="desc">Descripción (A-Z)</option>
+              <option value="desc_rev">Descripción (Z-A)</option>
             </select>
           </div>
           <button class="inv-btn" id="btnActualizarInv">Actualizar</button>
@@ -772,6 +774,8 @@
       if(ord==="kg_asc")     return toNum(a.kgPend) - toNum(b.kgPend);
       if(ord==="machine")    return (a.ultimaMachine||"").localeCompare((b.ultimaMachine||""),"es",{numeric:true});
       if(ord==="part")       return (a.Part||"").localeCompare((b.Part||""),"es",{numeric:true});
+      if(ord==="desc")       return (a.descrip||"").localeCompare((b.descrip||""),"es",{numeric:true});
+      if(ord==="desc_rev")   return (b.descrip||"").localeCompare((a.descrip||""),"es",{numeric:true});
       return 0;
     });
 
@@ -1192,4 +1196,5 @@ async function renderHistorial(){
   });
   </script>
 </body>
+
 </html>
