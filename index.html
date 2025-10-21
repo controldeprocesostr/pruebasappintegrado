@@ -597,16 +597,40 @@
       <small>Gestión y trazabilidad</small>
     </div>
 
-    <!-- ✅ Mueve aquí esta parte -->
     <div class="opt" data-target="planos">
-      <b>Consulta de Planos</b><br>
-      <small>Acceso directo a los planos en Excel</small>
-    </div>
-  </div>
+  <b>Consulta de Planos</b><br>
+  <small>Acceso directo a los planos en Excel</small>
 </div>
+
+<div class="opt" onclick="actualizarZonaTecnoglass()" style="border-top:1px solid #333;margin-top:8px;">
+  <b>🛠️ Actualizar zona Tecnoglass</b><br>
+  <small>Solo administrador</small>
+</div>
+
+
 
 <!-- ✅ Agrega este bloque -->
 <div class="drawer-mask" id="drawerMask"></div>
+
+<!-- 🛰️ Panel GPS flotante con botón Mostrar/Ocultar -->
+<div id="panelGPS" 
+     style="position:fixed;bottom:60px;right:10px;background:#111;padding:10px 14px;
+     border:1px solid #00e5ff;border-radius:10px;color:#0ff;font-size:12px;
+     font-family:monospace;z-index:9999;box-shadow:0 0 10px rgba(0,229,255,0.5);display:none;">
+  <div>📍 <b>Lat:</b> — | <b>Lng:</b> —</div>
+  <div>🏭 <b>Centro:</b> 10.9846, -74.8181</div>
+  <div>📏 <b>Distancia:</b> — km</div>
+  <div>✅ <b>Estado:</b> —</div>
+</div>
+
+<!-- 🔘 Botón para mostrar / ocultar panel -->
+<button id="btnGPS"
+        style="position:fixed;bottom:10px;right:10px;background:#00e5ff;color:#000;
+        border:none;padding:6px 10px;border-radius:8px;font-weight:bold;cursor:pointer;
+        z-index:10000;box-shadow:0 0 10px rgba(0,229,255,0.5);">
+  🛰️ GPS
+</button>
+
 
 
   <script>
@@ -622,6 +646,19 @@
   firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const dbInv = db.ref("inventarioPorTemplar");
+
+// ✅ Botón de actualización de zona (solo administrador)
+async function actualizarZonaTecnoglass() {
+  const confirmar = confirm("¿Actualizar zona TecnoglassBarranquilla en Firebase?");
+  if (!confirmar) return;
+  await firebase.database().ref("seguridad/zonas/TecnoglassBarranquilla").update({
+    lat: 10.9846,   // 📍 punto real frente a Tecnoglass S.A.S
+    lng: -74.8181,  // Vía a La Playa
+    radio_km: 5.0   // cubre toda la planta
+  });
+  alert("✅ Zona TecnoglassBarranquilla actualizada correctamente en Firebase.");
+}
+
 
 // Inicializar nodos de seguridad y permisos después de Firebase
 inicializarSeguridad();
@@ -1891,41 +1928,105 @@ let accesoPlanos = false;
 
 // ✅ Detectar correo del usuario (por ejemplo con prompt simple)
 async function verificarAccesoPlanos() {
-  // Pedimos el correo (en tu versión final puedes reemplazar por login)
-  const correo = prompt("Ingresa tu correo corporativo para continuar:");
-  if (!correo) return false;
-  usuarioAutenticado = correo.toLowerCase().replace(/\./g, "_").replace(/@/g, "_");
-usuarioCorreoActual = correo.toLowerCase().replace(/\./g, "_").replace(/@/g, "_");
+  const correo = prompt("📧 Ingresa tu correo corporativo:");
 
-
-
-  const permisosSnap = await firebase.database().ref("planosAcceso").once("value");
-  const permisos = permisosSnap.val() || {};
-
-const dentroZona = await verificarZonaPermitida(correo);
-if (!dentroZona) {
-  $("view-planos").classList.add("hidden");
-  return;
-}
-
-
-  // Normalizar claves para comparación (Firebase no acepta . ni @ en claves)
-  const clavesPermitidas = Object.keys(permisos).map(k => k.toLowerCase().replace(/\./g, "_").replace(/@/g, "_"));
-
-  if (clavesPermitidas.includes(usuarioAutenticado)) {
-    accesoPlanos = true;
-    cargarPlanos();
-  } else {
-    accesoPlanos = false;
-    $("tbodyPlanos").innerHTML = "<tr><td colspan='2' style='padding:10px;'>🚫 No tienes permiso para ver estos planos.</td></tr>";
+  // Si cancela el prompt o deja vacío
+  if (!correo) {
+    alert("🚫 Debes ingresar tu correo para acceder a los planos.");
+    $("view-planos").classList.add("hidden");
+    return verificarAccesoPlanos();
 
   }
+
+  // Guarda correo normalizado
+  usuarioCorreoActual = correo.toLowerCase().replace(/\./g, "_").replace(/@/g, "_");
+
+  // 🔒 Verifica permisos de usuario
+  const snapPerm = await firebase.database().ref("planosAcceso").once("value");
+  const permisos = snapPerm.val() || {};
+  const tienePermiso = permisos[usuarioCorreoActual];
+
+  if (!tienePermiso) {
+    alert("🚫 No tienes permiso para ver los planos.");
+    $("view-planos").classList.add("hidden");
+    return verificarAccesoPlanos();
+
+  }
+
+  // 🔒 Verifica ubicación dentro de zona
+  const dentroZona = await verificarZonaPermitida(usuarioCorreoActual);
+  if (!dentroZona) {
+    alert("🚫 Estás fuera del área permitida. No puedes acceder a los planos.");
+    $("view-planos").classList.add("hidden");
+    return verificarAccesoPlanos();
+
+  }
+
+  // ✅ Si todo está bien, cargar planos
+  cargarPlanos();
 }
+
+
+
+// === Configuración del centro Tecnoglass ===
+const centro = { lat: 10.9846, lng: -74.8181 };
+const radioKm = 5.0;
+
+function distanciaKm(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2 +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function actualizarPanel(lat, lng) {
+  const panel = document.getElementById("panelGPS");
+  const dist = distanciaKm(lat, lng, centro.lat, centro.lng);
+  const dentro = dist <= radioKm;
+  panel.innerHTML = `
+    <div>📍 <b>Lat:</b> ${lat.toFixed(5)} | <b>Lng:</b> ${lng.toFixed(5)}</div>
+    <div>🏭 <b>Centro:</b> ${centro.lat}, ${centro.lng}</div>
+    <div>📏 <b>Distancia:</b> ${dist.toFixed(2)} km</div>
+    <div>${dentro ? "✅ <b>Dentro del área</b>" : "🚫 <b>Fuera del área</b>"}</div>
+  `;
+}
+
+function iniciarGPS() {
+  if (!navigator.geolocation) {
+    document.getElementById("panelGPS").innerHTML = "⚠️ Geolocalización no soportada";
+    return;
+  }
+  navigator.geolocation.watchPosition(
+    pos => {
+      const { latitude: lat, longitude: lng } = pos.coords;
+      actualizarPanel(lat, lng);
+    },
+    err => {
+      document.getElementById("panelGPS").innerHTML = "❌ Error GPS: " + err.message;
+    },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+}
+
+// Mostrar / ocultar panel
+document.getElementById("btnGPS").addEventListener("click", () => {
+  const panel = document.getElementById("panelGPS");
+  if (panel.style.display === "none") {
+    panel.style.display = "block";
+    iniciarGPS();
+  } else {
+    panel.style.display = "none";
+  }
+});
 
 
   </script>
 </body>
 </html>
+
 
 
 
