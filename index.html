@@ -800,18 +800,43 @@ async function verificarZonaPermitida(correoUsuario) {
     console.log(`📍 Lat:${pos.lat}, Lng:${pos.lng} — ${distancia.toFixed(2)} km del centro`);
 
     if (dentro) {
-      console.log("✅ Dentro del área permitida o rango extendido.");
-      return true;
-    } else {
-      alert(`🚫 Estás fuera del área (${distancia.toFixed(2)} km del centro de Tecnoglass).`);
-      return false;
-    }
+  console.log("✅ Dentro del área permitida o rango extendido.");
+  habilitarAccesoTotal();
+  return true;
+} else {
+  alert(`🚫 Estás fuera del área (${distancia.toFixed(2)} km del centro de Tecnoglass).`);
+  deshabilitarAcceso();
+  return false;
+}
+
 
   } catch (err) {
     console.error("Error verificando zona:", err);
     alert("⚠️ No se pudo verificar la zona: " + err);
     return false;
   }
+}
+
+/* ==================== 🔓 ACTIVAR MENÚS AL VALIDAR ACCESO ==================== */
+function habilitarAccesoTotal() {
+  accesoPermitido = true;
+  localStorage.setItem("accesoPermitido", "true");
+  document.querySelectorAll(".drawer .opt").forEach(o => {
+    o.style.opacity = "1";
+    o.style.pointerEvents = "auto";
+  });
+  console.log("✅ Acceso total habilitado");
+}
+
+function deshabilitarAcceso() {
+  accesoPermitido = false;
+  localStorage.removeItem("accesoPermitido");
+  document.querySelectorAll(".drawer .opt[data-target='inventario'], .drawer .opt[data-target='planos']")
+    .forEach(o => {
+      o.style.opacity = "0.5";
+      o.style.pointerEvents = "none";
+    });
+  console.warn("🚫 Acceso restringido temporalmente");
 }
 
 
