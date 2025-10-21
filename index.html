@@ -655,14 +655,15 @@ async function inicializarSeguridad() {
   }
 
   const dataInicial = {
-    zonas: {
-      TecnoglassBarranquilla: {
-        nombre: "Tecnoglass S.A.S - Barranquilla",
-        lat: 10.9684,
-        lng: -74.8099,
-        radio_km: 1.5
-      }
-    },
+   zonas: {
+  TecnoglassBarranquilla: {
+    nombre: "Tecnoglass S.A.S - Barranquilla",
+    lat: 10.9790,  // un punto más centrado entre A1, A2 y A3
+    lng: -74.8195, // ajustado a la zona industrial
+    radio_km: 8.0  // 🔹 radio ampliado a 8 km
+  }
+},
+
     usuarios: {
   "gary_maldonado_tecnoglass_com": { autorizado: true, zona: "TecnoglassBarranquilla" },
   "operario1_tecnoglass_com":     { autorizado: true, zona: "TecnoglassBarranquilla" },
