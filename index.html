@@ -2050,27 +2050,28 @@ function iniciarGPS() {
     return;
   }
   navigator.geolocation.watchPosition(
-  pos => {
-    const { latitude: lat, longitude: lng } = pos.coords;
-    actualizarPanel(lat, lng);
+    pos => {
+      const { latitude: lat, longitude: lng } = pos.coords;
+      actualizarPanel(lat, lng);
 
-    // 🔒 Bloqueo dinámico si el usuario se aleja del área
-    const dist = distanciaKm(lat, lng, centro.lat, centro.lng);
-    const dentro = dist <= (centro.radio_km + 2);
+      // 🔒 Bloqueo dinámico si el usuario se aleja del área
+      const dist = distanciaKm(lat, lng, centro.lat, centro.lng);
+      const dentro = dist <= (centro.radio_km + 2);
 
-    if (!dentro && accesoPermitido) {
-      accesoPermitido = false;
-      localStorage.removeItem("accesoPermitido");
-      document.querySelectorAll(".drawer .opt[data-target='inventario'], .drawer .opt[data-target='planos']")
-        .forEach(o => o.style.opacity = "0.5");
-      console.warn("🚫 Usuario salió del área, acceso temporal revocado.");
-    }
-  },
-  err => {
-    document.getElementById("panelGPS").innerHTML = "❌ Error GPS: " + err.message;
-  },
-  { enableHighAccuracy: true, timeout: 10000 }
-);
+      if (!dentro && accesoPermitido) {
+        accesoPermitido = false;
+        localStorage.removeItem("accesoPermitido");
+        document.querySelectorAll(".drawer .opt[data-target='inventario'], .drawer .opt[data-target='planos']")
+          .forEach(o => o.style.opacity = "0.5");
+        console.warn("🚫 Usuario salió del área, acceso temporal revocado.");
+      }
+    },
+    err => {
+      document.getElementById("panelGPS").innerHTML = "❌ Error GPS: " + err.message;
+    },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+}  // 👈 ESTA LLAVE FALTABA AQUÍ
 
 
 
@@ -2099,6 +2100,7 @@ window.addEventListener("DOMContentLoaded", () => {
   </script>
 </body>
 </html>
+
 
 
 
