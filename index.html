@@ -833,6 +833,8 @@ function habilitarAccesoTotal() {
   console.log("✅ Acceso total habilitado");
 }
 
+
+
 function deshabilitarAcceso() {
   accesoPermitido = false;
   localStorage.removeItem("accesoPermitido");
@@ -1881,49 +1883,71 @@ cargarInventario();
 
 
   /* ==================== Drawer / navegación ==================== */
-  const drawer = document.getElementById("drawer");
-  const mask   = document.getElementById("drawerMask");
-  document.getElementById("btnMenu").addEventListener("click",()=>{
-    drawer.classList.add("open"); mask.style.display="block";
-  });
-  document.getElementById("btnCloseDrawer").addEventListener("click",closeDrawer);
-  document.getElementById("drawerMask").addEventListener("click",closeDrawer);
-  function closeDrawer(){ drawer.classList.remove("open"); mask.style.display="none"; }
+const drawer = document.getElementById("drawer");
+const mask   = document.getElementById("drawerMask");
 
-  document.querySelectorAll(".drawer .opt").forEach(opt=>{
-  opt.addEventListener("click",()=>{
-    const target = opt.dataset.target;
+document.getElementById("btnMenu").addEventListener("click", async ()=>{
+  drawer.classList.add("open"); 
+  mask.style.display = "block";
 
-    if(target==="temperaturas"){
-      $("view-temperaturas").classList.remove("hidden");
-      $("view-inventario").classList.add("hidden");
-      $("view-planos").classList.add("hidden");
-      $("topTitle").textContent = "Registro de Temperaturas";
-      closeDrawer();
-
-   } else if(target==="inventario"){
-  if (!accesoPermitido) {
-    alert("🚫 No puedes acceder a este módulo sin estar dentro de la zona o sin autorización.");
-    return;
+  // ✅ Revalidar acceso solo si ya hay correo
+  const correo = localStorage.getItem("correo_autorizado");
+  if (correo) {
+    const dentro = await verificarZonaPermitida(correo);
+    if (dentro) habilitarAccesoTotal();
+    else deshabilitarAcceso();
   }
-  $("view-inventario").classList.remove("hidden");
-  $("view-temperaturas").classList.add("hidden");
-  $("view-planos").classList.add("hidden");
-  $("topTitle").textContent = "Inventario Por Templar";
-  closeDrawer();
+});
 
-} else if(target==="planos"){
-  $("view-temperaturas").classList.add("hidden");
-  $("view-inventario").classList.add("hidden");
-  $("view-planos").classList.remove("hidden");
-  $("topTitle").textContent = "Consulta de Planos";
-  closeDrawer();
-
-  verificarAccesoPlanos(); // 👈 valida permisos antes de mostrar
+document.getElementById("btnCloseDrawer").addEventListener("click", closeDrawer);
+document.getElementById("drawerMask").addEventListener("click", closeDrawer);
+function closeDrawer(){ 
+  drawer.classList.remove("open"); 
+  mask.style.display="none"; 
 }
 
+/* ✅ Manejo de clics en opciones del menú */
+document.querySelectorAll(".drawer .opt").forEach(opt=>{
+  opt.addEventListener("click", ()=>{
+    const target = opt.dataset.target;
+
+    if (target === "temperaturas") {
+      mostrarVista("temperaturas");
+    } 
+    else if (target === "inventario") {
+      if (!accesoPermitido) {
+        alert("🚫 No puedes acceder a este módulo sin estar dentro de la zona o sin autorización.");
+        return;
+      }
+      mostrarVista("inventario");
+    } 
+    else if (target === "planos") {
+      if (!accesoPermitido) {
+        alert("🚫 No puedes acceder a este módulo sin estar dentro de la zona o sin autorización.");
+        return;
+      }
+      mostrarVista("planos");
+      verificarAccesoPlanos();
+    }
   });
 });
+
+function mostrarVista(vista) {
+  // Oculta todas
+  $("view-temperaturas").classList.add("hidden");
+  $("view-inventario").classList.add("hidden");
+  $("view-planos").classList.add("hidden");
+
+  // Muestra la seleccionada
+  $("view-" + vista).classList.remove("hidden");
+  $("topTitle").textContent =
+    vista === "temperaturas" ? "Registro de Temperaturas" :
+    vista === "inventario"   ? "Inventario Por Templar" :
+    "Consulta de Planos";
+
+  // ✅ cerrar el drawer DESPUÉS de aplicar permisos
+  setTimeout(closeDrawer, 150);
+}
 
 
 
@@ -2170,6 +2194,7 @@ function cambiarCorreo() {
   </script>
 </body>
 </html>
+
 
 
 
