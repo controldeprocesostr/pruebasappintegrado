@@ -607,6 +607,11 @@
   <small>Solo administrador</small>
 </div>
 
+<div class="opt" onclick="cambiarCorreo()">
+  <b>👤 Cambiar usuario</b><br>
+  <small>Permite volver a iniciar con otro correo</small>
+</div>
+
 
 
 <!-- ✅ Agrega este bloque -->
@@ -1828,7 +1833,10 @@ $("tabHist").onclick = () => {
 $("fBuscar").addEventListener("input", actualizarVistaPendientes);
 
 // ==================== 🔑 Solicitar correo al iniciar si no está guardado ====================
+// ==================== 🔑 Verificación inicial de acceso ====================
 window.addEventListener("DOMContentLoaded", async () => {
+  console.log("🚀 Iniciando verificación de acceso...");
+
   let correo = localStorage.getItem("correo_autorizado");
   if (!correo) {
     correo = prompt("Introduce tu correo corporativo (ej: gary.maldonado@tecnoglass.com):");
@@ -1843,18 +1851,26 @@ window.addEventListener("DOMContentLoaded", async () => {
     usuarioCorreoActual = correo;
   }
 
-  // Una vez ingresado, verificar zona
+  // Verificar zona
   const dentro = await verificarZonaPermitida(correo);
+
   if (dentro) {
     accesoPermitido = true;
     localStorage.setItem("accesoPermitido", "true");
-    document.querySelectorAll(".drawer .opt").forEach(o => o.style.opacity = "1");
+    document.querySelectorAll(".drawer .opt").forEach(o => {
+      o.style.opacity = "1";
+      o.style.pointerEvents = "auto";
+    });
     console.log("✅ Acceso habilitado para:", correo);
   } else {
     accesoPermitido = false;
     localStorage.removeItem("accesoPermitido");
     document.querySelectorAll(".drawer .opt[data-target='inventario'], .drawer .opt[data-target='planos']")
-      .forEach(o => o.style.opacity = "0.5");
+      .forEach(o => {
+        o.style.opacity = "0.5";
+        o.style.pointerEvents = "none";
+      });
+    console.warn("🚫 Usuario fuera de área o no autorizado.");
   }
 });
 
@@ -2141,20 +2157,20 @@ document.getElementById("btnGPS").addEventListener("click", () => {
   }
 });
 
-// 🔄 Restaurar acceso global si ya fue validado antes
-window.addEventListener("DOMContentLoaded", () => {
-  if (localStorage.getItem("accesoPermitido") === "true") {
-    accesoPermitido = true;
-    document.querySelectorAll(".drawer .opt").forEach(o => o.style.opacity = "1");
-    console.log("✅ Acceso restaurado automáticamente al iniciar.");
-  }
-});
+function cambiarCorreo() {
+  localStorage.removeItem("correo_autorizado");
+  localStorage.removeItem("accesoPermitido");
+  alert("🔄 Correo eliminado. Recarga la página para ingresar uno nuevo.");
+  location.reload();
+}
+
 
 
 
   </script>
 </body>
 </html>
+
 
 
 
