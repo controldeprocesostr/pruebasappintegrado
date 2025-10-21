@@ -652,9 +652,9 @@ async function actualizarZonaTecnoglass() {
   const confirmar = confirm("¿Actualizar zona TecnoglassBarranquilla en Firebase?");
   if (!confirmar) return;
   await firebase.database().ref("seguridad/zonas/TecnoglassBarranquilla").update({
-    lat: 10.9846,   // 📍 punto real frente a Tecnoglass S.A.S
-    lng: -74.8181,  // Vía a La Playa
-    radio_km: 5.0   // cubre toda la planta
+    lat: 11.0000,   // 📍 punto real frente a Tecnoglass S.A.S
+    lng: -74.8300,  // Vía a La Playa
+    radio_km: 8   // cubre toda la planta
   });
   alert("✅ Zona TecnoglassBarranquilla actualizada correctamente en Firebase.");
 }
@@ -695,9 +695,9 @@ async function inicializarSeguridad() {
    zonas: {
   TecnoglassBarranquilla: {
     nombre: "Tecnoglass S.A.S - Barranquilla",
-    lat: 10.9790,  // un punto más centrado entre A1, A2 y A3
-    lng: -74.8195, // ajustado a la zona industrial
-    radio_km: 8.0  // 🔹 radio ampliado a 8 km
+    lat: 11.0000,  // un punto más centrado entre A1, A2 y A3
+    lng: -74.8300, // ajustado a la zona industrial
+    radio_km: 8  // 🔹 radio ampliado a 8 km
   }
 },
 
@@ -746,6 +746,7 @@ function distanciaKm(lat1, lon1, lat2, lon2) {
 }
 
 // 🔒 Verificar si usuario está dentro de su zona permitida
+// 🔒 Verificar si usuario está dentro de su zona permitida (mejorado)
 async function verificarZonaPermitida(correoUsuario) {
   try {
     const snap = await firebase.database().ref("seguridad").once("value");
@@ -758,25 +759,37 @@ async function verificarZonaPermitida(correoUsuario) {
       return false;
     }
 
-    if (usuario.zona === "Libre") return true; // acceso global sin restricción
+    // ✅ Si tiene zona 'Libre', acceso total
+    if (usuario.zona === "Libre") {
+      console.log("✅ Usuario con zona Libre: acceso sin restricción.");
+      return true;
+    }
 
-    const zona = seguridad.zonas?.[usuario.zona.replace(/\s+/g,'')];
+    // ✅ Cargar zona desde Firebase
+    const zona = seguridad.zonas?.[usuario.zona];
     if (!zona) {
-      alert("🚫 La zona asignada no existe.");
+      alert("⚠️ La zona asignada no existe en Firebase.");
       return false;
     }
 
-    // Obtener ubicación actual
+    // ✅ Obtener posición actual
     const pos = await obtenerUbicacionActual();
     const distancia = distanciaKm(pos.lat, pos.lng, zona.lat, zona.lng);
 
-    if (distancia <= zona.radio_km) {
-      console.log(`✅ Dentro de la zona (${distancia.toFixed(2)} km)`);
+    // ✅ Tolerancia de 2 km extra
+    const dentro = distancia <= zona.radio_km + 2;
+
+    // Mostrar en consola para depurar
+    console.log(`📍 Lat:${pos.lat}, Lng:${pos.lng} — ${distancia.toFixed(2)} km del centro`);
+
+    if (dentro) {
+      console.log("✅ Dentro del área permitida o rango extendido.");
       return true;
     } else {
-      alert(`🚫 Estás fuera del área permitida (${distancia.toFixed(2)} km del límite).`);
+      alert(`🚫 Estás fuera del área (${distancia.toFixed(2)} km del centro de Tecnoglass).`);
       return false;
     }
+
   } catch (err) {
     console.error("Error verificando zona:", err);
     alert("⚠️ No se pudo verificar la zona: " + err);
@@ -1968,27 +1981,21 @@ async function verificarAccesoPlanos() {
 
 
 
-// === Configuración del centro Tecnoglass ===
-const centro = { lat: 10.9846, lng: -74.8181 };
-const radioKm = 5.0;
+// === Panel GPS sincronizado con Firebase ===
+let centro = { lat: 11.0000, lng: -74.8300, radio_km: 8 };
 
-function distanciaKm(lat1, lon1, lat2, lon2) {
-  const R = 6371;
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = Math.sin(dLat / 2) ** 2 +
-            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-            Math.sin(dLon / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
+// 🔹 Cargar centro real desde Firebase
+firebase.database().ref("seguridad/zonas/TecnoglassBarranquilla").on("value", snap => {
+  if (snap.exists()) centro = snap.val();
+});
 
 function actualizarPanel(lat, lng) {
   const panel = document.getElementById("panelGPS");
   const dist = distanciaKm(lat, lng, centro.lat, centro.lng);
-  const dentro = dist <= radioKm;
+  const dentro = dist <= (centro.radio_km + 2);
   panel.innerHTML = `
     <div>📍 <b>Lat:</b> ${lat.toFixed(5)} | <b>Lng:</b> ${lng.toFixed(5)}</div>
-    <div>🏭 <b>Centro:</b> ${centro.lat}, ${centro.lng}</div>
+    <div>🏭 <b>Centro:</b> ${centro.lat.toFixed(4)}, ${centro.lng.toFixed(4)}</div>
     <div>📏 <b>Distancia:</b> ${dist.toFixed(2)} km</div>
     <div>${dentro ? "✅ <b>Dentro del área</b>" : "🚫 <b>Fuera del área</b>"}</div>
   `;
@@ -2011,7 +2018,7 @@ function iniciarGPS() {
   );
 }
 
-// Mostrar / ocultar panel
+// Mostrar / ocultar panel GPS
 document.getElementById("btnGPS").addEventListener("click", () => {
   const panel = document.getElementById("panelGPS");
   if (panel.style.display === "none") {
@@ -2026,6 +2033,7 @@ document.getElementById("btnGPS").addEventListener("click", () => {
   </script>
 </body>
 </html>
+
 
 
 
