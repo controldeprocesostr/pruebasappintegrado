@@ -647,6 +647,7 @@
 const db = firebase.database();
 const dbInv = db.ref("inventarioPorTemplar");
 
+
 // ✅ Botón de actualización de zona (solo administrador)
 async function actualizarZonaTecnoglass() {
   let correo = localStorage.getItem("correo_autorizado") || "";
@@ -671,6 +672,7 @@ inicializarSeguridad();
 
 // === Crear nodo planosAcceso si no existe ===
 const permisosRef = firebase.database().ref("planosAcceso");
+
 
 permisosRef.once("value", snapshot => {
   if (!snapshot.exists()) {
@@ -723,6 +725,15 @@ async function inicializarSeguridad() {
 /* ==================== SEGURIDAD POR ZONA ==================== */
 let usuarioCorreoActual = ""; // Se llenará al iniciar sesión o al abrir planos
 let accesoPermitido = false; // 🔓 se activará cuando el usuario esté dentro de la zona y autorizado
+if(localStorage.getItem("accesoPermitido")==="true"){
+  accesoPermitido = true;
+  document.querySelectorAll(".drawer .opt").forEach(o=>o.style.opacity="1");
+}
+if(!accesoPermitido){
+  document.querySelectorAll(".drawer .opt[data-target='inventario'], .drawer .opt[data-target='planos']")
+    .forEach(o=>o.style.opacity="0.5");
+}
+
 
 // Obtener ubicación actual (geolocalización del navegador)
 function obtenerUbicacionActual() {
@@ -1829,17 +1840,17 @@ cargarInventario();
   $("view-planos").classList.add("hidden");
   $("topTitle").textContent = "Inventario Por Templar";
   closeDrawer();
+
+} else if(target==="planos"){
+  $("view-temperaturas").classList.add("hidden");
+  $("view-inventario").classList.add("hidden");
+  $("view-planos").classList.remove("hidden");
+  $("topTitle").textContent = "Consulta de Planos";
+  closeDrawer();
+
+  verificarAccesoPlanos(); // 👈 valida permisos antes de mostrar
 }
 
-    } else if(target==="planos"){
-      $("view-temperaturas").classList.add("hidden");
-      $("view-inventario").classList.add("hidden");
-      $("view-planos").classList.remove("hidden");
-      $("topTitle").textContent = "Consulta de Planos";
-      closeDrawer();
-
-      verificarAccesoPlanos(); // 👈 valida permisos antes de mostrar
-    }
   });
 });
 
@@ -1990,7 +2001,9 @@ async function verificarAccesoPlanos() {
 
     // ✅ Todo correcto
     accesoPermitido = true;
-    console.log("✅ Acceso general habilitado para:", correo);
+localStorage.setItem("accesoPermitido", "true"); // 🔹 Guarda el acceso
+document.querySelectorAll(".drawer .opt").forEach(o=>o.style.opacity="1"); // 🔹 Ilumina los menús
+
 
     // Mostrar vista de planos
     document.getElementById("view-planos").classList.remove("hidden");
@@ -2005,6 +2018,10 @@ async function verificarAccesoPlanos() {
   }
 }
 
+function ocultarVistaPlanos() {
+  document.getElementById("view-planos").classList.add("hidden");
+  document.getElementById("topTitle").textContent = "Acceso restringido";
+}
 
 
 // === Panel GPS sincronizado con Firebase ===
@@ -2033,16 +2050,29 @@ function iniciarGPS() {
     return;
   }
   navigator.geolocation.watchPosition(
-    pos => {
-      const { latitude: lat, longitude: lng } = pos.coords;
-      actualizarPanel(lat, lng);
-    },
-    err => {
-      document.getElementById("panelGPS").innerHTML = "❌ Error GPS: " + err.message;
-    },
-    { enableHighAccuracy: true, timeout: 10000 }
-  );
-}
+  pos => {
+    const { latitude: lat, longitude: lng } = pos.coords;
+    actualizarPanel(lat, lng);
+
+    // 🔒 Bloqueo dinámico si el usuario se aleja del área
+    const dist = distanciaKm(lat, lng, centro.lat, centro.lng);
+    const dentro = dist <= (centro.radio_km + 2);
+
+    if (!dentro && accesoPermitido) {
+      accesoPermitido = false;
+      localStorage.removeItem("accesoPermitido");
+      document.querySelectorAll(".drawer .opt[data-target='inventario'], .drawer .opt[data-target='planos']")
+        .forEach(o => o.style.opacity = "0.5");
+      console.warn("🚫 Usuario salió del área, acceso temporal revocado.");
+    }
+  },
+  err => {
+    document.getElementById("panelGPS").innerHTML = "❌ Error GPS: " + err.message;
+  },
+  { enableHighAccuracy: true, timeout: 10000 }
+);
+
+
 
 // Mostrar / ocultar panel GPS
 document.getElementById("btnGPS").addEventListener("click", () => {
@@ -2055,10 +2085,21 @@ document.getElementById("btnGPS").addEventListener("click", () => {
   }
 });
 
+// 🔄 Restaurar acceso global si ya fue validado antes
+window.addEventListener("DOMContentLoaded", () => {
+  if (localStorage.getItem("accesoPermitido") === "true") {
+    accesoPermitido = true;
+    document.querySelectorAll(".drawer .opt").forEach(o => o.style.opacity = "1");
+    console.log("✅ Acceso restaurado automáticamente al iniciar.");
+  }
+});
+
+
 
   </script>
 </body>
 </html>
+
 
 
 
