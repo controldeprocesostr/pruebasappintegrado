@@ -1802,6 +1802,36 @@ $("tabHist").onclick = () => {
 ["fPlanta","fMaquina","fOrden"].forEach(id => $(id).addEventListener("change", actualizarVistaPendientes));
 $("fBuscar").addEventListener("input", actualizarVistaPendientes);
 
+// ==================== 🔑 Solicitar correo al iniciar si no está guardado ====================
+window.addEventListener("DOMContentLoaded", async () => {
+  let correo = localStorage.getItem("correo_autorizado");
+  if (!correo) {
+    correo = prompt("Introduce tu correo corporativo (ej: gary.maldonado@tecnoglass.com):");
+    if (correo) {
+      localStorage.setItem("correo_autorizado", correo);
+      usuarioCorreoActual = correo;
+    } else {
+      alert("⚠️ No se puede continuar sin correo autorizado.");
+      return;
+    }
+  } else {
+    usuarioCorreoActual = correo;
+  }
+
+  // Una vez ingresado, verificar zona
+  const dentro = await verificarZonaPermitida(correo);
+  if (dentro) {
+    accesoPermitido = true;
+    localStorage.setItem("accesoPermitido", "true");
+    document.querySelectorAll(".drawer .opt").forEach(o => o.style.opacity = "1");
+    console.log("✅ Acceso habilitado para:", correo);
+  } else {
+    accesoPermitido = false;
+    localStorage.removeItem("accesoPermitido");
+    document.querySelectorAll(".drawer .opt[data-target='inventario'], .drawer .opt[data-target='planos']")
+      .forEach(o => o.style.opacity = "0.5");
+  }
+});
 
 
   /* ===== Init Inventario ===== */
@@ -2100,6 +2130,7 @@ window.addEventListener("DOMContentLoaded", () => {
   </script>
 </body>
 </html>
+
 
 
 
