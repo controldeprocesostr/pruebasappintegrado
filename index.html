@@ -649,14 +649,19 @@ const dbInv = db.ref("inventarioPorTemplar");
 
 // ✅ Botón de actualización de zona (solo administrador)
 async function actualizarZonaTecnoglass() {
+  let correo = localStorage.getItem("correo_autorizado") || "";
+  if (!correo.includes("gary_maldonado")) {
+    alert("🚫 Solo administradores pueden actualizar la zona.");
+    return;
+  }
   const confirmar = confirm("¿Actualizar zona TecnoglassBarranquilla en Firebase?");
   if (!confirmar) return;
   await firebase.database().ref("seguridad/zonas/TecnoglassBarranquilla").update({
-    lat: 11.0000,   // 📍 punto real frente a Tecnoglass S.A.S
-    lng: -74.8300,  // Vía a La Playa
-    radio_km: 8   // cubre toda la planta
+    lat: 11.0000,
+    lng: -74.8300,
+    radio_km: 8
   });
-  alert("✅ Zona TecnoglassBarranquilla actualizada correctamente en Firebase.");
+  alert("✅ Zona TecnoglassBarranquilla actualizada correctamente.");
 }
 
 
@@ -717,6 +722,7 @@ async function inicializarSeguridad() {
 
 /* ==================== SEGURIDAD POR ZONA ==================== */
 let usuarioCorreoActual = ""; // Se llenará al iniciar sesión o al abrir planos
+let accesoPermitido = false; // 🔓 se activará cuando el usuario esté dentro de la zona y autorizado
 
 // Obtener ubicación actual (geolocalización del navegador)
 function obtenerUbicacionActual() {
@@ -1813,12 +1819,17 @@ cargarInventario();
       $("topTitle").textContent = "Registro de Temperaturas";
       closeDrawer();
 
-    } else if(target==="inventario"){
-      $("view-inventario").classList.remove("hidden");
-      $("view-temperaturas").classList.add("hidden");
-      $("view-planos").classList.add("hidden");
-      $("topTitle").textContent = "Inventario Por Templar";
-      closeDrawer();
+   } else if(target==="inventario"){
+  if (!accesoPermitido) {
+    alert("🚫 No puedes acceder a este módulo sin estar dentro de la zona o sin autorización.");
+    return;
+  }
+  $("view-inventario").classList.remove("hidden");
+  $("view-temperaturas").classList.add("hidden");
+  $("view-planos").classList.add("hidden");
+  $("topTitle").textContent = "Inventario Por Templar";
+  closeDrawer();
+}
 
     } else if(target==="planos"){
       $("view-temperaturas").classList.add("hidden");
@@ -1939,44 +1950,59 @@ $("btnRecargarPlanos").onclick = cargarPlanos;
 let usuarioAutenticado = null;
 let accesoPlanos = false;
 
-// ✅ Detectar correo del usuario (por ejemplo con prompt simple)
+// =============================
+// 🧩 VERIFICAR ACCESO A PLANOS
+// =============================
 async function verificarAccesoPlanos() {
-  const correo = prompt("📧 Ingresa tu correo corporativo:");
+  try {
+    let correo = localStorage.getItem("correo_autorizado");
+    if (!correo) {
+      correo = prompt("Introduce tu correo corporativo:");
+      if (!correo) {
+        alert("🚫 Acceso cancelado. Debes ingresar un correo autorizado.");
+        ocultarVistaPlanos();
+        return;
+      }
+      localStorage.setItem("correo_autorizado", correo);
+    }
 
-  // Si cancela el prompt o deja vacío
-  if (!correo) {
-    alert("🚫 Debes ingresar tu correo para acceder a los planos.");
-    $("view-planos").classList.add("hidden");
-    return verificarAccesoPlanos();
+    usuarioCorreoActual = correo;
 
+    // 2️⃣ Validar zona
+    const dentro = await verificarZonaPermitida(correo);
+    if (!dentro) {
+      ocultarVistaPlanos();
+      accesoPermitido = false;
+      return;
+    }
+
+    // 3️⃣ Validar usuario autorizado
+    const usuarioKey = correo.toLowerCase().replace(/\./g, "_").replace(/@/g, "_");
+    const snap = await firebase.database().ref("seguridad/usuarios/" + usuarioKey).once("value");
+    const usuario = snap.val();
+
+    if (!usuario || usuario.autorizado !== true) {
+      alert("🚫 No estás autorizado para acceder a los módulos.");
+      ocultarVistaPlanos();
+      accesoPermitido = false;
+      return;
+    }
+
+    // ✅ Todo correcto
+    accesoPermitido = true;
+    console.log("✅ Acceso general habilitado para:", correo);
+
+    // Mostrar vista de planos
+    document.getElementById("view-planos").classList.remove("hidden");
+    document.getElementById("topTitle").textContent = "Consulta de Planos";
+    cargarPlanos();
+
+  } catch (err) {
+    console.error("Error verificando acceso:", err);
+    alert("⚠️ Error verificando acceso a planos.");
+    accesoPermitido = false;
+    ocultarVistaPlanos();
   }
-
-  // Guarda correo normalizado
-  usuarioCorreoActual = correo.toLowerCase().replace(/\./g, "_").replace(/@/g, "_");
-
-  // 🔒 Verifica permisos de usuario
-  const snapPerm = await firebase.database().ref("planosAcceso").once("value");
-  const permisos = snapPerm.val() || {};
-  const tienePermiso = permisos[usuarioCorreoActual];
-
-  if (!tienePermiso) {
-    alert("🚫 No tienes permiso para ver los planos.");
-    $("view-planos").classList.add("hidden");
-    return verificarAccesoPlanos();
-
-  }
-
-  // 🔒 Verifica ubicación dentro de zona
-  const dentroZona = await verificarZonaPermitida(usuarioCorreoActual);
-  if (!dentroZona) {
-    alert("🚫 Estás fuera del área permitida. No puedes acceder a los planos.");
-    $("view-planos").classList.add("hidden");
-    return verificarAccesoPlanos();
-
-  }
-
-  // ✅ Si todo está bien, cargar planos
-  cargarPlanos();
 }
 
 
@@ -2033,6 +2059,7 @@ document.getElementById("btnGPS").addEventListener("click", () => {
   </script>
 </body>
 </html>
+
 
 
 
