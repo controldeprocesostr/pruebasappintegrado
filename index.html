@@ -133,6 +133,213 @@
       .inv-toolbar{flex-direction:column;align-items:stretch}
       .inv-toolbar select,.inv-toolbar input[type="text"]{width:100%}
     }
+
+#viewTabla table th, #viewTabla table td {
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+  padding: 8px;
+  color: #eee;
+  font-size: 14px;
+}
+#viewTabla table th {
+  background: #171717;
+  color: var(--accent);
+  font-weight: 700;
+}
+#viewTabla .btn-mini {
+  padding: 4px 8px;
+  font-size: 13px;
+}
+#viewTabla select {
+  background: #fff;
+  color: #000;
+  border-radius: 6px;
+  padding: 6px;
+}
+
+#viewTabla {
+  padding-bottom: 20px;
+}
+/* ==== Tabla agrupada SIN scroll (adaptativa móvil) ==== */
+.grupoTabla {
+  margin-bottom: 22px;
+  background: var(--panel);
+  border-radius: 12px;
+  padding: 10px;
+  box-shadow: 0 0 6px rgba(0,0,0,0.3);
+}
+
+/* título del grupo */
+.titulo-grupo {
+  margin: 0 0 8px 4px;
+  font-size: 15px;
+  color: var(--accent);
+  text-transform: uppercase;
+  font-weight: bold;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* tabla responsive nativa */
+.tabla-grupo {
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 10px;
+  overflow: hidden;
+  display: block;
+}
+
+.tabla-grupo thead {
+  background: #171717;
+  display: block;
+  border-bottom: 2px solid var(--accent);
+}
+
+.tabla-grupo tbody {
+  display: block;
+}
+
+.tabla-grupo tr {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  border-bottom: 1px solid var(--border);
+  padding: 4px 0;
+}
+
+.tabla-grupo th,
+.tabla-grupo td {
+  text-align: center;
+  font-size: 14px;
+  padding: 6px;
+  color: #e0e0e0;
+  word-break: break-word;
+  white-space: normal;
+}
+
+/* encabezados */
+.tabla-grupo th {
+  color: var(--accent);
+  font-weight: 600;
+  padding: 8px 6px;
+  text-transform: uppercase;
+  font-size: 13px;
+}
+
+/* celdas alternas para legibilidad */
+.tabla-grupo tr:nth-child(even) {
+  background: rgba(255,255,255,0.03);
+}
+
+/* acciones centradas y grandes */
+.acciones-cell {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+/* botones táctiles grandes */
+.btn-mini {
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-size: 15px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+.btn-mini.ok {
+  background: #00c853;
+  color: #fff;
+}
+.btn-mini.warn {
+  background: #ffab00;
+  color: #000;
+}
+.btn-mini:active {
+  transform: scale(0.95);
+}
+
+/* animación confirmación */
+.btn-mini.confirmed {
+  animation: confirmPulse 0.4s ease;
+  background: #1de9b6 !important;
+}
+@keyframes confirmPulse {
+  0% { transform: scale(1); box-shadow: 0 0 0 rgba(0,255,0,0.6); }
+  50% { transform: scale(1.1); box-shadow: 0 0 12px rgba(0,255,0,0.8); }
+  100% { transform: scale(1); box-shadow: 0 0 0 rgba(0,255,0,0); }
+}
+
+/* ✅ Adaptación móvil */
+@media (max-width: 600px) {
+  .tabla-grupo tr {
+    grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  }
+  .tabla-grupo th, .tabla-grupo td {
+    font-size: 13px;
+    padding: 4px;
+  }
+  .btn-mini {
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+}
+
+/* ======== Estilos de la tabla de Planos ======== */
+#tablaPlanos {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  background: #1a1a1a;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+#tablaPlanos thead th {
+  position: sticky;
+  top: 0;
+  background: #111;
+  color: #00e5ff;
+  font-weight: bold;
+  text-align: left;
+  padding: 10px;
+  border-bottom: 1px solid #333;
+  z-index: 2;
+}
+
+#tablaPlanos tbody tr.fila-plano {
+  transition: background 0.2s;
+}
+
+#tablaPlanos tbody tr.fila-plano:hover {
+  background: #222;
+}
+
+.celda-nombre {
+  padding: 8px 10px;
+  border-bottom: 1px solid #333;
+  color: #e0e0e0;
+  font-weight: 500;
+}
+
+.celda-link {
+  padding: 8px 10px;
+  border-bottom: 1px solid #333;
+}
+
+.celda-link a {
+  color: #00e5ff;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.celda-link a:hover {
+  text-decoration: underline;
+}
+
   </style>
 </head>
 <body>
@@ -259,13 +466,15 @@
               <option value="machine">Máquina</option>
               <option value="part">Part</option>
               <option value="kg_desc">Kg ↓</option>
-              <option value="kg_asc">Kg ↑</option> 
+              <option value="kg_asc">Kg ↑</option>
               <option value="desc">Descripción (A-Z)</option>
               <option value="desc_rev">Descripción (Z-A)</option>
+
             </select>
           </div>
           <button class="inv-btn" id="btnActualizarInv">Actualizar</button>
           <div class="inv-info" id="ultimaInfoInv">Última actualización: -</div>
+          <button class="inv-btn" id="btnVistaToggle">📋 Vista Tabla</button>
           <div class="inv-info"><b>Turno actual:</b> <span id="lblTurno">-</span></div>
         </div>
 
@@ -290,6 +499,48 @@
       <div id="listHist" class="inv-grid hidden"></div>
     </div>
   </div>
+<div id="viewTabla" class="hidden">
+  <div class="card" style="background:var(--panel-2)">
+    <div class="inv-toolbar" style="justify-content:space-between;align-items:center">
+      <div class="inv-pill">
+        <label>Agrupar por</label>
+        <select id="agrupacionTabla">
+          <option value="part">Part</option>
+          <option value="desc">Descripción</option>
+        </select>
+      </div>
+      <button class="inv-btn primary" id="btnRecargarTabla">🔄 Recargar</button>
+    </div>
+
+    <div class="table-wrap" id="tablaAgrupada"></div>
+  </div>
+</div>
+
+<!-- ======== Vista: Planos (Tabla ligera) ======== -->
+<div id="view-planos" class="hidden">
+  <div class="card" style="background:var(--panel-2)">
+    <div class="inv-toolbar">
+      <div class="inv-pill">
+        <label>Buscar plano</label>
+        <input id="buscarPlano" type="text" placeholder="Nombre del plano...">
+      </div>
+      <button class="inv-btn primary" id="btnRecargarPlanos">🔄 Recargar</button>
+    </div>
+
+    <div class="tabla-container" style="max-height:70vh;overflow-y:auto;border-radius:10px;">
+      <table id="tablaPlanos" style="width:100%;border-collapse:collapse;">
+        <thead>
+          <tr style="background:#222;color:#00e5ff;">
+            <th style="padding:8px;border-bottom:1px solid #333;text-align:left;">Nombre</th>
+            <th style="padding:8px;border-bottom:1px solid #333;text-align:left;">Enlace</th>
+          </tr>
+        </thead>
+        <tbody id="tbodyPlanos" style="color:#e0e0e0;"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 
   <!-- ===== Modal Inventario ===== -->
   <div class="modal" id="modalInv">
@@ -331,23 +582,32 @@
   </div>
 
   <!-- ===== Drawer ===== -->
-  <div class="drawer-mask" id="drawerMask"></div>
   <div class="drawer" id="drawer">
-    <div class="head">
-      <span>Menú principal</span>
-      <button id="btnCloseDrawer">✕</button>
+  <div class="head">
+    <span>Menú principal</span>
+    <button id="btnCloseDrawer">✕</button>
+  </div>
+  <div class="body">
+    <div class="opt" data-target="temperaturas">
+      <b>Registro de Temperaturas</b><br>
+      <small>Lecturas por zona y ciclo</small>
     </div>
-    <div class="body">
-      <div class="opt" data-target="temperaturas">
-        <b>Registro de Temperaturas</b><br>
-        <small>Lecturas por zona y ciclo</small>
-      </div>
-      <div class="opt" data-target="inventario">
-        <b>Inventario Por Templar</b><br>
-        <small>Gestión y trazabilidad</small>
-      </div>
+    <div class="opt" data-target="inventario">
+      <b>Inventario Por Templar</b><br>
+      <small>Gestión y trazabilidad</small>
+    </div>
+
+    <!-- ✅ Mueve aquí esta parte -->
+    <div class="opt" data-target="planos">
+      <b>Consulta de Planos</b><br>
+      <small>Acceso directo a los planos en Excel</small>
     </div>
   </div>
+</div>
+
+<!-- ✅ Agrega este bloque -->
+<div class="drawer-mask" id="drawerMask"></div>
+
 
   <script>
   "use strict";
@@ -360,8 +620,133 @@
     projectId: "hornosapp-60887",
   };
   firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
-  const dbInv = db.ref("inventarioPorTemplar");
+const db = firebase.database();
+const dbInv = db.ref("inventarioPorTemplar");
+
+// Inicializar nodos de seguridad y permisos después de Firebase
+inicializarSeguridad();
+
+
+// === Crear nodo planosAcceso si no existe ===
+const permisosRef = firebase.database().ref("planosAcceso");
+
+permisosRef.once("value", snapshot => {
+  if (!snapshot.exists()) {
+    const nuevosPermisos = {
+  "gary_maldonado_tecnoglass_com": true,
+  "supervisor_tecnoglass_net": true,
+  "operario_tecnoglass_net": true
+};
+
+    permisosRef.set(nuevosPermisos)
+      .then(() => console.log("✅ Nodo planosAcceso creado en Firebase"))
+      .catch(err => console.error("❌ Error creando nodo:", err));
+  } else {
+    console.log("ℹ️ Nodo planosAcceso ya existe.");
+  }
+});
+
+async function inicializarSeguridad() {
+  const ref = firebase.database().ref("seguridad");
+  const snap = await ref.once("value");
+  if (snap.exists()) {
+    console.log("✅ Nodo 'seguridad' ya existe, no se sobrescribirá.");
+    return;
+  }
+
+  const dataInicial = {
+    zonas: {
+      TecnoglassBarranquilla: {
+        nombre: "Tecnoglass S.A.S - Barranquilla",
+        lat: 10.9684,
+        lng: -74.8099,
+        radio_km: 1.5
+      }
+    },
+    usuarios: {
+  "gary_maldonado_tecnoglass_com": { autorizado: true, zona: "TecnoglassBarranquilla" },
+  "operario1_tecnoglass_com":     { autorizado: true, zona: "TecnoglassBarranquilla" },
+  "externo_gmail_com":            { autorizado: true, zona: "Libre" }
+}
+
+  };
+
+  await ref.set(dataInicial);
+  console.log("✅ Nodo 'seguridad' creado correctamente en Firebase.");
+}
+
+
+
+/* ==================== SEGURIDAD POR ZONA ==================== */
+let usuarioCorreoActual = ""; // Se llenará al iniciar sesión o al abrir planos
+
+// Obtener ubicación actual (geolocalización del navegador)
+function obtenerUbicacionActual() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) return reject("Geolocalización no soportada");
+    navigator.geolocation.getCurrentPosition(
+      pos => resolve({
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude
+      }),
+      err => reject(err.message || "Error al obtener ubicación"),
+      { enableHighAccuracy: true, timeout: 7000 }
+    );
+  });
+}
+
+// Calcular distancia entre dos coordenadas (en km)
+function distanciaKm(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2 +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) ** 2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+// 🔒 Verificar si usuario está dentro de su zona permitida
+async function verificarZonaPermitida(correoUsuario) {
+  try {
+    const snap = await firebase.database().ref("seguridad").once("value");
+    const seguridad = snap.val() || {};
+    const usuarioKey = correoUsuario.toLowerCase().replace(/\./g, "_").replace(/@/g, "_");
+    const usuario = seguridad.usuarios?.[usuarioKey];
+
+    if (!usuario) {
+      alert("🚫 Este usuario no está registrado en la base de seguridad.");
+      return false;
+    }
+
+    if (usuario.zona === "Libre") return true; // acceso global sin restricción
+
+    const zona = seguridad.zonas?.[usuario.zona.replace(/\s+/g,'')];
+    if (!zona) {
+      alert("🚫 La zona asignada no existe.");
+      return false;
+    }
+
+    // Obtener ubicación actual
+    const pos = await obtenerUbicacionActual();
+    const distancia = distanciaKm(pos.lat, pos.lng, zona.lat, zona.lng);
+
+    if (distancia <= zona.radio_km) {
+      console.log(`✅ Dentro de la zona (${distancia.toFixed(2)} km)`);
+      return true;
+    } else {
+      alert(`🚫 Estás fuera del área permitida (${distancia.toFixed(2)} km del límite).`);
+      return false;
+    }
+  } catch (err) {
+    console.error("Error verificando zona:", err);
+    alert("⚠️ No se pudo verificar la zona: " + err);
+    return false;
+  }
+}
+
+
 
   /* ==================== Helpers globales ==================== */
   const $ = id => document.getElementById(id);
@@ -649,9 +1034,23 @@
     alert('✅ Ciclo finalizado y movido a históricos.');
   });
 
-  /* ==================== Inventario por templar ==================== */
+ /* ==================== Inventario por templar ==================== */
+const API_URL = "https://optima.tecnoglass.net/api/alutions_production/reports-producion/Detalle-produccion";
 
-  const API_URL="https://optima.tecnoglass.net/api/alutions_production/reports-producion/Detalle-produccion";
+async function cargarInventario() {
+  if (!usuarioCorreoActual) {
+    alert("⚠️ Primero debes ingresar con tu correo en la vista de Planos para habilitar la verificación de zona.");
+    return;
+  }
+  const dentroZona = await verificarZonaPermitida(usuarioCorreoActual);
+  if (!dentroZona) {
+    alert("🚫 No puedes consumir esta API fuera de la zona permitida.");
+    return;
+  }
+  await cargarPendientes();
+} // 👈 asegúrate de que esta llave esté y que no haya otra función duplicada
+
+
 
   /* Turnos: T1 07:00–18:59, T2 19:00–06:59 con fecha base del T2 en el día anterior */
   function turnoDetallado(){
@@ -868,7 +1267,13 @@
           if(texto.trim().length === 0) return;     // 🔒 vacío: no mueve
           guardarRevisado(r,{comentario:texto.trim(), ok:false});
         }
-        if(act==="ok") guardarRevisado(r,{comentario:null, ok:true});
+        if (act === "ok") {
+  const confirmacion = confirm("¿Confirmar revisión OK?");
+  if (!confirmacion) return;
+  ev.target.classList.add('confirmed');
+  guardarRevisado(r, { comentario: null, ok: true });
+}
+
         if(act==="detalle") abrirModal(r, "pendiente");
       });
       frag.appendChild(el);
@@ -1065,6 +1470,118 @@ async function renderHistorial(){
     dbInv.child("revisados").child(fBase).child(turno).child(clave).remove();
   }
 
+/* ==================== Vista Tabla AGRUPADA (por Part o Descripción) ==================== */
+let vistaTabla = false;
+
+$('btnVistaToggle').onclick = () => {
+  vistaTabla = !vistaTabla;
+  $('btnVistaToggle').textContent = vistaTabla ? '🗂️ Vista Cards' : '📋 Vista Tabla';
+  $('viewTabla').classList.toggle('hidden', !vistaTabla);
+  $('listPend').classList.toggle('hidden', vistaTabla);
+  $('listRevis').classList.toggle('hidden', vistaTabla);
+  $('listHist').classList.toggle('hidden', vistaTabla);
+  if (vistaTabla) renderTablaAgrupada();
+};
+
+$('agrupacionTabla').onchange = renderTablaAgrupada;
+$('btnRecargarTabla').onclick = renderTablaAgrupada;
+
+function renderTablaAgrupada() {
+  const { turno, fechaISO: fBase } = turnoDetallado();
+  const revisadosTurno = cacheRevisadosTurno[`${fBase}_${turno}`] || {};
+  const baseNoRevisados = basePendientes.filter(r => !revisadosTurno[r.clave]);
+  const arr = filtrarOrdenar(baseNoRevisados);
+
+  const agr = $('agrupacionTabla').value; // 'part' o 'desc'
+  const grupos = {};
+
+  arr.forEach(r => {
+    const key = agr === 'part' ? r.Part : r.descrip;
+    if (!grupos[key]) grupos[key] = [];
+    grupos[key].push(r);
+  });
+
+  const cont = $('tablaAgrupada');
+  cont.innerHTML = '';
+
+  Object.entries(grupos).forEach(([key, items]) => {
+    const groupDiv = document.createElement('div');
+    groupDiv.className = 'grupoTabla';
+
+    // 🔹 Título del grupo (sin prefijo)
+    const titulo = document.createElement('h3');
+    titulo.textContent = key;
+    titulo.className = 'titulo-grupo';
+    groupDiv.appendChild(titulo);
+
+    // 🔹 Determinar columna complementaria
+    const colExtra = agr === 'part' ? 'Descripción' : 'Part';
+
+    // 🔹 Tabla
+    const table = document.createElement('div');
+    table.className = 'tabla-scroll';
+    table.innerHTML = `
+      <table class="tabla-grupo">
+        <thead>
+          <tr>
+            <th>SOITEM</th>
+            <th>Máquina</th>
+            <th>Pzs Pend</th>
+            <th>Kg Pend</th>
+            <th>Long</th>
+            <th>${colExtra}</th>
+            <th>Prioridad</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    `;
+    const tbody = table.querySelector('tbody');
+
+    items.forEach(r => {
+      const tr = document.createElement('tr');
+      const extraValue = agr === 'part' ? r.descrip : r.Part;
+
+      tr.innerHTML = `
+        <td>${r.clave}</td>
+        <td>${r.ultimaMachine}</td>
+        <td>${r.piezasPend}</td>
+        <td>${Math.round(r.kgPend)}</td>
+        <td>${r.long}</td>
+        <td>${extraValue}</td>
+        <td>${r.prio}</td>
+        <td class="acciones-cell">
+          <button class="btn-mini ok" data-act="ok">✅</button>
+          <button class="btn-mini warn" data-act="coment">💬</button>
+        </td>
+      `;
+
+      // === comportamiento ===
+      const btnOk = tr.querySelector('[data-act="ok"]');
+      const btnCom = tr.querySelector('[data-act="coment"]');
+
+      btnOk.onclick = (ev) => {
+        const confirmar = confirm("¿Confirmar revisión OK?");
+        if (!confirmar) return;
+        ev.target.classList.add('confirmed');
+        guardarRevisado(r, { ok: true });
+        tr.style.opacity = '0.5';
+      };
+
+      btnCom.onclick = () => {
+        abrirModal(r, 'pendiente');
+      };
+
+      tbody.appendChild(tr);
+    });
+
+    groupDiv.appendChild(table);
+    cont.appendChild(groupDiv);
+  });
+}
+
+
   /* ===== Modal Detalle / Trazabilidad ===== */
   let modalData = null;
   function abrirModal(record, origen){
@@ -1141,33 +1658,88 @@ async function renderHistorial(){
   /* ===== Eventos Inventario ===== */
   $('btnActualizarInv').onclick = async ()=>{
     const b=$('btnActualizarInv'); b.disabled=true; const old=b.textContent; b.textContent="Cargando...";
-    try{ await cargarPendientes(); } catch(e){ alert("Error: "+(e.message||e)); }
+    try { await cargarInventario(); } catch(e){ alert("Error: "+(e.message||e)); }
     b.disabled=false; b.textContent=old;
   };
   ['fPlanta','fMaquina','fOrden'].forEach(id=> $(id).addEventListener('change', render));
   $('fBuscar').addEventListener('input', render);
 
-  $('tabPend').onclick=()=>{
-    vista="pendientes";
-    ['tabPend','tabRevis','tabHist'].forEach(id=> $(id).classList.remove("active"));
-    $('tabPend').classList.add("active");
-    render();
-  };
-  $('tabRevis').onclick=()=>{
-    vista="revisados";
-    ['tabPend','tabRevis','tabHist'].forEach(id=> $(id).classList.remove("active"));
-    $('tabRevis').classList.add("active");
-    render();
-  };
-  $('tabHist').onclick=()=>{
-    vista="historial";
-    ['tabPend','tabRevis','tabHist'].forEach(id=> $(id).classList.remove("active"));
-    $('tabHist').classList.add("active");
-    render();
-  };
+ //* ===== Alternar vista de Pendientes: Cards ↔ Tabla ===== */
+let vistaTablaPendientes = false;
+
+$("btnVistaToggle").onclick = () => {
+  const btn = $("btnVistaToggle");
+
+  // Solo afecta la vista Pendientes
+  if (vista !== "pendientes") {
+    alert("🔹 Solo puedes usar la vista de tabla en Pendientes.");
+    return;
+  }
+
+  vistaTablaPendientes = !vistaTablaPendientes;
+  actualizarVistaPendientes();
+  btn.textContent = vistaTablaPendientes ? "🃏 Vista Cards" : "📋 Vista Tabla";
+};
+
+/* ===== Función para controlar qué se ve en Pendientes ===== */
+function actualizarVistaPendientes() {
+  // Ocultar todo primero
+  $("listPend").classList.add("hidden");
+  $("viewTabla").classList.add("hidden");
+  $("listRevis").classList.add("hidden");
+  $("listHist").classList.add("hidden");
+
+  if (vista === "pendientes") {
+    if (vistaTablaPendientes) {
+      $("viewTabla").classList.remove("hidden");
+      renderTablaAgrupada();
+    } else {
+      $("listPend").classList.remove("hidden");
+      renderPendientes();
+    }
+  } else if (vista === "revisados") {
+    $("listRevis").classList.remove("hidden");
+    renderRevisados();
+  } else if (vista === "historial") {
+    $("listHist").classList.remove("hidden");
+    renderHistorial();
+  }
+
+  actualizarTotales();
+}
+
+/* ===== Tabs principales (Pendientes, Revisados, Historial) ===== */
+$("tabPend").onclick = () => {
+  vista = "pendientes";
+  ["tabPend", "tabRevis", "tabHist"].forEach(id => $(id).classList.remove("active"));
+  $("tabPend").classList.add("active");
+  actualizarVistaPendientes();
+};
+
+$("tabRevis").onclick = () => {
+  vista = "revisados";
+  ["tabPend", "tabRevis", "tabHist"].forEach(id => $(id).classList.remove("active"));
+  $("tabRevis").classList.add("active");
+  actualizarVistaPendientes();
+};
+
+$("tabHist").onclick = () => {
+  vista = "historial";
+  ["tabPend", "tabRevis", "tabHist"].forEach(id => $(id).classList.remove("active"));
+  $("tabHist").classList.add("active");
+  actualizarVistaPendientes();
+};
+
+/* ===== Mantener sincronizado al aplicar filtros o actualizar ===== */
+["fPlanta","fMaquina","fOrden"].forEach(id => $(id).addEventListener("change", actualizarVistaPendientes));
+$("fBuscar").addEventListener("input", actualizarVistaPendientes);
+
+
 
   /* ===== Init Inventario ===== */
-  cargarPendientes();
+  
+cargarInventario();
+
 
   /* ==================== Drawer / navegación ==================== */
   const drawer = document.getElementById("drawer");
@@ -1180,21 +1752,179 @@ async function renderHistorial(){
   function closeDrawer(){ drawer.classList.remove("open"); mask.style.display="none"; }
 
   document.querySelectorAll(".drawer .opt").forEach(opt=>{
-    opt.addEventListener("click",()=>{
-      const target = opt.dataset.target;
-      if(target==="temperaturas"){
-        document.getElementById("view-temperaturas").classList.remove("hidden");
-        document.getElementById("view-inventario").classList.add("hidden");
-        document.getElementById("topTitle").textContent = "Registro de Temperaturas";
-      }else{
-        document.getElementById("view-inventario").classList.remove("hidden");
-        document.getElementById("view-temperaturas").classList.add("hidden");
-        document.getElementById("topTitle").textContent = "Inventario Por Templar";
-      }
+  opt.addEventListener("click",()=>{
+    const target = opt.dataset.target;
+
+    if(target==="temperaturas"){
+      $("view-temperaturas").classList.remove("hidden");
+      $("view-inventario").classList.add("hidden");
+      $("view-planos").classList.add("hidden");
+      $("topTitle").textContent = "Registro de Temperaturas";
       closeDrawer();
-    });
+
+    } else if(target==="inventario"){
+      $("view-inventario").classList.remove("hidden");
+      $("view-temperaturas").classList.add("hidden");
+      $("view-planos").classList.add("hidden");
+      $("topTitle").textContent = "Inventario Por Templar";
+      closeDrawer();
+
+    } else if(target==="planos"){
+      $("view-temperaturas").classList.add("hidden");
+      $("view-inventario").classList.add("hidden");
+      $("view-planos").classList.remove("hidden");
+      $("topTitle").textContent = "Consulta de Planos";
+      closeDrawer();
+
+      verificarAccesoPlanos(); // 👈 valida permisos antes de mostrar
+    }
   });
+});
+
+
+
+/* ==================== Consulta de Planos (versión tabla, ligera y optimizada) ==================== */
+let planosData = [];
+let filtrados = [];
+let indexRender = 0;
+const PAGE_SIZE = 200; // cantidad de filas por carga
+const PLANOS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTlsUCkIwRggf4CcUkfq239hl5UKRE86B3FycdB14sgIs5OIeFuqKQjlhzezzNNWJa6WEPy_URJtDB_/pub?gid=1893719309&single=true&output=csv";
+const CACHE_KEY = "planosCacheCSV";
+
+/* --- Cargar planos (usa caché local + actualización silenciosa) --- */
+async function cargarPlanos() {
+  const cuerpo = $("tbodyPlanos");
+  cuerpo.innerHTML = "<tr><td colspan='2' style='padding:10px;'>Cargando planos...</td></tr>";
+
+  // 1️⃣ Leer desde cache local
+  const cache = localStorage.getItem(CACHE_KEY);
+  if (cache) planosData = parseCSV(cache);
+
+  // 2️⃣ Intentar actualizar online
+  try {
+    const resp = await fetch(PLANOS_URL);
+    const csv = await resp.text();
+    if (csv.length > 100) {
+      localStorage.setItem(CACHE_KEY, csv);
+      planosData = parseCSV(csv);
+    }
+  } catch (err) {
+    console.warn("Sin conexión, usando cache local.");
+  }
+
+  renderPlanos(); // Mostrar
+}
+
+/* --- Parsear CSV --- */
+function parseCSV(csv) {
+  const rows = csv.trim().split("\n").map(r => r.split(","));
+  const headers = rows[0].map(h => h.trim());
+  return rows.slice(1).map(r => {
+    const o = {};
+    headers.forEach((h, i) => o[h] = (r[i] || "").trim());
+    return o;
+  });
+}
+
+//* --- Renderizar tabla de planos (con buscador funcional y diseño mejorado) --- */
+function renderPlanos(reset = true) {
+  const cuerpo = $("tbodyPlanos");
+
+  if (reset) {
+    const q = ($("buscarPlano").value || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    filtrados = planosData.filter(p => {
+      const nombre = (p.NOMBRE || p.Nombre || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      return nombre.includes(q);
+    });
+
+    indexRender = 0;
+    cuerpo.innerHTML = "";
+  }
+
+  const next = filtrados.slice(indexRender, indexRender + PAGE_SIZE);
+  const frag = document.createDocumentFragment();
+
+  next.forEach(p => {
+    const nombre = (p.NOMBRE || p.Nombre || "").replace(".pdf", "").trim();
+    const link = p.LINK || p.Link || p.ARCHIVO || "#";
+
+    const fila = document.createElement("tr");
+    fila.className = "fila-plano";
+    fila.innerHTML = `
+      <td class="celda-nombre">${nombre || "Sin nombre"}</td>
+      <td class="celda-link">
+        <a href="${link}" target="_blank">Abrir</a>
+      </td>
+    `;
+
+    fila.onclick = () => {
+      if (link && link !== "#") window.open(link, "_blank");
+    };
+
+    frag.appendChild(fila);
+  });
+
+  cuerpo.appendChild(frag);
+  indexRender += PAGE_SIZE;
+}
+
+
+/* --- Cargar más filas al hacer scroll --- */
+$("tablaPlanos").parentElement.onscroll = e => {
+  const el = e.target;
+  if (el.scrollTop + el.clientHeight >= el.scrollHeight - 30 && indexRender < filtrados.length) {
+    renderPlanos(false);
+  }
+};
+
+/* --- Buscar --- */
+$("buscarPlano").oninput = () => renderPlanos(true);
+
+/* --- Recargar --- */
+$("btnRecargarPlanos").onclick = cargarPlanos;
+
+
+/* ==================== Verificación de acceso a Planos ==================== */
+let usuarioAutenticado = null;
+let accesoPlanos = false;
+
+// ✅ Detectar correo del usuario (por ejemplo con prompt simple)
+async function verificarAccesoPlanos() {
+  // Pedimos el correo (en tu versión final puedes reemplazar por login)
+  const correo = prompt("Ingresa tu correo corporativo para continuar:");
+  if (!correo) return false;
+  usuarioAutenticado = correo.toLowerCase().replace(/\./g, "_").replace(/@/g, "_");
+usuarioCorreoActual = correo.toLowerCase().replace(/\./g, "_").replace(/@/g, "_");
+
+
+
+  const permisosSnap = await firebase.database().ref("planosAcceso").once("value");
+  const permisos = permisosSnap.val() || {};
+
+const dentroZona = await verificarZonaPermitida(correo);
+if (!dentroZona) {
+  $("view-planos").classList.add("hidden");
+  return;
+}
+
+
+  // Normalizar claves para comparación (Firebase no acepta . ni @ en claves)
+  const clavesPermitidas = Object.keys(permisos).map(k => k.toLowerCase().replace(/\./g, "_").replace(/@/g, "_"));
+
+  if (clavesPermitidas.includes(usuarioAutenticado)) {
+    accesoPlanos = true;
+    cargarPlanos();
+  } else {
+    accesoPlanos = false;
+    $("tbodyPlanos").innerHTML = "<tr><td colspan='2' style='padding:10px;'>🚫 No tienes permiso para ver estos planos.</td></tr>";
+
+  }
+}
+
+
   </script>
 </body>
-
 </html>
+
+
+
