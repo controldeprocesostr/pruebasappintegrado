@@ -12,6 +12,7 @@
   <!-- Firebase compat (v9 compat) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
   <style>
     :root{
@@ -28,15 +29,16 @@
     .header-title{color:var(--accent);font-weight:800;font-size:22px;text-align:center}
     .hamb{position:absolute;left:0;top:50%;transform:translateY(-50%);background:transparent;border:1px solid var(--soft);color:#fff;border-radius:8px;padding:8px 10px;cursor:pointer}
     .hamb:active{filter:brightness(.9)}
+    .user-chip{position:absolute;right:0;top:50%;transform:translateY(-50%);display:flex;gap:8px;align-items:center}
+    .user-chip small{color:#9aa9b1}
+    .user-chip button{background:transparent;border:1px solid var(--soft);border-radius:8px;color:#fff;padding:6px 8px;cursor:pointer}
 
     /* Cards */
-    .card{background:#1b1b1b;border:1px solid #2e2e2e;border-radius:12px;padding:14px;margin-bottom:14px;box-shadow:0 2px 6px rgba(0,0,0,.35);transition:transform .15s ease, box-shadow .2s ease}
-    .card:hover{transform:translateY(-2px);box-shadow:0 4px 10px rgba(0,0,0,.5)}
-
+    .card{background:#1b1b1b;border:1px solid #2e2e2e;border-radius:12px;padding:14px;margin-bottom:14px;box-shadow:0 2px 6px rgba(0,0,0,.35)}
     label{display:block;margin:6px 0 4px;font-weight:700;color:#ddd}
     input, select, textarea, button{box-sizing:border-box;border-radius:6px;border:1px solid var(--border);padding:8px}
-    input,select,textarea{width:100%;background:#fff;color:#000;border:1px solid #ccc}
-
+    input,select,textarea{width:100%;background:var(--input-bg);color:var(--input-color)}
+    input, select, textarea { background:#fff; color:#000; border:1px solid #ccc }
     button{cursor:pointer;border:none;font-weight:700}
     .btn-primary{background:var(--accent);color:#000}
     .btn-outline{background:transparent;border:2px solid var(--accent);color:var(--accent)}
@@ -76,9 +78,9 @@
     .inv-tabs{display:flex;gap:8px;margin:10px 0 14px}
     .inv-tab{border:1px solid var(--soft);background:#0f0f0f;border-radius:999px;padding:6px 12px;cursor:pointer}
     .inv-tab.active{background:var(--accent);color:#000;border-color:var(--accent);font-weight:800}
+
     .inv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px}
-    .inv-card{background:#1b1b1b;border:1px solid #2e2e2e;border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px;box-shadow:0 2px 6px rgba(0,0,0,.35);transition:transform .15s ease, box-shadow .2s ease}
-    .inv-card:hover{transform:translateY(-2px);box-shadow:0 4px 10px rgba(0,0,0,.5)}
+    .inv-card{background:#1b1b1b;border:1px solid #2e2e2e;border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px;box-shadow:0 2px 6px rgba(0,0,0,.35)}
     .inv-head{display:flex;justify-content:space-between;gap:8px;align-items:center}
     .inv-head .m{font-weight:800;color:#00e5ff}
     .inv-meta{display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12.5px;color:#e1e1e1}
@@ -98,39 +100,7 @@
     .kpi-por-mac{margin:8px 0 2px;color:#9aa9b1;font-size:12px}
     .kpi-por-mac b{color:#cfeaf0}
 
-    /* Modal Inventario */
-    .modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:14px;z-index:1200}
-    .win{background:#1a1a1a;border:1px solid #333;border-radius:14px;max-width:920px;width:98vw;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;color:#fff;box-shadow:0 4px 14px rgba(0,0,0,.7)}
-    .win .head{padding:10px;border-bottom:1px solid var(--soft);display:flex;justify-content:space-between;align-items:center}
-    .win .body{padding:10px;overflow:auto}
-    .close{border:1px solid var(--soft);background:#151515;border-radius:8px;padding:6px 10px;cursor:pointer;color:#fff}
-    .kv{display:grid;grid-template-columns:160px 1fr;gap:6px;font-size:13px}
-    .kv b{color:#bfefff}
-    .modal .actions{padding:10px;border-top:1px solid var(--soft);display:flex;gap:8px}
-    .modal input, .modal textarea, .modal select{background:#fff;color:#000;border:1px solid #ccc}
-
-    /* Responsive */
-    @media (max-width:900px){
-      .grid4{grid-template-columns:repeat(2,1fr)}
-      canvas{height:320px !important}
-    }
-    @media (max-width:520px){
-      .grid4{grid-template-columns:1fr}
-      .actions{flex-direction:column;align-items:stretch}
-    }
-    @media (max-width:768px){
-      .inv-grid{grid-template-columns:1fr !important}
-      .inv-card{padding:10px;border-radius:12px}
-      .inv-meta{grid-template-columns:1fr !important;font-size:12px}
-      .inv-head .m{font-size:14px}
-      .inv-actions{flex-direction:column;align-items:stretch}
-      .btn-mini{width:100%;font-size:13px;padding:8px}
-      .inv-pill{flex-direction:column;align-items:flex-start}
-      .inv-toolbar{flex-direction:column;align-items:stretch}
-      .inv-toolbar select,.inv-toolbar input[type="text"]{width:100%}
-    }
-
-    /* Vista Tabla agrupada */
+    /* Tabla Pend/Hist */
     #viewTabla table th, #viewTabla table td { border-bottom: 1px solid var(--border); text-align: center; padding: 8px; color: #eee; font-size: 14px; }
     #viewTabla table th { background: #171717; color: var(--accent); font-weight: 700; }
     #viewTabla .btn-mini { padding: 4px 8px; font-size: 13px; }
@@ -142,34 +112,63 @@
     .tabla-grupo thead { background: #171717; display: block; border-bottom: 2px solid var(--accent); }
     .tabla-grupo tbody { display: block; }
     .tabla-grupo tr { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); border-bottom: 1px solid var(--border); padding: 4px 0; }
-    .tabla-grupo th,.tabla-grupo td { text-align: center; font-size: 14px; padding: 6px; color: #e0e0e0; word-break: break-word; white-space: normal; }
+    .tabla-grupo th, .tabla-grupo td { text-align: center; font-size: 14px; padding: 6px; color: #e0e0e0; word-break: break-word; white-space: normal; }
     .tabla-grupo th { color: var(--accent); font-weight: 600; padding: 8px 6px; text-transform: uppercase; font-size: 13px; }
     .tabla-grupo tr:nth-child(even) { background: rgba(255,255,255,0.03); }
-    .acciones-cell { display: flex; justify-content: center; align-items: center; gap: 8px; }
-    .btn-mini { padding: 10px 16px; border-radius: 10px; font-size: 15px; border: none; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
-    .btn-mini.ok { background: #00c853; color: #fff; }
-    .btn-mini.warn { background: #ffab00; color: #000; }
-    .btn-mini:active { transform: scale(0.95); }
-    .btn-mini.confirmed { animation: confirmPulse 0.4s ease; background: #1de9b6 !important; }
-    @keyframes confirmPulse { 0%{transform:scale(1); box-shadow:0 0 0 rgba(0,255,0,.6);} 50%{transform:scale(1.1); box-shadow:0 0 12px rgba(0,255,0,.8);} 100%{transform:scale(1); box-shadow:0 0 0 rgba(0,255,0,0);} }
+    .acciones-cell { display:flex; justify-content:center; align-items:center; gap:8px; }
+    .btn-mini { padding:10px 16px; border-radius:10px; font-size:15px; border:none; cursor:pointer; transition:.2s; box-shadow:0 2px 6px rgba(0,0,0,0.3); }
+    .btn-mini.ok { background:#00c853; color:#fff; }
+    .btn-mini.warn { background:#ffab00; color:#000; }
+    .btn-mini:active { transform:scale(.95) }
+    .btn-mini.confirmed { animation: confirmPulse .4s ease; background:#1de9b6!important; }
+    @keyframes confirmPulse { 0%{transform:scale(1); box-shadow:0 0 0 rgba(0,255,0,.6)} 50%{transform:scale(1.1); box-shadow:0 0 12px rgba(0,255,0,.8)} 100%{transform:scale(1); box-shadow:0 0 0 rgba(0,0,0,0)} }
+    @media (max-width: 600px){ .tabla-grupo tr{grid-template-columns:repeat(auto-fit,minmax(90px,1fr))} .tabla-grupo th, .tabla-grupo td{font-size:13px; padding:4px} .btn-mini{padding:8px 12px; font-size:14px} }
 
-    /* Tabla Planos */
+    /* ======== Planos (tabla y modal) ======== */
     #tablaPlanos { width:100%; border-collapse:collapse; font-size:14px; background:#1a1a1a; border-radius:10px; overflow:hidden; }
-    #tablaPlanos thead th { position:sticky; top:0; background:#111; color:#00e5ff; font-weight:bold; text-align:left; padding:10px; border-bottom:1px solid #333; z-index:2;}
-    #tablaPlanos tbody tr.fila-plano{ transition:background .2s; }
-    #tablaPlanos tbody tr.fila-plano:hover{ background:#222; }
-    .celda-nombre{ padding:8px 10px; border-bottom:1px solid #333; color:#e0e0e0; font-weight:500; }
-    .celda-link{ padding:8px 10px; border-bottom:1px solid #333; }
-    .celda-link a{ color:#00e5ff; text-decoration:none; font-weight:bold; }
-    .celda-link a:hover{ text-decoration:underline; }
+    #tablaPlanos thead th { position:sticky; top:0; background:#111; color:#00e5ff; font-weight:bold; text-align:center; padding:10px; border-bottom:1px solid #333; z-index:2; } /* centrado */
+    #tablaPlanos tbody tr.fila-plano { transition:background .2s; }
+    #tablaPlanos tbody tr.fila-plano:hover { background:#222; }
+    .celda-nombre, .celda-link { padding:8px 10px; border-bottom:1px solid #333; color:#e0e0e0; text-align:center } /* centrado */
+
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:14px;z-index:1200}
+    .win{background:#1a1a1a;border:1px solid #333;border-radius:14px;max-width:920px;width:98vw;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;color:#fff;box-shadow:0 4px 14px rgba(0,0,0,.7)}
+    .win .head{padding:10px;border-bottom:1px solid var(--soft);display:flex;justify-content:space-between;align-items:center}
+    .win .body{padding:0;overflow:auto;background:#0b0b0b}
+    .close{border:1px solid var(--soft);background:#151515;border-radius:8px;padding:6px 10px;cursor:pointer;color:#fff}
+    .pdf-frame{width:100%; height:80vh; border:0}
+    .no-select, .no-select *{ user-select:none; -webkit-user-select:none; -ms-user-select:none }
+    .no-context{ -webkit-touch-callout:none }
+    /* ======== Admin panel ======== */
+    .admin-only { display:none } /* se muestra si rol=admin */
+
+    /* Responsive */
+    @media (max-width:900px){ .grid4{grid-template-columns:repeat(2,1fr)} canvas{height:320px !important} }
+    @media (max-width:520px){ .grid4{grid-template-columns:1fr} .actions{flex-direction:column;align-items:stretch} }
+    @media (max-width:768px){
+      .inv-grid{grid-template-columns:1fr !important}
+      .inv-card{padding:10px;border-radius:12px}
+      .inv-meta{grid-template-columns:1fr !important;font-size:12px}
+      .inv-head .m{font-size:14px}
+      .inv-actions{flex-direction:column;align-items:stretch}
+      .btn-mini{width:100%;font-size:13px;padding:8px}
+      .inv-pill{flex-direction:column;align-items:flex-start}
+      .inv-toolbar{flex-direction:column;align-items:stretch}
+      .inv-toolbar select,.inv-toolbar input[type="text"]{width:100%}
+    }
   </style>
 </head>
-<body>
+<body class="no-select no-context">
   <div class="wrap">
     <!-- Header -->
     <div class="header-bar">
       <button class="hamb" id="btnMenu">☰</button>
       <div class="header-title" id="topTitle">Registro de Temperaturas</div>
+      <div class="user-chip">
+        <small id="lblUser">—</small>
+        <button id="btnLogin">Iniciar sesión</button>
+        <button id="btnLogout" class="hidden">Salir</button>
+      </div>
     </div>
 
     <!-- ======== Vista: Registro de Temperaturas ======== -->
@@ -319,136 +318,161 @@
       <div id="listRevis" class="inv-grid hidden"></div>
       <div id="listHist" class="inv-grid hidden"></div>
     </div>
-  </div>
 
-  <!-- ===== Vista Tabla agrupada Pendientes ===== -->
-  <div id="viewTabla" class="hidden">
-    <div class="card" style="background:var(--panel-2)">
-      <div class="inv-toolbar" style="justify-content:space-between;align-items:center">
-        <div class="inv-pill">
-          <label>Agrupar por</label>
-          <select id="agrupacionTabla">
-            <option value="part">Part</option>
-            <option value="desc">Descripción</option>
-          </select>
+    <!-- ===== Vista Tabla agrupada de Pendientes ===== -->
+    <div id="viewTabla" class="hidden">
+      <div class="card" style="background:var(--panel-2)">
+        <div class="inv-toolbar" style="justify-content:space-between;align-items:center">
+          <div class="inv-pill">
+            <label>Agrupar por</label>
+            <select id="agrupacionTabla">
+              <option value="part">Part</option>
+              <option value="desc">Descripción</option>
+            </select>
+          </div>
+          <button class="inv-btn primary" id="btnRecargarTabla">🔄 Recargar</button>
         </div>
-        <button class="inv-btn primary" id="btnRecargarTabla">🔄 Recargar</button>
-      </div>
-      <div class="table-wrap" id="tablaAgrupada"></div>
-    </div>
-  </div>
-
-  <!-- ======== Vista: Planos ======== -->
-  <div id="view-planos" class="hidden">
-    <div class="card" style="background:var(--panel-2)">
-      <div class="inv-toolbar">
-        <div class="inv-pill">
-          <label>Buscar plano</label>
-          <input id="buscarPlano" type="text" placeholder="Nombre del plano...">
-        </div>
-        <button class="inv-btn primary" id="btnRecargarPlanos">🔄 Recargar</button>
-      </div>
-
-      <div class="tabla-container" style="max-height:70vh;overflow-y:auto;border-radius:10px;">
-        <table id="tablaPlanos" style="width:100%;border-collapse:collapse;">
-          <thead>
-            <tr style="background:#222;color:#00e5ff;">
-              <th style="padding:8px;border-bottom:1px solid #333;text-align:left;">Nombre</th>
-              <th style="padding:8px;border-bottom:1px solid #333;text-align:left;">Enlace</th>
-            </tr>
-          </thead>
-          <tbody id="tbodyPlanos" style="color:#e0e0e0;"></tbody>
-        </table>
+        <div class="table-wrap" id="tablaAgrupada"></div>
       </div>
     </div>
-  </div>
 
-  <!-- ===== Modal Inventario ===== -->
-  <div class="modal" id="modalInv">
-    <div class="win" role="dialog" aria-modal="true">
+    <!-- ======== Vista: Planos ======== -->
+    <div id="view-planos" class="hidden">
+      <div class="card" style="background:var(--panel-2)">
+        <div class="inv-toolbar">
+          <div class="inv-pill">
+            <label>Buscar plano</label>
+            <input id="buscarPlano" type="text" placeholder="Nombre del plano...">
+          </div>
+          <button class="inv-btn primary" id="btnRecargarPlanos">🔄 Recargar</button>
+        </div>
+
+        <div class="tabla-container" style="max-height:70vh;overflow-y:auto;border-radius:10px;">
+          <table id="tablaPlanos" style="width:100%;border-collapse:collapse;">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Enlace</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyPlanos"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Modal General (Inventario/Planos) ===== -->
+    <div class="modal" id="modalInv">
+      <div class="win" role="dialog" aria-modal="true">
+        <div class="head">
+          <div><b id="mdTitulo">Detalle</b></div>
+          <button class="close" id="btnCloseInv">Cerrar</button>
+        </div>
+        <div class="body">
+          <div class="kv" id="kvInventario" style="padding:10px;display:none">
+            <b>SOITEM</b><div id="mdSoitem"></div>
+            <b>Part</b><div id="mdPart"></div>
+            <b>Descripción</b><div id="mdDesc"></div>
+            <b>Prioridad</b><div id="mdPrio"></div>
+            <b>Longitud</b><div id="mdLong"></div>
+            <b>Pzs Pend</b><div id="mdPzs"></div>
+            <b>Kg Pend</b><div id="mdKg"></div>
+            <b>Máquina</b><div id="mdMac"></div>
+            <b>Planta</b><div id="mdPlanta"></div>
+            <b>Fecha</b><div id="mdFec"></div>
+          </div>
+          <div id="mdTrace" style="padding:10px; font-size:12.5px;color:#ddd;display:none"></div>
+
+          <!-- Contenedor para Planos -->
+          <div id="kvPlano" style="display:none">
+            <iframe id="framePlano" class="pdf-frame" sandbox="allow-same-origin allow-scripts"></iframe>
+            <!-- Capa para bloquear contexto y clics directos sobre UI de descarga -->
+            <div style="position:absolute; inset:0; pointer-events:none"></div>
+          </div>
+        </div>
+        <div class="actions" id="actionsInv" style="display:none">
+          <input id="mdCmt" type="text" placeholder="Agregar/editar comentario..." style="flex:1">
+          <button class="btn-mini warn" id="btnGuardarCmt">💬 Guardar comentario</button>
+          <button class="btn-mini ok" id="btnOk">✅ OK</button>
+          <button class="btn-mini rev" id="btnRegresar">↩️ Regresar a pendientes</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Drawer ===== -->
+    <div class="drawer" id="drawer">
       <div class="head">
-        <div><b id="mdTitulo">Detalle</b></div>
-        <button class="close" id="btnCloseInv">Cerrar</button>
+        <span>Menú principal</span>
+        <button id="btnCloseDrawer">✕</button>
       </div>
       <div class="body">
-        <div class="kv">
-          <b>SOITEM</b><div id="mdSoitem"></div>
-          <b>Part</b><div id="mdPart"></div>
-          <b>Descripción</b><div id="mdDesc"></div>
-          <b>Prioridad</b><div id="mdPrio"></div>
-          <b>Longitud</b><div id="mdLong"></div>
-          <b>Pzs Pend</b><div id="mdPzs"></div>
-          <b>Kg Pend</b><div id="mdKg"></div>
-          <b>Máquina</b><div id="mdMac"></div>
-          <b>Planta</b><div id="mdPlanta"></div>
-          <b>Fecha</b><div id="mdFec"></div>
+        <div class="opt" data-target="temperaturas">
+          <b>Registro de Temperaturas</b><br>
+          <small>Lecturas por zona y ciclo</small>
+        </div>
+        <div class="opt" data-target="inventario">
+          <b>Inventario Por Templar</b><br>
+          <small>Gestión y trazabilidad</small>
+        </div>
+        <div class="opt" data-target="planos">
+          <b>Consulta de Planos</b><br>
+          <small>Acceso directo a los planos en Excel</small>
         </div>
 
-        <hr style="margin:10px 0;border:0;border-top:1px solid var(--soft)">
-
-        <div class="kv">
-          <b>Comentario</b>
-          <div><input id="mdCmt" type="text" placeholder="Agregar/editar comentario..."></div>
-          <b>Trazabilidad</b>
-          <div id="mdTrace" style="font-size:12.5px;color:#ddd">(sin registros)</div>
+        <!-- Solo Admin -->
+        <div class="opt admin-only" data-target="admin">
+          <b>👑 Administrador</b><br>
+          <small>Usuarios, roles y zona</small>
         </div>
       </div>
-      <div class="actions">
-        <button class="btn-mini warn" id="btnGuardarCmt">💬 Guardar comentario</button>
-        <button class="btn-mini ok" id="btnOk">✅ OK</button>
-        <button class="btn-mini rev" id="btnRegresar">↩️ Regresar a pendientes</button>
+    </div>
+    <div class="drawer-mask" id="drawerMask"></div>
+
+    <!-- ===== Vista ADMIN (solo visible si rol=admin) ===== -->
+    <div id="view-admin" class="hidden">
+      <div class="card">
+        <h3 style="margin:0 0 12px;color:var(--accent)">Usuarios autorizados</h3>
+        <div class="grid4">
+          <div>
+            <label>Correo corporativo</label>
+            <input id="admCorreo" type="email" placeholder="nombre@tecnoglass.com">
+          </div>
+          <div>
+            <label>Rol</label>
+            <select id="admRol">
+              <option value="user">user</option>
+              <option value="admin">admin</option>
+            </select>
+          </div>
+          <div>
+            <label>Zona</label>
+            <select id="admZona">
+              <option value="TecnoglassBarranquilla">TecnoglassBarranquilla</option>
+              <option value="Libre">Libre</option>
+            </select>
+          </div>
+          <div class="actions" style="align-items:end">
+            <button id="btnAdmAgregar" class="btn-primary">Agregar / Actualizar</button>
+            <button id="btnAdmEliminar" class="btn-danger">Eliminar</button>
+          </div>
+        </div>
+        <div class="hint">Esta lista vive en <code>seguridad/usuarios</code> de Firebase.</div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin:0 0 12px;color:var(--accent)">Actualizar zona Tecnoglass</h3>
+        <div class="grid4">
+          <div><label>Latitud</label><input id="admLat" type="number" step="0.0001" value="11.0000"></div>
+          <div><label>Longitud</label><input id="admLng" type="number" step="0.0001" value="-74.8300"></div>
+          <div><label>Radio (km)</label><input id="admRad" type="number" step="0.1" value="2.0"></div>
+          <div class="actions" style="align-items:end">
+            <button id="btnAdmZona" class="btn-primary">Guardar zona</button>
+          </div>
+        </div>
+        <div class="hint">Este botón actualiza <code>seguridad/zonas/TecnoglassBarranquilla</code> (centro y radio). Se usa para la geocerca.</div>
       </div>
     </div>
   </div>
-
-  <!-- ===== Drawer ===== -->
-  <div class="drawer" id="drawer">
-    <div class="head">
-      <span>Menú principal</span>
-      <button id="btnCloseDrawer">✕</button>
-    </div>
-    <div class="body">
-      <div class="opt" data-target="temperaturas">
-        <b>Registro de Temperaturas</b><br>
-        <small>Lecturas por zona y ciclo</small>
-      </div>
-      <div class="opt gate" data-target="inventario">
-        <b>Inventario Por Templar</b><br>
-        <small>Gestión y trazabilidad</small>
-      </div>
-      <div class="opt gate" data-target="planos">
-        <b>Consulta de Planos</b><br>
-        <small>Acceso directo a los planos en Excel</small>
-      </div>
-
-      <div class="opt" onclick="actualizarZonaTecnoglass()" style="border-top:1px solid #333;margin-top:8px;">
-        <b>🛠️ Actualizar zona Tecnoglass</b><br>
-        <small>Solo administrador</small>
-      </div>
-      <div class="opt" onclick="cambiarCorreo()">
-        <b>👤 Cambiar usuario</b><br>
-        <small>Permite volver a iniciar con otro correo</small>
-      </div>
-    </div>
-  </div>
-  <div class="drawer-mask" id="drawerMask"></div>
-
-  <!-- Panel GPS y botón -->
-  <div id="panelGPS"
-       style="position:fixed;bottom:60px;right:10px;background:#111;padding:10px 14px;
-       border:1px solid #00e5ff;border-radius:10px;color:#0ff;font-size:12px;
-       font-family:monospace;z-index:9999;box-shadow:0 0 10px rgba(0,229,255,0.5);display:none;">
-    <div>📍 <b>Lat:</b> — | <b>Lng:</b> —</div>
-    <div>🏭 <b>Centro:</b> 10.9846, -74.8181</div>
-    <div>📏 <b>Distancia:</b> — km</div>
-    <div>✅ <b>Estado:</b> —</div>
-  </div>
-  <button id="btnGPS"
-          style="position:fixed;bottom:10px;right:10px;background:#00e5ff;color:#000;
-          border:none;padding:6px 10px;border-radius:8px;font-weight:bold;cursor:pointer;
-          z-index:10000;box-shadow:0 0 10px rgba(0,229,255,0.5);">
-    🛰️ GPS
-  </button>
 
   <script>
   "use strict";
@@ -462,100 +486,122 @@
   };
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
-  const dbInv = db.ref("inventarioPorTemplar");
+  const auth = firebase.auth();
 
-  /* ============ Seguridad inicial (si faltan nodos, crearlos) ============ */
-  async function inicializarSeguridad() {
-    const ref = firebase.database().ref("seguridad");
-    const snap = await ref.once("value");
-    if (snap.exists()) return;
-    const dataInicial = {
-      zonas: {
-        TecnoglassBarranquilla: {
-          nombre: "Tecnoglass S.A.S - Barranquilla",
-          lat: 11.0000,
-          lng: -74.8300,
-          radio_km: 8
-        }
-      },
-      usuarios: {
-        "gary_maldonado_tecnoglass_com": { autorizado: true, zona: "TecnoglassBarranquilla" },
-        "operario1_tecnoglass_com":     { autorizado: true, zona: "TecnoglassBarranquilla" },
-        "externo_gmail_com":            { autorizado: true, zona: "Libre" }
-      }
-    };
-    await ref.set(dataInicial);
-  }
-  inicializarSeguridad();
+  /* ============ Estado global ============ */
+  let usuarioCorreoActual = "";
+  let accesoPermitido = false;
+  let rolActual = "user"; // 'user' | 'admin'
 
-  // Nodo de permisos Planos si no existe
-  const permisosRef = firebase.database().ref("planosAcceso");
-  permisosRef.once("value", s => {
-    if (!s.exists()) {
-      permisosRef.set({
-        "gary_maldonado_tecnoglass_com": true,
-        "supervisor_tecnoglass_net": true,
-        "operario_tecnoglass_net": true
-      });
-    }
-  });
-
-  /* ==================== Variables globales ==================== */
   const $ = id => document.getElementById(id);
   const pad2 = n => String(n).padStart(2,'0');
   const hoyISO = () => new Date().toISOString().slice(0,10);
-  const toNum = v => isNaN(+v)?0:+v;
-
-  let usuarioCorreoActual = "";
-  let accesoPermitido = false; // solo controla Inventario/Planos
-  let currentCicloId = "";
-  let liveRef = null;
-
-  const API_URL = "https://optima.tecnoglass.net/api/alutions_production/reports-producion/Detalle-produccion";
-
-  /* ==================== Utilidades ==================== */
+  function horaAhoraHHMM(){ const d = new Date(); return pad2(d.getHours())+':'+pad2(d.getMinutes()); }
   function addHoursToHHMM(hhmm, plus=10){
     if(!hhmm) return "";
     const [h,m] = hhmm.split(':').map(Number);
     const dt = new Date(); dt.setHours(h||0,m||0,0,0); dt.setHours(dt.getHours()+plus);
     return pad2(dt.getHours())+':'+pad2(dt.getMinutes());
   }
-  function horaAhoraHHMM(){ const d = new Date(); return pad2(d.getHours())+':'+pad2(d.getMinutes()); }
-  function toAMPM(hhmm){
-    if(!hhmm) return '';
-    const [h,m] = hhmm.split(':').map(Number);
-    let hour = h % 12 || 12; const ampm = h >= 12 ? 'PM' : 'AM';
-    return `${hour}:${pad2(m)} ${ampm}`;
-  }
-  function turnoDetallado(){
-    const ahora = new Date();
-    const h = ahora.getHours();
-    let turno = (h >= 7 && h < 19) ? "T1" : "T2";
-    let fechaBase = new Date(ahora);
-    if (turno === "T2" && h < 7) { fechaBase.setDate(fechaBase.getDate()-1); }
-    return { turno, fechaISO: fechaBase.toISOString().slice(0,10) };
-  }
-  function fFecha(iso){ if(!iso) return ""; const d=new Date(iso); if(isNaN(d)) return ""; return d.toLocaleString("es-CO",{hour12:true}); }
-  function getPlanta(machine){
-    const m=(machine||"").trim().toUpperCase();
-    if(["PRENSA 7-1","PRENSA 7-2","PRENSA 7-3","PRENSA 7-6","PRENSA 7-7","PRENSA 7-8"].includes(m)) return "A1";
-    if(["PRENSA 7-4"].includes(m)) return "A2";
-    if(["PRENSA 7-5","PRENSA 7-9","PRENSA 7-10"].includes(m)) return "A3";
-    return "OTRA";
-  }
-  function isAdmin(c){ return (c||"").toLowerCase().includes("gary.maldonado"); }
+  function toAMPM(hhmm){ if(!hhmm) return ''; const [h,m] = hhmm.split(':').map(Number); let hour = h % 12 || 12; const ampm = h >= 12 ? 'PM' : 'AM'; return `${hour}:${pad2(m)} ${ampm}`; }
 
-  /* ==================== Geolocalización / Zona ==================== */
+  /* ==================== Auth (Google) ==================== */
+  const provider = new firebase.auth.GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
+
+  $("btnLogin").onclick = async () => {
+    try{
+      await auth.signInWithPopup(provider);
+    }catch(e){ alert("No se pudo iniciar sesión: "+(e.message||e)); }
+  };
+  $("btnLogout").onclick = async () => {
+    await auth.signOut();
+  };
+
+  auth.onAuthStateChanged(async (user)=>{
+    if(!user){
+      usuarioCorreoActual = "";
+      rolActual = "user";
+      $("lblUser").textContent = "—";
+      $("btnLogin").classList.remove("hidden");
+      $("btnLogout").classList.add("hidden");
+      ocultarTodoPorSeguridad();
+      return;
+    }
+    // usuario logueado
+    usuarioCorreoActual = (user.email||"").trim();
+    $("lblUser").textContent = usuarioCorreoActual;
+    $("btnLogin").classList.add("hidden");
+    $("btnLogout").classList.remove("hidden");
+
+    // 1) asegurar nodos base
+    await inicializarSeguridad();
+
+    // 2) validar usuario en seguridad/usuarios
+    const uKey = normalizarCorreo(usuarioCorreoActual);
+    const uSnap = await db.ref("seguridad/usuarios/"+uKey).once("value");
+    const u = uSnap.val();
+    if(!u || u.autorizado !== true){
+      alert("🚫 Este usuario no está autorizado por el administrador.");
+      ocultarTodoPorSeguridad();
+      return;
+    }
+    rolActual = u.rol||"user";
+
+    // 3) geocerca
+    const dentro = await verificarZonaPermitida(usuarioCorreoActual);
+    if(!dentro){
+      ocultarTodoPorSeguridad();
+      return;
+    }
+
+    // 4) habilitar menús
+    habilitarAccesoTotal();
+  });
+
+  function normalizarCorreo(c){
+    return (c||"").toLowerCase().replace(/\./g,"_").replace(/@/g,"_");
+  }
+
+  /* ==================== Seguridad/Inicialización ==================== */
+  async function inicializarSeguridad(){
+    const ref = db.ref("seguridad");
+    const snap = await ref.once("value");
+    if (snap.exists()) return;
+
+    const dataInicial = {
+      zonas: {
+        TecnoglassBarranquilla: {
+          nombre: "Tecnoglass S.A.S - Barranquilla",
+          lat: 11.0000,
+          lng: -74.8300,
+          radio_km: 2.0  // 🔹 más estricto por defecto
+        }
+      },
+      usuarios: {
+        "gary_maldonado_tecnoglass_com": { autorizado: true, rol:"admin", zona: "TecnoglassBarranquilla" },
+        "operario1_tecnoglass_com":     { autorizado: true, rol:"user",  zona: "TecnoglassBarranquilla" }
+      },
+      planosAcceso: {
+        "gary_maldonado_tecnoglass_com": true,
+        "operario1_tecnoglass_com": true
+      }
+    };
+    await ref.set(dataInicial);
+  }
+
+  /* ==================== Geolocalización / Geocerca ==================== */
   function obtenerUbicacionActual() {
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) return reject("Geolocalización no soportada");
       navigator.geolocation.getCurrentPosition(
         pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
         err => reject(err.message || "Error al obtener ubicación"),
-        { enableHighAccuracy: true, timeout: 7000 }
+        { enableHighAccuracy: true, timeout: 7000, maximumAge: 0 }
       );
     });
   }
+
   function distanciaKm(lat1, lon1, lat2, lon2) {
     const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -569,30 +615,26 @@
 
   async function verificarZonaPermitida(correoUsuario) {
     try {
-      const snap = await firebase.database().ref("seguridad").once("value");
-      const seguridad = snap.val() || {};
-      const usuarioKey = correoUsuario.toLowerCase().replace(/\./g, "_").replace(/@/g, "_");
-      const usuario = seguridad.usuarios?.[usuarioKey];
+      const sec = (await db.ref("seguridad").once("value")).val() || {};
+      const uKey = normalizarCorreo(correoUsuario);
+      const usuario = sec.usuarios?.[uKey];
 
-      if (!usuario) {
-        alert("🚫 Este usuario no está registrado en la base de seguridad.");
-        return false;
-      }
-      if (usuario.zona === "Libre") return true;
+      if (!usuario) { alert("🚫 Usuario no registrado en seguridad."); return false; }
 
-      const zona = seguridad.zonas?.[usuario.zona];
-      if (!zona) {
-        alert("⚠️ La zona asignada no existe en Firebase.");
-        return false;
-      }
+      if (usuario.zona === "Libre") return true; // acceso sin geocerca
+
+      const zona = sec.zonas?.[usuario.zona];
+      if (!zona) { alert("⚠️ La zona asignada no existe."); return false; }
+
       const pos = await obtenerUbicacionActual();
-      const distancia = distanciaKm(pos.lat, pos.lng, zona.lat, zona.lng);
-      const dentro = distancia <= zona.radio_km + 2; // tolerancia
+      const dist = distanciaKm(pos.lat, pos.lng, zona.lat, zona.lng);
+      const dentro = dist <= zona.radio_km; // 🔹 estricto (sin +2 km)
 
-      // Actualiza panel GPS si está abierto
-      actualizarPanel(pos.lat, pos.lng);
-
-      return dentro;
+      if (!dentro) {
+        alert(`🚫 Fuera del área (${dist.toFixed(2)} km > ${zona.radio_km} km).`);
+        return false;
+      }
+      return true;
     } catch (err) {
       console.error("Error verificando zona:", err);
       alert("⚠️ No se pudo verificar la zona: " + err);
@@ -602,166 +644,51 @@
 
   function habilitarAccesoTotal() {
     accesoPermitido = true;
-    localStorage.setItem("accesoPermitido", "true");
-    document.querySelectorAll(".drawer .opt.gate").forEach(o => {
-      o.style.opacity = "1";
-      o.style.pointerEvents = "auto";
+    document.querySelectorAll(".drawer .opt").forEach(o => {
+      // admin-only se controla aparte
+      if (!o.classList.contains("admin-only")) {
+        o.style.opacity = "1";
+        o.style.pointerEvents = "auto";
+      }
+    });
+    // mostrar opciones admin si corresponde
+    document.querySelectorAll(".admin-only").forEach(n=>{
+      n.style.display = (rolActual === "admin") ? "block" : "none";
+      n.style.opacity = "1";
+      n.style.pointerEvents = (rolActual === "admin") ? "auto" : "none";
     });
   }
-  function deshabilitarAcceso() {
+
+  function ocultarTodoPorSeguridad(){
     accesoPermitido = false;
-    localStorage.removeItem("accesoPermitido");
-    document.querySelectorAll(".drawer .opt.gate").forEach(o => {
-      o.style.opacity = "0.5";
-      o.style.pointerEvents = "none";
+    document.querySelectorAll(".drawer .opt").forEach(o=>{
+      o.style.opacity="0.5";
+      o.style.pointerEvents="none";
     });
-  }
-
-  /* ==================== Login: pedir correo solo 1ra vez ==================== */
-  window.addEventListener("DOMContentLoaded", async () => {
-    let correo = localStorage.getItem("correo_autorizado");
-    if (!correo) {
-      correo = prompt("Introduce tu correo corporativo (ej: gary.maldonado@tecnoglass.com):");
-      if (!correo) {
-        alert("⚠️ No se puede continuar sin correo autorizado.");
-        correo = "externo@gmail.com"; // fallback para no romper UI
-      }
-      localStorage.setItem("correo_autorizado", correo);
-    }
-    usuarioCorreoActual = correo;
-
-    // Verificar zona (no bloquea menús generales)
-    const dentro = isAdmin(correo) ? true : await verificarZonaPermitida(correo);
-    if (dentro) habilitarAccesoTotal(); else deshabilitarAcceso();
-
-    $('lblTurno').textContent = `${turnoDetallado().turno} (${turnoDetallado().fechaISO})`;
-
-    // Defaults Temperaturas
-    $('fecha').value = hoyISO();
-    $('horaInicio').value = horaAhoraHHMM();
-    $('horaFin').value = addHoursToHHMM($('horaInicio').value,10);
-    $('selActivos').innerHTML = '<option value="">-- Ninguno --</option>';
-
-    // Iniciar inventario solo si hay acceso permitido
-    if (accesoPermitido) { try { await cargarInventario(); } catch(e){} }
-  });
-
-  /* ==================== Botón Admin: actualizar zona ==================== */
-  async function actualizarZonaTecnoglass() {
-    let correo = localStorage.getItem("correo_autorizado") || "";
-    if (!isAdmin(correo)) {
-      alert("🚫 Solo administradores pueden actualizar la zona.");
-      return;
-    }
-    const confirmar = confirm("¿Actualizar zona TecnoglassBarranquilla en Firebase?");
-    if (!confirmar) return;
-    await firebase.database().ref("seguridad/zonas/TecnoglassBarranquilla").update({
-      lat: 11.0000, lng: -74.8300, radio_km: 8
+    document.querySelectorAll(".admin-only").forEach(n=>{
+      n.style.display="none";
     });
-    alert("✅ Zona TecnoglassBarranquilla actualizada correctamente.");
-  }
-  window.actualizarZonaTecnoglass = actualizarZonaTecnoglass;
-
-  /* ==================== Drawer ==================== */
-  const drawer = document.getElementById("drawer");
-  const mask   = document.getElementById("drawerMask");
-  function openDrawer(){ drawer.classList.add("open"); mask.style.display="block"; }
-  function closeDrawer(){ drawer.classList.remove("open"); mask.style.display="none"; }
-
-  $('btnMenu').addEventListener('click', async ()=>{
-    openDrawer();
-    // Revalidar acceso sin bloquear acciones
-    const correo = localStorage.getItem("correo_autorizado");
-    if (correo) {
-      const dentro = isAdmin(correo) ? true : await verificarZonaPermitida(correo);
-      if (dentro) habilitarAccesoTotal(); else deshabilitarAcceso();
-    }
-  });
-  $('btnCloseDrawer').addEventListener('click', closeDrawer);
-  $('drawerMask').addEventListener('click', closeDrawer);
-
-  document.querySelectorAll(".drawer .opt").forEach(opt=>{
-    opt.addEventListener("click", ()=>{
-      const target = opt.dataset.target;
-      if (target === "temperaturas") {
-        mostrarVista("temperaturas");
-      } else if (target === "inventario") {
-        if (!accesoPermitido) { alert("🚫 Fuera de zona o no autorizado."); return; }
-        mostrarVista("inventario");
-      } else if (target === "planos") {
-        if (!accesoPermitido) { alert("🚫 Fuera de zona o no autorizado."); return; }
-        mostrarVista("planos");
-        verificarAccesoPlanos();
-      }
-    });
-  });
-
-  function mostrarVista(vista) {
-    ["view-temperaturas","view-inventario","view-planos","viewTabla"].forEach(id=>$(id).classList.add("hidden"));
-    $("view-" + vista).classList.remove("hidden");
-    $("topTitle").textContent =
-      vista === "temperaturas" ? "Registro de Temperaturas" :
-      vista === "inventario"   ? "Inventario Por Templar" :
-      "Consulta de Planos";
-    setTimeout(closeDrawer, 120);
+    // Mostrar la vista por defecto (temperaturas) pero sin navegar a inventario/planos/admin
+    mostrarVista("temperaturas");
   }
 
-  /* ==================== GPS ==================== */
-  let centro = { lat: 11.0000, lng: -74.8300, radio_km: 8 };
-  firebase.database().ref("seguridad/zonas/TecnoglassBarranquilla").on("value", snap => {
-    if (snap.exists()) centro = snap.val();
-  });
+  /* ==================== TEMPERATURAS ==================== */
+  const dbInv = db.ref("inventarioPorTemplar");
+  let currentCicloId = ""; let liveRef = null;
 
-  function actualizarPanel(lat, lng) {
-    const panel = $('panelGPS');
-    const dist = distanciaKm(lat, lng, centro.lat, centro.lng);
-    const dentro = dist <= (centro.radio_km + 2);
-    panel.innerHTML = `
-      <div>📍 <b>Lat:</b> ${lat.toFixed(5)} | <b>Lng:</b> ${lng.toFixed(5)}</div>
-      <div>🏭 <b>Centro:</b> ${centro.lat.toFixed(4)}, ${centro.lng.toFixed(4)}</div>
-      <div>📏 <b>Distancia:</b> ${dist.toFixed(2)} km</div>
-      <div>${dentro ? "✅ <b>Dentro del área</b>" : "🚫 <b>Fuera del área</b>"}</div>
-    `;
-  }
-  function iniciarGPS() {
-    if (!navigator.geolocation) {
-      $('panelGPS').innerHTML = "⚠️ Geolocalización no soportada";
-      return;
-    }
-    navigator.geolocation.watchPosition(
-      pos => {
-        const { latitude: lat, longitude: lng } = pos.coords;
-        actualizarPanel(lat, lng);
-        const dist = distanciaKm(lat, lng, centro.lat, centro.lng);
-        const dentro = dist <= (centro.radio_km + 2);
-        if (!dentro && accesoPermitido) deshabilitarAcceso();
-      },
-      err => { $('panelGPS').innerHTML = "❌ Error GPS: " + err.message; },
-      { enableHighAccuracy: true, timeout: 10000 }
-    );
-  }
-  $('btnGPS').addEventListener('click', ()=>{
-    const panel = $('panelGPS');
-    if (panel.style.display === "none") { panel.style.display="block"; iniciarGPS(); }
-    else { panel.style.display="none"; }
-  });
+  $('fecha').value = hoyISO();
+  $('horaInicio').value = horaAhoraHHMM();
+  $('horaFin').value = addHoursToHHMM($('horaInicio').value,10);
+  $('horno').value = ''; $('turno').value = ''; $('operarioInicio').value = '';
+  $('selActivos').innerHTML = '<option value="">-- Ninguno --</option>';
 
-  /* ==================== Cambiar correo ==================== */
-  function cambiarCorreo() {
-    localStorage.removeItem("correo_autorizado");
-    localStorage.removeItem("accesoPermitido");
-    alert("🔄 Correo eliminado. Recarga la página para ingresar uno nuevo.");
-    location.reload();
-  }
-  window.cambiarCorreo = cambiarCorreo;
-
-  /* ==================== Temperaturas ==================== */
   function bindDeletes(){
     document.querySelectorAll('#tbody .del').forEach(btn=>{
       btn.onclick = ()=> btn.closest('tr').remove();
     });
   }
   bindDeletes();
+
   $('btnAgregarFila').onclick = ()=>{
     const now = horaAhoraHHMM();
     const tr = document.createElement('tr');
@@ -832,23 +759,16 @@
       const arr=[];
       snap.forEach(ch=>{
         const v=ch.val()||{};
-        arr.push({
-          hora: v.hora || horaAhoraHHMM(),
-          zona1: v.zona1 ?? '',
-          zona2: v.zona2 ?? '',
-          zona3: v.zona3 ?? '',
-          zona4: v.zona4 ?? '',
-          setPoint: v.setPoint ?? ''
-        });
+        arr.push({ hora: v.hora || horaAhoraHHMM(), zona1: v.zona1 ?? '', zona2: v.zona2 ?? '', zona3: v.zona3 ?? '', zona4: v.zona4 ?? '', setPoint: v.setPoint ?? '' });
       });
       arr.sort((a,b)=>a.hora.localeCompare(b.hora));
 
       chart.data.labels = arr.map(r => toAMPM(r.hora));
-      chart.data.datasets[0].data = arr.map(r => (r.zona1!=='' && r.zona1!=null && !isNaN(r.zona1)) ? Number(r.zona1) : null);
-      chart.data.datasets[1].data = arr.map(r => (r.zona2!=='' && r.zona2!=null && !isNaN(r.zona2)) ? Number(r.zona2) : null);
-      chart.data.datasets[2].data = arr.map(r => (r.zona3!=='' && r.zona3!=null && !isNaN(r.zona3)) ? Number(r.zona3) : null);
-      chart.data.datasets[3].data = arr.map(r => (r.zona4!=='' && r.zona4!=null && !isNaN(r.zona4)) ? Number(r.zona4) : null);
-      chart.data.datasets[4].data = arr.map(r => (r.setPoint!=='' && r.setPoint!=null && !isNaN(r.setPoint)) ? Number(r.setPoint) : null);
+      chart.data.datasets[0].data = arr.map(r => (r.zona1!=='' && !isNaN(r.zona1)) ? Number(r.zona1) : null);
+      chart.data.datasets[1].data = arr.map(r => (r.zona2!=='' && !isNaN(r.zona2)) ? Number(r.zona2) : null);
+      chart.data.datasets[2].data = arr.map(r => (r.zona3!=='' && !isNaN(r.zona3)) ? Number(r.zona3) : null);
+      chart.data.datasets[3].data = arr.map(r => (r.zona4!=='' && !isNaN(r.zona4)) ? Number(r.zona4) : null);
+      chart.data.datasets[4].data = arr.map(r => (r.setPoint!=='' && !isNaN(r.setPoint)) ? Number(r.setPoint) : null);
       chart.update();
 
       const tbody = $('tbody');
@@ -895,48 +815,31 @@
     const horaFin = $('horaFin').value || addHoursToHHMM(horaInicio,10);
     const operarioInicio = $('operarioInicio').value.trim();
 
-    if(!horno || !fecha || !turno){
-      alert('⚠️ Debes seleccionar Horno, Fecha y Turno antes de iniciar.');
-      return;
-    }
+    if(!horno || !fecha || !turno){ alert('⚠️ Debes seleccionar Horno, Fecha y Turno.'); return; }
     const snapshot = await db.ref('ciclosActivos').once('value');
     let duplicado = false;
     snapshot.forEach(ch=>{
       const meta = ch.val().meta || {};
-      if(meta.horno===horno && meta.fecha===fecha && meta.turno===turno){
-        duplicado = true;
-      }
+      if(meta.horno===horno && meta.fecha===fecha && meta.turno===turno){ duplicado = true; }
     });
-    if(duplicado){
-      alert('🚫 Ya existe un ciclo activo para este Horno, Fecha y Turno.');
-      return;
-    }
+    if(duplicado){ alert('🚫 Ya existe un ciclo activo para este Horno, Fecha y Turno.'); return; }
 
     const meta = { horno, fecha, turno, horaInicio, horaFin, operarioInicio };
     const newRef = await db.ref('ciclosActivos').push({ meta, lecturas: {} });
     await cargarActivosSelect();
     $('selActivos').value = newRef.key;
     attachLive(newRef.key);
-    alert('✅ Ciclo iniciado correctamente.');
+    alert('✅ Ciclo iniciado.');
   });
 
   $('btnGuardar').addEventListener('click', async ()=> {
-    if(!currentCicloId){
-      alert('⚠️ Primero inicia o selecciona un ciclo activo.');
-      return;
-    }
+    if(!currentCicloId){ alert('⚠️ Primero inicia o selecciona un ciclo.'); return; }
     const rows = Array.from(document.querySelectorAll('#tbody tr'));
-    if(rows.length === 0){
-      alert('No hay lecturas para guardar.');
-      return;
-    }
+    if(rows.length === 0){ alert('No hay lecturas.'); return; }
     const refLecturas = db.ref(`ciclosActivos/${currentCicloId}/lecturas`);
     const snap = await refLecturas.once('value');
     const existentes = {};
-    snap.forEach(ch => {
-      const val = ch.val();
-      if(val && val.hora) existentes[val.hora] = ch.key;
-    });
+    snap.forEach(ch => { const val = ch.val(); if(val && val.hora) existentes[val.hora] = ch.key; });
 
     const ops = [];
     for(const tr of rows){
@@ -953,20 +856,14 @@
       if(existentes[hora]) ops.push(refLecturas.child(existentes[hora]).set(data));
       else ops.push(refLecturas.push(data));
     }
-    if(ops.length === 0){
-      alert('No hay lecturas válidas.');
-      return;
-    }
+    if(ops.length === 0){ alert('No hay lecturas válidas.'); return; }
     await Promise.all(ops);
-    alert('✅ Lecturas guardadas o actualizadas correctamente.');
+    alert('✅ Lecturas guardadas/actualizadas.');
   });
 
   $('btnFinalizar').addEventListener('click', async ()=> {
-    if(!currentCicloId){
-      alert('Selecciona o inicia primero un ciclo activo.');
-      return;
-    }
-    const horaFinPrompt = prompt('Hora fin del ciclo (HH:MM):', $('horaFin').value || horaAhoraHHMM());
+    if(!currentCicloId){ alert('Selecciona o inicia un ciclo.'); return; }
+    const horaFinPrompt = prompt('Hora fin (HH:MM):', $('horaFin').value || horaAhoraHHMM());
     if(horaFinPrompt === null) return;
     const operarioFin = prompt('Operario que finaliza:', '');
     if(operarioFin === null) return;
@@ -974,7 +871,7 @@
 
     const snap = await db.ref(`ciclosActivos/${currentCicloId}`).once('value');
     const node = snap.val();
-    if(!node){ alert('No se encontró el ciclo activo.'); return; }
+    if(!node){ alert('No se encontró el ciclo.'); return; }
 
     node.meta = node.meta || {};
     node.meta.horaFin = horaFinPrompt;
@@ -1000,10 +897,30 @@
     $('horaFin').value = addHoursToHHMM($('horaInicio').value,10);
     $('operarioInicio').value = '';
     await cargarActivosSelect();
-    alert('✅ Ciclo finalizado y movido a históricos.');
+    alert('✅ Ciclo finalizado → históricos.');
   });
 
-  /* ==================== Inventario por templar ==================== */
+  /* ==================== INVENTARIO ==================== */
+  const API_URL = "https://optima.tecnoglass.net/api/alutions_production/reports-producion/Detalle-produccion";
+  function turnoDetallado(){
+    const ahora = new Date(); const h = ahora.getHours();
+    let turno = (h >= 7 && h < 19) ? "T1" : "T2";
+    let fechaBase = new Date(ahora); if (turno === "T2" && h < 7) { fechaBase.setDate(fechaBase.getDate()-1); }
+    return { turno, fechaISO: fechaBase.toISOString().slice(0,10) };
+  }
+  function obtenerTurnoActual(){ return turnoDetallado().turno; }
+  function fechaISO(){ return new Date().toISOString().slice(0,10); }
+  $('lblTurno').textContent = `${turnoDetallado().turno} (${turnoDetallado().fechaISO})`;
+  const toNum = v => isNaN(+v)?0:+v;
+  function fFecha(iso){ if(!iso) return ""; const d=new Date(iso); if(isNaN(d)) return ""; return d.toLocaleString("es-CO",{hour12:true}); }
+  function getPlanta(machine){
+    const m=(machine||"").trim().toUpperCase();
+    if(["PRENSA 7-1","PRENSA 7-2","PRENSA 7-3","PRENSA 7-6","PRENSA 7-7","PRENSA 7-8"].includes(m)) return "A1";
+    if(["PRENSA 7-4"].includes(m)) return "A2";
+    if(["PRENSA 7-5","PRENSA 7-9","PRENSA 7-10"].includes(m)) return "A3";
+    return "OTRA";
+  }
+
   let basePendientes = [];
   let maquinasSet = new Set();
   let vista = "pendientes";
@@ -1024,8 +941,6 @@
     const json=await resp.json(); let det=[]; if(json?.data) json.data.forEach(d=>{ if(Array.isArray(d.DetalleProduccion)) det=det.concat(d.DetalleProduccion); });
     return det;
   }
-  function fechaISO(){ return new Date().toISOString().slice(0,10); }
-
   async function cargarPendientes(){
     const fi="2025-01-01", ff=fechaISO();
     const [extrude,tmpin] = await Promise.all([fetchDep(fi,ff,"EXTRUDE"), fetchDep(fi,ff,"TMP-IN")]);
@@ -1037,8 +952,7 @@
       exMap[k].pzs += toNum(e.PcProd);
       exMap[k].kg  += toNum(e.KgProd);
       if(!exMap[k].ultima || new Date(e.dt)>new Date(exMap[k].ultima)){
-        exMap[k].ultima = e.dt;
-        exMap[k].mac    = (e.MachineName||"-").trim();
+        exMap[k].ultima = e.dt; exMap[k].mac = (e.MachineName||"-").trim();
       }
     });
     tmpin.forEach(t=>{
@@ -1048,8 +962,7 @@
       tmMap[k].kg  += toNum(t.KgProd);
     });
 
-    basePendientes = [];
-    maquinasSet.clear();
+    basePendientes = []; maquinasSet.clear();
 
     Object.entries(exMap).forEach(([k,v])=>{
       const tm = tmMap[k] || {pzs:0,kg:0};
@@ -1068,16 +981,6 @@
     popularSelectMaquinas();
     $('ultimaInfoInv').textContent = "Última actualización: "+ new Date().toLocaleString("es-CO",{hour12:true});
     render();
-  }
-
-  async function cargarInventario() {
-    if (!usuarioCorreoActual) {
-      alert("⚠️ Ingresa tu correo primero (opción Cambiar usuario).");
-      return;
-    }
-    const dentroZona = isAdmin(usuarioCorreoActual) ? true : await verificarZonaPermitida(usuarioCorreoActual);
-    if (!dentroZona) { alert("🚫 Fuera de zona permitida."); return; }
-    await cargarPendientes();
   }
 
   function popularSelectMaquinas(){
@@ -1169,6 +1072,7 @@
     const cont = $('listPend'); cont.innerHTML="";
     const {turno, fechaISO: fBase} = turnoDetallado();
     const revisadosTurno = cacheRevisadosTurno[`${fBase}_${turno}`] || {};
+
     const baseNoRevisados = basePendientes.filter(r => !revisadosTurno[r.clave]);
     const arr = filtrarOrdenar(baseNoRevisados);
 
@@ -1205,7 +1109,8 @@
           guardarRevisado(r,{comentario:texto.trim(), ok:false});
         }
         if (act === "ok") {
-          if (!confirm("¿Confirmar revisión OK?")) return;
+          const confirmacion = confirm("¿Confirmar revisión OK?");
+          if (!confirmacion) return;
           ev.target.classList.add('confirmed');
           guardarRevisado(r, { comentario: null, ok: true });
         }
@@ -1257,17 +1162,8 @@
       `;
       el.addEventListener("click",(ev)=>{
         const act=ev.target?.dataset?.act;
-        if(act==="editar"){
-          const nuevo = prompt("Editar comentario:", it.comentario || "");
-          if(nuevo===null) return;
-          const {turno, fechaISO: fBase} = turnoDetallado();
-          dbInv.child("revisados").child(fBase).child(turno).child(r.clave)
-            .update({ comentario: (nuevo.trim()? nuevo.trim(): null) });
-        }
-        if(act==="volver"){
-          const {turno, fechaISO: fBase} = turnoDetallado();
-          dbInv.child("revisados").child(fBase).child(turno).child(r.clave).remove();
-        }
+        if(act==="editar") editarComentario(r.clave);
+        if(act==="volver") regresarAPendientes(r.clave);
         if(act==="detalle") abrirModal(r, "revisado");
       });
       frag.appendChild(el);
@@ -1276,8 +1172,7 @@
   }
 
   async function renderHistorial(){
-    const cont = $('listHist'); 
-    cont.innerHTML = "";
+    const cont = $('listHist'); cont.innerHTML = "";
     const root = await dbInv.child("revisados").once("value");
     const registros = [];
 
@@ -1309,10 +1204,7 @@
     });
 
     let arr = registros.filter(x=>{
-      const obj = {
-        planta:x.planta, ultimaMachine:x.ultimaMachine, clave:x.clave,
-        Part:x.part, descrip:x.descrip, kgPend:x.kgPend, ultimaFechaRaw:x.fechaPend
-      };
+      const obj = { planta:x.planta, ultimaMachine:x.ultimaMachine, clave:x.clave, Part:x.part, descrip:x.descrip, kgPend:x.kgPend, ultimaFechaRaw:x.fechaPend };
       return filtrarOrdenar([obj]).length>0;
     }).sort((a,b)=> new Date(b.fechaMarcado||b.fechaPend) - new Date(a.fechaMarcado||a.fechaPend));
 
@@ -1326,6 +1218,7 @@
       const el=document.createElement("div");
       el.className="inv-card";
       const estado = x.comentario ? `💬 ${x.comentario}` : (x.ok ? "✅ OK" : "—");
+
       el.innerHTML = `
         <div class="inv-head">
           <div class="m">${x.clave}</div>
@@ -1358,23 +1251,20 @@
   }
 
   function render(){
-    if(vista==="pendientes"){ 
+    if(vista==="pendientes"){
       $('listPend').classList.remove('hidden');
       $('listRevis').classList.add('hidden');
       $('listHist').classList.add('hidden');
-      $('viewTabla').classList.add('hidden');
-      renderPendientes(); 
-    } else if(vista==="revisados"){ 
+      renderPendientes();
+    } else if(vista==="revisados"){
       $('listPend').classList.add('hidden');
       $('listRevis').classList.remove('hidden');
       $('listHist').classList.add('hidden');
-      $('viewTabla').classList.add('hidden');
-      renderRevisados(); 
+      renderRevisados();
     } else {
       $('listPend').classList.add('hidden');
       $('listRevis').classList.add('hidden');
       $('listHist').classList.remove('hidden');
-      $('viewTabla').classList.add('hidden');
       renderHistorial();
     }
     actualizarTotales();
@@ -1383,28 +1273,32 @@
   function guardarRevisado(record,{comentario=null, ok=false}){
     const {turno, fechaISO: fBase} = turnoDetallado();
     const path = dbInv.child("revisados").child(fBase).child(turno).child(record.clave);
-    const payload = {
-      clave:record.clave,
-      record,
-      comentario: comentario && comentario.trim() ? comentario.trim() : null,
-      ok,
-      fechaOK: new Date().toISOString(),
-      turno
-    };
+    const payload = { clave:record.clave, record, comentario: comentario && comentario.trim() ? comentario.trim() : null, ok, fechaOK: new Date().toISOString(), turno };
     path.set(payload);
   }
+  function editarComentario(clave){
+    const {turno, fechaISO: fBase} = turnoDetallado();
+    const node = (cacheRevisadosTurno[`${fBase}_${turno}`]||{})[clave];
+    if(!node) return;
+    const nuevo = prompt("Editar comentario:", node.comentario || "");
+    if(nuevo===null) return;
+    dbInv.child("revisados").child(fBase).child(turno).child(clave).update({ comentario: (nuevo.trim()? nuevo.trim(): null) });
+  }
+  function regresarAPendientes(clave){
+    const {turno, fechaISO: fBase} = turnoDetallado();
+    dbInv.child("revisados").child(fBase).child(turno).child(clave).remove();
+  }
 
-  // Toggle Vista Tabla Pendientes
+  /* ===== Vista Tabla AGRUPADA ===== */
   let vistaTabla = false;
   $('btnVistaToggle').onclick = () => {
-    if (vista !== "pendientes") {
-      alert("🔹 La tabla agrupada está disponible en Pendientes.");
-      return;
-    }
     vistaTabla = !vistaTabla;
-    $('btnVistaToggle').textContent = vistaTabla ? '🃏 Vista Cards' : '📋 Vista Tabla';
-    if (vistaTabla) { $('viewTabla').classList.remove('hidden'); renderTablaAgrupada(); $('listPend').classList.add('hidden'); }
-    else { $('viewTabla').classList.add('hidden'); $('listPend').classList.remove('hidden'); }
+    $('btnVistaToggle').textContent = vistaTabla ? '🗂️ Vista Cards' : '📋 Vista Tabla';
+    $('viewTabla').classList.toggle('hidden', !vistaTabla);
+    $('listPend').classList.toggle('hidden', vistaTabla);
+    $('listRevis').classList.toggle('hidden', vistaTabla);
+    $('listHist').classList.toggle('hidden', vistaTabla);
+    if (vistaTabla) renderTablaAgrupada();
   };
   $('agrupacionTabla').onchange = renderTablaAgrupada;
   $('btnRecargarTabla').onclick = renderTablaAgrupada;
@@ -1417,28 +1311,15 @@
 
     const agr = $('agrupacionTabla').value; // 'part' o 'desc'
     const grupos = {};
-    arr.forEach(r => {
-      const key = agr === 'part' ? r.Part : r.descrip;
-      if (!grupos[key]) grupos[key] = [];
-      grupos[key].push(r);
-    });
+    arr.forEach(r => { const key = agr === 'part' ? r.Part : r.descrip; if (!grupos[key]) grupos[key] = []; grupos[key].push(r); });
 
-    const cont = $('tablaAgrupada');
-    cont.innerHTML = '';
-
+    const cont = $('tablaAgrupada'); cont.innerHTML = '';
     Object.entries(grupos).forEach(([key, items]) => {
-      const groupDiv = document.createElement('div');
-      groupDiv.className = 'grupoTabla';
-
-      const titulo = document.createElement('h3');
-      titulo.textContent = key;
-      titulo.className = 'titulo-grupo';
-      groupDiv.appendChild(titulo);
-
+      const groupDiv = document.createElement('div'); groupDiv.className = 'grupoTabla';
+      const titulo = document.createElement('h3'); titulo.textContent = key; titulo.className = 'titulo-grupo'; groupDiv.appendChild(titulo);
       const colExtra = agr === 'part' ? 'Descripción' : 'Part';
 
-      const table = document.createElement('div');
-      table.className = 'tabla-scroll';
+      const table = document.createElement('div'); table.className = 'tabla-scroll';
       table.innerHTML = `
         <table class="tabla-grupo">
           <thead>
@@ -1474,15 +1355,10 @@
             <button class="btn-mini warn" data-act="coment">💬</button>
           </td>
         `;
-        tr.querySelector('[data-act="ok"]').onclick = (ev) => {
-          if (!confirm("¿Confirmar revisión OK?")) return;
-          ev.target.classList.add('confirmed');
-          guardarRevisado(r, { ok: true });
-          tr.style.opacity = '0.5';
-        };
-        tr.querySelector('[data-act="coment"]').onclick = () => {
-          abrirModal(r, 'pendiente');
-        };
+        const btnOk = tr.querySelector('[data-act="ok"]');
+        const btnCom = tr.querySelector('[data-act="coment"]');
+        btnOk.onclick = (ev) => { if(!confirm("¿Confirmar revisión OK?")) return; ev.target.classList.add('confirmed'); guardarRevisado(r, { ok: true }); tr.style.opacity='0.5'; };
+        btnCom.onclick = () => { abrirModal(r,'pendiente'); };
         tbody.appendChild(tr);
       });
 
@@ -1491,23 +1367,15 @@
     });
   }
 
-  // Filtros y controles Inventario
-  $('btnActualizarInv').onclick = async ()=>{
-    const b=$('btnActualizarInv'); b.disabled=true; const old=b.textContent; b.textContent="Cargando...";
-    try { await cargarInventario(); } catch(e){ alert("Error: "+(e.message||e)); }
-    b.disabled=false; b.textContent=old;
-  };
-  ['fPlanta','fMaquina','fOrden'].forEach(id=> $(id).addEventListener('change', render));
-  $('fBuscar').addEventListener('input', render);
-
-  // Tabs
-  $('tabPend').onclick = ()=>{ vista="pendientes"; ['tabPend','tabRevis','tabHist'].forEach(i=>$(i).classList.remove('active')); $('tabPend').classList.add('active'); render(); };
-  $('tabRevis').onclick = ()=>{ vista="revisados"; ['tabPend','tabRevis','tabHist'].forEach(i=>$(i).classList.remove('active')); $('tabRevis').classList.add('active'); render(); };
-  $('tabHist').onclick = ()=>{ vista="historial"; ['tabPend','tabRevis','tabHist'].forEach(i=>$(i).classList.remove('active')); $('tabHist').classList.add('active'); render(); };
-
-  /* ==================== Modal Inventario ==================== */
+  /* ===== Modal / Trazabilidad y Planos ===== */
   let modalData = null;
   function abrirModal(record, origen){
+    // Modo Inventario
+    $("kvPlano").style.display = "none";
+    $("kvInventario").style.display = "grid";
+    $("actionsInv").style.display = (origen==="pendiente" || origen==="revisado") ? "flex" : "none";
+    $("mdTrace").style.display = "block";
+
     modalData = {record, origen};
     $('mdTitulo').textContent = `SOITEM ${record.clave}`;
     $('mdSoitem').textContent = record.clave;
@@ -1521,7 +1389,6 @@
     $('mdPlanta').textContent = record.planta || "-";
     $('mdFec').textContent    = fFecha(record.ultimaFechaRaw);
     $('mdCmt').value          = "";
-
     cargarTrazabilidad(record.clave).then(html=>{ $('mdTrace').innerHTML = html; });
 
     $('btnOk').style.display        = (origen==="pendiente") ? "inline-block" : "none";
@@ -1529,7 +1396,20 @@
 
     $('modalInv').style.display = "flex";
   }
-  function cerrarModal(){ $('modalInv').style.display = "none"; modalData=null; }
+  function abrirPlanoEnModal(nombre, link){
+    $("kvInventario").style.display = "none";
+    $("actionsInv").style.display = "none";
+    $("mdTrace").style.display = "none";
+    $("kvPlano").style.display = "block";
+    $("mdTitulo").textContent = nombre;
+    // intentar reducción de UI compartida en Drive/PDF
+    const safeLink = link.includes("drive.google.com")
+      ? (link + (link.includes("?") ? "&" : "?") + "embedded=true&rm=minimal")
+      : link;
+    $("framePlano").src = safeLink;
+    $('modalInv').style.display = "flex";
+  }
+  function cerrarModal(){ $('modalInv').style.display = "none"; modalData=null; $("framePlano").src="about:blank"; }
   $('btnCloseInv').onclick = cerrarModal;
 
   $('btnGuardarCmt').onclick = ()=>{
@@ -1538,25 +1418,15 @@
     if(modalData.origen==="pendiente"){
       if(!cmt.trim()) return;
       guardarRevisado(modalData.record, {comentario:cmt.trim(), ok:false});
-    }else if(modalData.origen==="revisado"){
+    } else if(modalData.origen==="revisado"){
       const {turno, fechaISO: fBase} = turnoDetallado();
       const clave = modalData.record.clave;
-      dbInv.child("revisados").child(fBase).child(turno).child(clave)
-        .update({comentario: cmt.trim()? cmt.trim() : null});
+      dbInv.child("revisados").child(fBase).child(turno).child(clave).update({comentario: cmt.trim()? cmt.trim() : null});
     }
     $('mdCmt').value="";
   };
-  $('btnOk').onclick = ()=>{
-    if(!modalData) return;
-    guardarRevisado(modalData.record, {comentario: ($('mdCmt').value||"").trim()||null, ok:true});
-    cerrarModal();
-  };
-  $('btnRegresar').onclick = ()=>{
-    if(!modalData) return;
-    const {turno, fechaISO: fBase} = turnoDetallado();
-    dbInv.child("revisados").child(fBase).child(turno).child(modalData.record.clave).remove();
-    cerrarModal();
-  };
+  $('btnOk').onclick = ()=>{ if(!modalData) return; guardarRevisado(modalData.record, {comentario: ($('mdCmt').value||"").trim()||null, ok:true}); cerrarModal(); };
+  $('btnRegresar').onclick = ()=>{ if(!modalData) return; regresarAPendientes(modalData.record.clave); cerrarModal(); };
 
   async function cargarTrazabilidad(clave){
     const root = await dbInv.child("revisados").once("value");
@@ -1564,66 +1434,30 @@
     root.forEach(diaSnap=>{
       const fecha = diaSnap.key;
       diaSnap.forEach(turnoSnap=>{
-        const turno = turnoSnap.key;
         const node = turnoSnap.child(clave);
         if(node.exists()){
           const v = node.val();
-          html.push(`<div>📌 <b>${fecha}</b> · <b>${turno}</b> · ${fFecha(v.fechaOK)} · ${v.comentario?('💬 '+v.comentario):'✅ OK'}</div>`);
+          html.push(`<div>📌 <b>${fecha}</b> · <b>${turnoSnap.key}</b> · ${fFecha(v.fechaOK)} · ${v.comentario?('💬 '+v.comentario):'✅ OK'}</div>`);
         }
       });
     });
     return html.length ? html.join("") : "(sin registros)";
   }
 
-  /* ==================== Planos ==================== */
-  let planosData = [];
-  let filtrados = [];
-  let indexRender = 0;
-  const PAGE_SIZE = 200;
+  /* ===== Planos: tabla + modal ===== */
+  let planosData = []; let filtrados = []; let indexRender = 0; const PAGE_SIZE = 200;
   const PLANOS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTlsUCkIwRggf4CcUkfq239hl5UKRE86B3FycdB14sgIs5OIeFuqKQjlhzezzNNWJa6WEPy_URJtDB_/pub?gid=1893719309&single=true&output=csv";
   const CACHE_KEY = "planosCacheCSV";
 
-  async function verificarAccesoPlanos() {
-    try {
-      let correo = localStorage.getItem("correo_autorizado");
-      if (!correo) {
-        correo = prompt("Introduce tu correo corporativo:");
-        if (!correo) { alert("🚫 Acceso cancelado."); ocultarVistaPlanos(); return; }
-        localStorage.setItem("correo_autorizado", correo);
-      }
-      usuarioCorreoActual = correo;
-      const dentro = isAdmin(correo) ? true : await verificarZonaPermitida(correo);
-      if (!dentro) { ocultarVistaPlanos(); accesoPermitido=false; return; }
-
-      const usuarioKey = correo.toLowerCase().replace(/\./g, "_").replace(/@/g, "_");
-      const snap = await firebase.database().ref("seguridad/usuarios/" + usuarioKey).once("value");
-      const usuario = snap.val();
-
-      if (!usuario || usuario.autorizado !== true) {
-        alert("🚫 No estás autorizado para acceder a los módulos.");
-        ocultarVistaPlanos(); accesoPermitido=false; return;
-      }
-      accesoPermitido = true; localStorage.setItem("accesoPermitido","true");
-      document.querySelectorAll(".drawer .opt.gate").forEach(o=>o.style.opacity="1");
-
-      $("view-planos").classList.remove("hidden");
-      $("topTitle").textContent = "Consulta de Planos";
-      cargarPlanos();
-    } catch (err) {
-      console.error("Error verificando acceso:", err);
-      alert("⚠️ Error verificando acceso a planos.");
-      accesoPermitido = false;
-      ocultarVistaPlanos();
-    }
-  }
-  function ocultarVistaPlanos() {
-    $("view-planos").classList.add("hidden");
-    $("topTitle").textContent = "Acceso restringido";
+  function parseCSV(csv) {
+    const rows = csv.trim().split("\n").map(r => r.split(","));
+    const headers = rows[0].map(h => h.trim());
+    return rows.slice(1).map(r => { const o = {}; headers.forEach((h, i) => o[h] = (r[i] || "").trim()); return o; });
   }
 
   async function cargarPlanos() {
     const cuerpo = $("tbodyPlanos");
-    cuerpo.innerHTML = "<tr><td colspan='2' style='padding:10px;'>Cargando planos...</td></tr>";
+    cuerpo.innerHTML = "<tr><td colspan='2' style='padding:10px;text-align:center'>Cargando planos...</td></tr>";
 
     const cache = localStorage.getItem(CACHE_KEY);
     if (cache) planosData = parseCSV(cache);
@@ -1635,29 +1469,23 @@
         localStorage.setItem(CACHE_KEY, csv);
         planosData = parseCSV(csv);
       }
-    } catch (err) {
-      console.warn("Sin conexión, usando cache local.");
-    }
+    } catch (err) { console.warn("Sin conexión, usando cache local."); }
+
     renderPlanos();
   }
-  function parseCSV(csv) {
-    const rows = csv.trim().split("\n").map(r => r.split(","));
-    const headers = rows[0].map(h => h.trim());
-    return rows.slice(1).map(r => {
-      const o = {}; headers.forEach((h, i) => o[h] = (r[i] || "").trim()); return o;
-    });
-  }
+
   function renderPlanos(reset = true) {
     const cuerpo = $("tbodyPlanos");
+
     if (reset) {
       const q = ($("buscarPlano").value || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
       filtrados = planosData.filter(p => {
         const nombre = (p.NOMBRE || p.Nombre || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         return nombre.includes(q);
       });
-      indexRender = 0;
-      cuerpo.innerHTML = "";
+      indexRender = 0; cuerpo.innerHTML = "";
     }
+
     const next = filtrados.slice(indexRender, indexRender + PAGE_SIZE);
     const frag = document.createDocumentFragment();
 
@@ -1668,15 +1496,19 @@
       fila.className = "fila-plano";
       fila.innerHTML = `
         <td class="celda-nombre">${nombre || "Sin nombre"}</td>
-        <td class="celda-link"><a href="${link}" target="_blank">Abrir</a></td>
+        <td class="celda-link"><a href="javascript:void(0)">Abrir</a></td>
       `;
-      fila.onclick = () => { if (link && link !== "#") window.open(link, "_blank"); };
+      fila.onclick = () => {
+        if(!accesoPermitido){ alert("🚫 Fuera de zona o no autorizado."); return; }
+        if (link && link !== "#") abrirPlanoEnModal(nombre, link);
+      };
       frag.appendChild(fila);
     });
 
     cuerpo.appendChild(frag);
     indexRender += PAGE_SIZE;
   }
+
   $("tablaPlanos").parentElement.onscroll = e => {
     const el = e.target;
     if (el.scrollTop + el.clientHeight >= el.scrollHeight - 30 && indexRender < filtrados.length) {
@@ -1685,6 +1517,118 @@
   };
   $("buscarPlano").oninput = () => renderPlanos(true);
   $("btnRecargarPlanos").onclick = cargarPlanos;
+
+  /* ==================== Navegación / Drawer ==================== */
+  const drawer = $("drawer"); const mask = $("drawerMask");
+  $("btnMenu").addEventListener("click", ()=>{ drawer.classList.add("open"); mask.style.display="block"; });
+  $("btnCloseDrawer").addEventListener("click", closeDrawer);
+  $("drawerMask").addEventListener("click", closeDrawer);
+  function closeDrawer(){ drawer.classList.remove("open"); mask.style.display="none"; }
+
+  document.querySelectorAll(".drawer .opt").forEach(opt=>{
+    opt.addEventListener("click", async ()=>{
+      const target = opt.dataset.target;
+      if (target === "temperaturas") { mostrarVista("temperaturas"); }
+      else if (target === "inventario") {
+        if (!accesoPermitido) return alert("🚫 No puedes acceder a Inventario.");
+        mostrarVista("inventario");
+      } else if (target === "planos") {
+        if (!accesoPermitido) return alert("🚫 No puedes acceder a Planos.");
+        mostrarVista("planos");
+        await verificarAccesoPlanos(); // valida zona + permisos
+      } else if (target === "admin") {
+        if (rolActual !== "admin") return;
+        mostrarVista("admin");
+      }
+      setTimeout(closeDrawer, 120);
+    });
+  });
+
+  function mostrarVista(v){
+    $("view-temperaturas").classList.add("hidden");
+    $("view-inventario").classList.add("hidden");
+    $("view-planos").classList.add("hidden");
+    $("view-admin").classList.add("hidden");
+
+    $("view-" + v).classList.remove("hidden");
+    $("topTitle").textContent =
+      v === "temperaturas" ? "Registro de Temperaturas" :
+      v === "inventario"   ? "Inventario Por Templar" :
+      v === "planos"       ? "Consulta de Planos" :
+      "Panel de Administrador";
+  }
+
+  async function verificarAccesoPlanos(){
+    if(!usuarioCorreoActual){ alert("Inicia sesión primero."); return; }
+    const dentro = await verificarZonaPermitida(usuarioCorreoActual);
+    if(!dentro){ alert("🚫 Fuera de zona Tecnoglass."); return; }
+    const uKey = normalizarCorreo(usuarioCorreoActual);
+    const allow = (await db.ref("seguridad/planosAcceso/"+uKey).once("value")).val();
+    if(!allow){ alert("🚫 Tu usuario no tiene permiso de Planos."); return; }
+    cargarPlanos();
+  }
+
+  /* ==================== ADMIN (usuarios y zona) ==================== */
+  $("btnAdmAgregar").onclick = async ()=>{
+    if(rolActual!=="admin"){ alert("Solo admin."); return; }
+    const correo = ($("admCorreo").value||"").trim().toLowerCase();
+    if(!correo){ alert("Correo requerido."); return; }
+    const rol = $("admRol").value || "user";
+    const zona = $("admZona").value || "TecnoglassBarranquilla";
+    const key = normalizarCorreo(correo);
+    await db.ref("seguridad/usuarios/"+key).set({ autorizado:true, rol, zona });
+    await db.ref("seguridad/planosAcceso/"+key).set(true);
+    alert("✅ Usuario agregado/actualizado.");
+  };
+
+  $("btnAdmEliminar").onclick = async ()=>{
+    if(rolActual!=="admin"){ alert("Solo admin."); return; }
+    const correo = ($("admCorreo").value||"").trim().toLowerCase();
+    if(!correo){ alert("Correo requerido."); return; }
+    const key = normalizarCorreo(correo);
+    await db.ref("seguridad/usuarios/"+key).remove();
+    await db.ref("seguridad/planosAcceso/"+key).remove();
+    alert("🗑️ Usuario eliminado.");
+  };
+
+  $("btnAdmZona").onclick = async ()=>{
+    if(rolActual!=="admin"){ alert("Solo admin."); return; }
+    const lat = parseFloat(($("admLat").value||"").trim());
+    const lng = parseFloat(($("admLng").value||"").trim());
+    const rad = parseFloat(($("admRad").value||"").trim());
+    if(isNaN(lat)||isNaN(lng)||isNaN(rad)){ alert("Valores inválidos."); return; }
+    await db.ref("seguridad/zonas/TecnoglassBarranquilla").update({ lat, lng, radio_km: rad });
+    alert("✅ Zona actualizada.");
+  };
+
+  /* ==================== Init por defecto ==================== */
+  window.addEventListener("DOMContentLoaded", ()=>{
+    // defaults temperaturas
+    $('fecha').value = hoyISO();
+    $('horaInicio').value = horaAhoraHHMM();
+    $('horaFin').value = addHoursToHHMM($('horaInicio').value,10);
+
+    // botones inventario
+    $('btnActualizarInv').onclick = async ()=>{
+      if(!accesoPermitido) return alert("🚫 Fuera de zona o no autorizado.");
+      await cargarPendientes();
+    };
+
+    // Tabs
+    $("tabPend").onclick = ()=>{ vista = "pendientes"; activarTab("tabPend"); render(); };
+    $("tabRevis").onclick = ()=>{ vista = "revisados"; activarTab("tabRevis"); render(); };
+    $("tabHist").onclick = ()=>{ vista = "historial"; activarTab("tabHist"); render(); };
+    ["fPlanta","fMaquina","fOrden"].forEach(id => $(id).addEventListener("change", render));
+    $("fBuscar").addEventListener("input", render);
+  });
+
+  function activarTab(id){
+    ["tabPend","tabRevis","tabHist"].forEach(t=>$(t).classList.remove("active"));
+    $(id).classList.add("active");
+  }
+
+  // Bloquear menú contextual (mitigación simple)
+  window.addEventListener("contextmenu", e=>{ e.preventDefault(); }, {passive:false});
 
   </script>
 </body>
