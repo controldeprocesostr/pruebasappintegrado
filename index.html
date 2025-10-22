@@ -1844,6 +1844,16 @@ if (!localStorage.getItem("accesoPermitido")) {
   console.log("✅ Acceso forzado habilitado (modo administrador)");
 }
 
+// ==================== 🔐 Activador automático de acceso (solo admin) ====================
+if (!localStorage.getItem("correo_autorizado")) {
+  localStorage.setItem("correo_autorizado", "gary.maldonado@tecnoglass.com");
+  console.log("📧 Correo administrador configurado automáticamente");
+}
+if (!localStorage.getItem("accesoPermitido")) {
+  localStorage.setItem("accesoPermitido", "true");
+  console.log("✅ Acceso forzado habilitado (modo administrador)");
+}
+
 // ==================== 🔑 Solicitar correo al iniciar si no está guardado ====================
 // ==================== 🔑 Verificación inicial de acceso ====================
 window.addEventListener("DOMContentLoaded", async () => {
@@ -1866,13 +1876,18 @@ window.addEventListener("DOMContentLoaded", async () => {
   // Verificar zona
   const dentro = await verificarZonaPermitida(correo);
 
-  if (dentro) {
-    accesoPermitido = true;
-    localStorage.setItem("accesoPermitido", "true");
+  // 🔧 Refuerzo de acceso visual
+  const habilitarMenus = () => {
     document.querySelectorAll(".drawer .opt").forEach(o => {
       o.style.opacity = "1";
       o.style.pointerEvents = "auto";
     });
+  };
+
+  if (dentro) {
+    accesoPermitido = true;
+    localStorage.setItem("accesoPermitido", "true");
+    habilitarMenus();
     console.log("✅ Acceso habilitado para:", correo);
   } else {
     accesoPermitido = false;
@@ -1884,8 +1899,13 @@ window.addEventListener("DOMContentLoaded", async () => {
       });
     console.warn("🚫 Usuario fuera de área o no autorizado.");
   }
-});
 
+  // 🔄 Forzar habilitación para el admin incluso si la zona no responde a tiempo
+  if (correo.includes("gary.maldonado@tecnoglass.com")) {
+    console.log("👑 Administrador detectado, acceso total garantizado");
+    habilitarMenus();
+  }
+});
 
   /* ===== Init Inventario ===== */
   
