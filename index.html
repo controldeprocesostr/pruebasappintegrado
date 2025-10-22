@@ -64,6 +64,7 @@
     .drawer .opt{background:#121212;border:1px solid var(--soft);padding:12px;border-radius:10px;cursor:pointer}
     .drawer .opt:hover{filter:brightness(1.05)}
     .drawer small{color:#9aa9b1}
+    .admin-only{display:none}
 
     /* Inventario */
     .inv-toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
@@ -162,9 +163,17 @@
     .celda-link{ padding:8px 10px; border-bottom:1px solid #333; }
     .celda-link a{ color:#00e5ff; text-decoration:none; font-weight:bold; }
     .celda-link a:hover{ text-decoration:underline; }
+
+    /* Modal PDF Planos */
+    #modalPlanoPdf .win{max-width:1080px;width:98vw;height:92vh}
+    #modalPlanoPdf iframe{width:100%;height:100%;border:0;background:#111}
+    #pdfShield{position:absolute;inset:0;z-index:5;background:transparent}
+
+    /* Anti impresión */
+    @media print { body { display: none !important; } }
   </style>
 </head>
-<body>
+<body oncontextmenu="return false">
   <div class="wrap">
     <!-- Header -->
     <div class="header-bar">
@@ -421,6 +430,12 @@
         <small>Acceso directo a los planos en Excel</small>
       </div>
 
+      <!-- Panel SOLO superadmin -->
+      <div class="opt admin-only" data-target="superadmin">
+        <b>Panel Superadmin</b><br>
+        <small>Gestión de zona y usuarios</small>
+      </div>
+
       <div class="opt" onclick="actualizarZonaTecnoglass()" style="border-top:1px solid #333;margin-top:8px;">
         <b>🛠️ Actualizar zona Tecnoglass</b><br>
         <small>Solo administrador</small>
@@ -449,6 +464,73 @@
           z-index:10000;box-shadow:0 0 10px rgba(0,229,255,0.5);">
     🛰️ GPS
   </button>
+
+  <!-- ===== MODAL PDF (Planos embebidos, sin descarga/compartir) ===== -->
+  <div class="modal" id="modalPlanoPdf">
+    <div class="win" role="dialog" aria-modal="true" style="position:relative">
+      <div class="head">
+        <div><b id="pdfTitulo">Plano</b></div>
+        <button class="close" id="btnClosePdf">Cerrar</button>
+      </div>
+      <div class="body" style="position:relative;padding:0;">
+        <div id="pdfShield"></div>
+        <iframe id="pdfFrame"
+                sandbox="allow-scripts allow-same-origin"
+                referrerpolicy="no-referrer"
+                allow="clipboard-read; clipboard-write"
+                src=""></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== VISTA SUPERADMIN (solo visible a superadmin) ====== -->
+  <div id="view-superadmin" class="hidden" style="max-width:1120px;margin:12px auto;padding:0 12px;">
+    <div class="card" style="background:var(--panel-2)">
+      <h3 style="margin:0 0 10px;color:var(--accent)">Zona Tecnoglass · Configuración</h3>
+      <div class="grid4">
+        <div>
+          <label>Latitud</label>
+          <input type="number" id="admLat" step="0.0001">
+        </div>
+        <div>
+          <label>Longitud</label>
+          <input type="number" id="admLng" step="0.0001">
+        </div>
+        <div>
+          <label>Radio (km)</label>
+          <input type="number" id="admRadio" step="0.1">
+        </div>
+        <div class="actions">
+          <div style="width:100%">
+            <label style="visibility:hidden">.</label>
+            <button class="btn-primary" id="btnGuardarZona">Guardar zona</button>
+          </div>
+        </div>
+      </div>
+      <div class="hint">Este cambio impacta validación de acceso a Inventario y Planos.</div>
+    </div>
+
+    <div class="card" style="background:var(--panel-2)">
+      <h3 style="margin:0 0 10px;color:var(--accent)">Usuarios autorizados</h3>
+      <div class="actions" style="gap:8px;flex-wrap:wrap">
+        <input id="usrCorreo" type="text" placeholder="correo@tecnoglass.com" style="max-width:260px;background:#fff;color:#000">
+        <select id="usrZona" style="max-width:200px;background:#fff;color:#000">
+          <option value="TecnoglassBarranquilla">TecnoglassBarranquilla</option>
+          <option value="Libre">Libre</option>
+        </select>
+        <button class="btn-primary" id="btnAgregarUsr">Agregar / Actualizar</button>
+        <button class="btn-outline" id="btnRecargarUsr">Recargar</button>
+      </div>
+      <div class="table-wrap" style="margin-top:10px">
+        <table>
+          <thead>
+            <tr><th>Correo</th><th>Zona</th><th>Autorizado</th><th>Acciones</th></tr>
+          </thead>
+          <tbody id="tbodyUsers"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 
   <script>
   "use strict";
@@ -559,7 +641,7 @@
   function distanciaKm(lat1, lon1, lat2, lon2) {
     const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const dLon = (lat2 - lon1) * Math.PI / 180;
     const a = Math.sin(dLat / 2) ** 2 +
               Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
               Math.sin(dLon / 2) ** 2;
@@ -630,6 +712,13 @@
     }
     usuarioCorreoActual = correo;
 
+    // Mostrar opción de Superadmin sólo si corresponde
+    if (isAdmin(correo)) {
+      document.querySelectorAll('.admin-only').forEach(el=> el.style.display='block');
+    } else {
+      document.querySelectorAll('.admin-only').forEach(el=> el.style.display='none');
+    }
+
     // Verificar zona (no bloquea menús generales)
     const dentro = isAdmin(correo) ? true : await verificarZonaPermitida(correo);
     if (dentro) habilitarAccesoTotal(); else deshabilitarAcceso();
@@ -644,9 +733,13 @@
 
     // Iniciar inventario solo si hay acceso permitido
     if (accesoPermitido) { try { await cargarInventario(); } catch(e){} }
+
+    // Precargar datos de la zona en el panel superadmin
+    precargarZonaAdmin();
+    recargarTablaUsuarios();
   });
 
-  /* ==================== Botón Admin: actualizar zona ==================== */
+  /* ==================== Botón Admin: actualizar zona rápida ==================== */
   async function actualizarZonaTecnoglass() {
     let correo = localStorage.getItem("correo_autorizado") || "";
     if (!isAdmin(correo)) {
@@ -692,17 +785,24 @@
         if (!accesoPermitido) { alert("🚫 Fuera de zona o no autorizado."); return; }
         mostrarVista("planos");
         verificarAccesoPlanos();
+      } else if (target === "superadmin") {
+        const correo = localStorage.getItem("correo_autorizado") || "";
+        if (!isAdmin(correo)) { alert("🚫 Panel exclusivo para superadmin."); return; }
+        mostrarVista("superadmin");
       }
     });
   });
 
   function mostrarVista(vista) {
-    ["view-temperaturas","view-inventario","view-planos","viewTabla"].forEach(id=>$(id).classList.add("hidden"));
-    $("view-" + vista).classList.remove("hidden");
+    ["view-temperaturas","view-inventario","view-planos","viewTabla","view-superadmin"].forEach(id=>$(id).classList.add("hidden"));
+    const el = $("view-" + vista);
+    if (el) el.classList.remove("hidden");
     $("topTitle").textContent =
       vista === "temperaturas" ? "Registro de Temperaturas" :
       vista === "inventario"   ? "Inventario Por Templar" :
-      "Consulta de Planos";
+      vista === "planos"       ? "Consulta de Planos" :
+      vista === "superadmin"   ? "Panel Superadmin" :
+      "Registro de Temperaturas";
     setTimeout(closeDrawer, 120);
   }
 
@@ -841,6 +941,8 @@
           setPoint: v.setPoint ?? ''
         });
       });
+
+      // ⚠️ Ordenar por HORA del ITEM (no por fecha) — como pediste
       arr.sort((a,b)=>a.hora.localeCompare(b.hora));
 
       chart.data.labels = arr.map(r => toAMPM(r.hora));
@@ -1647,6 +1749,13 @@
       const o = {}; headers.forEach((h, i) => o[h] = (r[i] || "").trim()); return o;
     });
   }
+  function lockPdfUrl(urlRaw){
+    let url = urlRaw || "#";
+    // Forzar visualización minimalista del visor
+    if (!url.includes("#")) url += "#toolbar=0&navpanes=0&scrollbar=0";
+    else url += "&toolbar=0&navpanes=0&scrollbar=0";
+    return url;
+  }
   function renderPlanos(reset = true) {
     const cuerpo = $("tbodyPlanos");
     if (reset) {
@@ -1668,9 +1777,13 @@
       fila.className = "fila-plano";
       fila.innerHTML = `
         <td class="celda-nombre">${nombre || "Sin nombre"}</td>
-        <td class="celda-link"><a href="${link}" target="_blank">Abrir</a></td>
+        <td class="celda-link"><a href="javascript:void(0)">Ver</a></td>
       `;
-      fila.onclick = () => { if (link && link !== "#") window.open(link, "_blank"); };
+      fila.onclick = () => {
+        if (link && link !== "#") {
+          abrirPdfEnModal(nombre, lockPdfUrl(link));
+        }
+      };
       frag.appendChild(fila);
     });
 
@@ -1685,6 +1798,104 @@
   };
   $("buscarPlano").oninput = () => renderPlanos(true);
   $("btnRecargarPlanos").onclick = cargarPlanos;
+
+  // ===== Modal PDF control (anti descarga básica) =====
+  function abrirPdfEnModal(nombre, url){
+    $('pdfTitulo').textContent = nombre;
+    const frame = $('pdfFrame');
+    frame.src = url;
+    $('modalPlanoPdf').style.display = 'flex';
+
+    // Bloqueos básicos
+    document.addEventListener('keydown', antiKeys);
+    $('pdfShield').oncontextmenu = ()=>false;
+    $('pdfShield').onmousedown = ()=>false;
+  }
+  function cerrarPdfModal(){
+    $('modalPlanoPdf').style.display = 'none';
+    $('pdfFrame').src = '';
+    document.removeEventListener('keydown', antiKeys);
+  }
+  function antiKeys(e){
+    // Bloquear imprimir, guardar, ver código, etc.
+    if (
+      (e.ctrlKey && ['s','p','S','P','u','U'].includes(e.key)) || // Ctrl+S/Ctrl+P/Ctrl+U
+      (e.key === 'PrintScreen') ||
+      (e.metaKey && ['s','p','S','P','u','U'].includes(e.key))
+    ){
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    }
+  }
+  $('btnClosePdf').onclick = cerrarPdfModal;
+  $('modalPlanoPdf').addEventListener('click',(ev)=>{
+    if (ev.target.id === 'modalPlanoPdf') cerrarPdfModal();
+  });
+
+  /* ==================== SUPERADMIN: Zona + Usuarios ==================== */
+  async function precargarZonaAdmin(){
+    const snap = await firebase.database().ref("seguridad/zonas/TecnoglassBarranquilla").once("value");
+    const z = snap.val() || {lat:11.0,lng:-74.83,radio_km:8};
+    $('admLat').value = z.lat;
+    $('admLng').value = z.lng;
+    $('admRadio').value = z.radio_km;
+  }
+  $('btnGuardarZona').onclick = async ()=>{
+    const correo = localStorage.getItem("correo_autorizado") || "";
+    if (!isAdmin(correo)) { alert("🚫 Solo superadmin."); return; }
+    const lat = parseFloat($('admLat').value);
+    const lng = parseFloat($('admLng').value);
+    const radio = parseFloat($('admRadio').value);
+    if (isNaN(lat)||isNaN(lng)||isNaN(radio)) { alert("Valores inválidos."); return; }
+    await firebase.database().ref("seguridad/zonas/TecnoglassBarranquilla").update({
+      lat, lng, radio_km: radio
+    });
+    alert("✅ Zona actualizada.");
+  };
+
+  async function recargarTablaUsuarios(){
+    const correo = localStorage.getItem("correo_autorizado") || "";
+    const tbody = $('tbodyUsers'); tbody.innerHTML = '';
+    if (!isAdmin(correo)) return;
+    const snap = await firebase.database().ref("seguridad/usuarios").once("value");
+    const u = snap.val() || {};
+    Object.entries(u).forEach(([k,v])=>{
+      const correoFmt = k.replace(/_/g,'.').replace('.com','.com').replace('.net','.net').replace('tecnoglass','tecnoglass');
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${correoFmt}</td>
+        <td>${v.zona||'-'}</td>
+        <td>${v.autorizado ? 'Sí' : 'No'}</td>
+        <td>
+          <button class="btn-mini ok" data-act="toggle">Toggle</button>
+          <button class="btn-mini warn" data-act="libre">Libre</button>
+        </td>
+      `;
+      tr.querySelector('[data-act="toggle"]').onclick = async ()=>{
+        await firebase.database().ref("seguridad/usuarios/"+k).update({autorizado: !v.autorizado});
+        recargarTablaUsuarios();
+      };
+      tr.querySelector('[data-act="libre"]').onclick = async ()=>{
+        await firebase.database().ref("seguridad/usuarios/"+k).update({zona:'Libre', autorizado:true});
+        recargarTablaUsuarios();
+      };
+      tbody.appendChild(tr);
+    });
+  }
+  $('btnRecargarUsr').onclick = recargarTablaUsuarios;
+  $('btnAgregarUsr').onclick = async ()=>{
+    const correo = localStorage.getItem("correo_autorizado") || "";
+    if (!isAdmin(correo)) { alert("🚫 Solo superadmin."); return; }
+    const c = ($('usrCorreo').value||'').trim().toLowerCase();
+    const z = $('usrZona').value;
+    if (!c) { alert('Correo requerido'); return; }
+    const key = c.replace(/\./g,'_').replace(/@/g,'_');
+    await firebase.database().ref("seguridad/usuarios/"+key).set({autorizado:true, zona:z});
+    $('usrCorreo').value='';
+    alert('✅ Usuario agregado/actualizado');
+    recargarTablaUsuarios();
+  };
 
   </script>
 </body>
