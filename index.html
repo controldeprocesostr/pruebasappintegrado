@@ -467,17 +467,21 @@
 
   <!-- ===== MODAL PDF (Planos embebidos, sin descarga/compartir) ===== -->
   <div class="modal" id="modalPlanoPdf">
-    <div class="win" role="dialog" aria-modal="true" style="position:relative">
-      <div class="head">
-        <div><b id="pdfTitulo">Plano</b></div>
-        <button class="close" id="btnClosePdf">Cerrar</button>
-      </div>
-      <div class="body" style="position:relative;padding:0;">
-        <div id="pdfShield"></div>
-        <iframe id="pdfFrame"
-  allow="fullscreen; clipboard-read; clipboard-write"
-  referrerpolicy="no-referrer"
-  style="width:100%;height:100%;border:0;background:#111;"></iframe>
+  <div class="win" role="dialog" aria-modal="true" style="position:relative">
+    <div class="head">
+      <div><b id="pdfTitulo">Plano</b></div>
+      <button class="close" id="btnClosePdf">Cerrar</button>
+    </div>
+    <div class="body" style="position:relative;padding:0;">
+      <div id="pdfShield"></div>
+      <iframe id="pdfFrame"
+        allow="fullscreen; clipboard-read; clipboard-write"
+        referrerpolicy="no-referrer"
+        style="width:100%;height:100%;border:0;background:#111;"></iframe>
+    </div>
+  </div>
+</div>
+
 
       </div>
     </div>
@@ -671,8 +675,11 @@
     }
 
     // 📏 Radio personalizado si existe
-    const rangoUsuario = usuario.rango_km ?? 0;
-    const radioPermitido = zona.radio_km + 2 + rangoUsuario;
+    // 📏 Radio personalizado y margen de tolerancia
+const rangoUsuario = usuario.rango_km ?? 0;
+const tolerancia = 3; // km adicionales permitidos fuera del radio base
+const radioPermitido = (zona.radio_km || 8) + tolerancia + rangoUsuario;
+
 
     const pos = await obtenerUbicacionActual();
     const distancia = distanciaKm(pos.lat, pos.lng, zona.lat, zona.lng);
@@ -1847,7 +1854,7 @@ window.addEventListener("load", () => {
   $("btnRecargarPlanos").onclick = cargarPlanos;
 
   // ===== Modal PDF control (anti descarga básica) =====
-  function abrirPdfEnModal(nombre, url) {
+ function abrirPdfEnModal(nombre, url) {
   const modal = $('modalPlanoPdf');
   const frame = $('pdfFrame');
   const shield = $('pdfShield');
@@ -1855,22 +1862,20 @@ window.addEventListener("load", () => {
   $('pdfTitulo').textContent = nombre;
   frame.src = url;
 
-  // Asegurar visibilidad
   modal.style.display = 'flex';
   frame.style.display = 'block';
   shield.style.display = 'block';
 
-  // Desbloquear clics internos del visor
+  // ✅ Permitir clics dentro del visor PDF
+  shield.style.pointerEvents = "none";
+
   frame.removeAttribute('sandbox');
   frame.setAttribute('allow', 'fullscreen; clipboard-read; clipboard-write');
   frame.setAttribute('referrerpolicy', 'no-referrer');
 
-  // Asegura que no se bloqueen eventos del modal
-  shield.oncontextmenu = () => false;
-  shield.onclick = (e) => e.stopPropagation();
-
   document.addEventListener('keydown', antiKeys);
 }
+
 
   function antiKeys(e){
     // Bloquear imprimir, guardar, ver código, etc.
