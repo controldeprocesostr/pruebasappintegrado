@@ -475,10 +475,10 @@
       <div class="body" style="position:relative;padding:0;">
         <div id="pdfShield"></div>
         <iframe id="pdfFrame"
-                sandbox="allow-scripts allow-same-origin"
-                referrerpolicy="no-referrer"
-                allow="clipboard-read; clipboard-write"
-                src=""></iframe>
+  allow="fullscreen; clipboard-read; clipboard-write"
+  referrerpolicy="no-referrer"
+  style="width:100%;height:100%;border:0;background:#111;"></iframe>
+
       </div>
     </div>
   </div>
@@ -650,37 +650,45 @@
   }
 
   async function verificarZonaPermitida(correoUsuario) {
-    try {
-      const snap = await firebase.database().ref("seguridad").once("value");
-      const seguridad = snap.val() || {};
-      const usuarioKey = correoUsuario.toLowerCase().replace(/\./g, "_").replace(/@/g, "_");
-      const usuario = seguridad.usuarios?.[usuarioKey];
+  try {
+    const snap = await firebase.database().ref("seguridad").once("value");
+    const seguridad = snap.val() || {};
+    const usuarioKey = correoUsuario.toLowerCase().replace(/\./g, "_").replace(/@/g, "_");
+    const usuario = seguridad.usuarios?.[usuarioKey];
 
-      if (!usuario) {
-        alert("🚫 Este usuario no está registrado en la base de seguridad.");
-        return false;
-      }
-      if (usuario.zona === "Libre") return true;
-
-      const zona = seguridad.zonas?.[usuario.zona];
-      if (!zona) {
-        alert("⚠️ La zona asignada no existe en Firebase.");
-        return false;
-      }
-      const pos = await obtenerUbicacionActual();
-      const distancia = distanciaKm(pos.lat, pos.lng, zona.lat, zona.lng);
-      const dentro = distancia <= zona.radio_km + 2; // tolerancia
-
-      // Actualiza panel GPS si está abierto
-      actualizarPanel(pos.lat, pos.lng);
-
-      return dentro;
-    } catch (err) {
-      console.error("Error verificando zona:", err);
-      alert("⚠️ No se pudo verificar la zona: " + err);
+    if (!usuario) {
+      alert("🚫 Este usuario no está registrado en la base de seguridad.");
       return false;
     }
+
+    // Si tiene zona libre, acceso total
+    if (usuario.zona === "Libre") return true;
+
+    const zona = seguridad.zonas?.[usuario.zona];
+    if (!zona) {
+      alert("⚠️ La zona asignada no existe en Firebase.");
+      return false;
+    }
+
+    // 📏 Radio personalizado si existe
+    const rangoUsuario = usuario.rango_km ?? 0;
+    const radioPermitido = zona.radio_km + 2 + rangoUsuario;
+
+    const pos = await obtenerUbicacionActual();
+    const distancia = distanciaKm(pos.lat, pos.lng, zona.lat, zona.lng);
+    const dentro = distancia <= radioPermitido;
+
+    // Actualiza panel GPS
+    actualizarPanel(pos.lat, pos.lng, distancia, radioPermitido);
+
+    return dentro;
+  } catch (err) {
+    console.error("Error verificando zona:", err);
+    alert("⚠️ No se pudo verificar la zona: " + err);
+    return false;
   }
+}
+
 
   function habilitarAccesoTotal() {
     accesoPermitido = true;
@@ -699,45 +707,66 @@
     });
   }
 
-  /* ==================== Login: pedir correo solo 1ra vez ==================== */
-  window.addEventListener("DOMContentLoaded", async () => {
-    let correo = localStorage.getItem("correo_autorizado");
-    if (!correo) {
-      correo = prompt("Introduce tu correo corporativo (ej: gary.maldonado@tecnoglass.com):");
-      if (!correo) {
-        alert("⚠️ No se puede continuar sin correo autorizado.");
-        correo = "externo@gmail.com"; // fallback para no romper UI
+  /* ==================== LOGIN CON GOOGLE ==================== */
+window.addEventListener("DOMContentLoaded", async () => {
+  const auth = firebase.auth();
+  const provider = new firebase.auth.GoogleAuthProvider();
+
+  const showLoginUI = () => {
+    document.body.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background:#121212;color:#fff;">
+        <h2>Registro de Temperaturas + Inventario</h2>
+        <button id="btnGoogleLogin" style="background:#00e5ff;color:#000;font-weight:bold;padding:10px 20px;border-radius:8px;border:none;cursor:pointer">
+          🔐 Iniciar sesión con Google
+        </button>
+      </div>`;
+    document.getElementById("btnGoogleLogin").onclick = async () => {
+      try {
+        const result = await auth.signInWithPopup(provider);
+        const correo = result.user.email;
+        localStorage.setItem("correo_autorizado", correo);
+        location.reload();
+      } catch (e) {
+        alert("⚠️ Error al iniciar sesión: " + e.message);
       }
-      localStorage.setItem("correo_autorizado", correo);
-    }
-    usuarioCorreoActual = correo;
+    };
+  };
 
-    // Mostrar opción de Superadmin sólo si corresponde
-    if (isAdmin(correo)) {
-      document.querySelectorAll('.admin-only').forEach(el=> el.style.display='block');
-    } else {
-      document.querySelectorAll('.admin-only').forEach(el=> el.style.display='none');
-    }
+  const correo = localStorage.getItem("correo_autorizado");
+  if (!correo) return showLoginUI();
 
-    // Verificar zona (no bloquea menús generales)
-    const dentro = isAdmin(correo) ? true : await verificarZonaPermitida(correo);
-    if (dentro) habilitarAccesoTotal(); else deshabilitarAcceso();
+  usuarioCorreoActual = correo;
 
-    $('lblTurno').textContent = `${turnoDetallado().turno} (${turnoDetallado().fechaISO})`;
+  const userSnap = await firebase.database().ref("seguridad/usuarios")
+    .child(correo.replace(/\./g,"_").replace(/@/g,"_"))
+    .once("value");
 
-    // Defaults Temperaturas
-    $('fecha').value = hoyISO();
-    $('horaInicio').value = horaAhoraHHMM();
-    $('horaFin').value = addHoursToHHMM($('horaInicio').value,10);
-    $('selActivos').innerHTML = '<option value="">-- Ninguno --</option>';
+  const userInfo = userSnap.val() || {};
+  const rango = userInfo.rango || "operario";
 
-    // Iniciar inventario solo si hay acceso permitido
-    if (accesoPermitido) { try { await cargarInventario(); } catch(e){} }
-
-    // Precargar datos de la zona en el panel superadmin
-    precargarZonaAdmin();
-    recargarTablaUsuarios();
+  // Superadmin UI
+  document.querySelectorAll('.admin-only').forEach(el => {
+    el.style.display = (rango === "superadmin") ? 'block' : 'none';
   });
+
+  // Validar zona
+  const dentro = rango === "superadmin" ? true : await verificarZonaPermitida(correo);
+  if (dentro) habilitarAccesoTotal(); else deshabilitarAcceso();
+
+  $('lblTurno').textContent = `${turnoDetallado().turno} (${turnoDetallado().fechaISO})`;
+
+  // Inicializar vistas
+  $('fecha').value = hoyISO();
+  $('horaInicio').value = horaAhoraHHMM();
+  $('horaFin').value = addHoursToHHMM($('horaInicio').value,10);
+  $('selActivos').innerHTML = '<option value="">-- Ninguno --</option>';
+
+  if (accesoPermitido) { try { await cargarInventario(); } catch(e){} }
+
+  precargarZonaAdmin();
+  recargarTablaUsuarios();
+});
+
 
   /* ==================== Botón Admin: actualizar zona rápida ==================== */
   async function actualizarZonaTecnoglass() {
@@ -812,17 +841,18 @@
     if (snap.exists()) centro = snap.val();
   });
 
-  function actualizarPanel(lat, lng) {
-    const panel = $('panelGPS');
-    const dist = distanciaKm(lat, lng, centro.lat, centro.lng);
-    const dentro = dist <= (centro.radio_km + 2);
-    panel.innerHTML = `
-      <div>📍 <b>Lat:</b> ${lat.toFixed(5)} | <b>Lng:</b> ${lng.toFixed(5)}</div>
-      <div>🏭 <b>Centro:</b> ${centro.lat.toFixed(4)}, ${centro.lng.toFixed(4)}</div>
-      <div>📏 <b>Distancia:</b> ${dist.toFixed(2)} km</div>
-      <div>${dentro ? "✅ <b>Dentro del área</b>" : "🚫 <b>Fuera del área</b>"}</div>
-    `;
-  }
+  function actualizarPanel(lat, lng, distancia = 0, radio = centro.radio_km) {
+  const panel = $('panelGPS');
+  const dentro = distancia <= radio;
+  panel.innerHTML = `
+    <div>📍 <b>Lat:</b> ${lat.toFixed(5)} | <b>Lng:</b> ${lng.toFixed(5)}</div>
+    <div>🏭 <b>Centro:</b> ${centro.lat.toFixed(4)}, ${centro.lng.toFixed(4)}</div>
+    <div>📏 <b>Distancia:</b> ${distancia.toFixed(2)} km</div>
+    <div>🎯 <b>Radio permitido:</b> ${radio.toFixed(1)} km</div>
+    <div>${dentro ? "✅ <b>Dentro del área</b>" : "🚫 <b>Fuera del área</b>"}</div>
+  `;
+}
+
   function iniciarGPS() {
     if (!navigator.geolocation) {
       $('panelGPS').innerHTML = "⚠️ Geolocalización no soportada";
@@ -1496,20 +1526,37 @@
     path.set(payload);
   }
 
-  // Toggle Vista Tabla Pendientes
-  let vistaTabla = false;
-  $('btnVistaToggle').onclick = () => {
-    if (vista !== "pendientes") {
-      alert("🔹 La tabla agrupada está disponible en Pendientes.");
-      return;
-    }
-    vistaTabla = !vistaTabla;
-    $('btnVistaToggle').textContent = vistaTabla ? '🃏 Vista Cards' : '📋 Vista Tabla';
-    if (vistaTabla) { $('viewTabla').classList.remove('hidden'); renderTablaAgrupada(); $('listPend').classList.add('hidden'); }
-    else { $('viewTabla').classList.add('hidden'); $('listPend').classList.remove('hidden'); }
-  };
-  $('agrupacionTabla').onchange = renderTablaAgrupada;
-  $('btnRecargarTabla').onclick = renderTablaAgrupada;
+  // === Toggle Vista Tabla Pendientes con persistencia ===
+let vistaTabla = localStorage.getItem("vistaTabla") === "true";
+
+function aplicarVistaTabla(){
+  $('btnVistaToggle').textContent = vistaTabla ? '🃏 Vista Cards' : '📋 Vista Tabla';
+  if (vistaTabla) {
+    $('viewTabla').classList.remove('hidden');
+    $('listPend').classList.add('hidden');
+    renderTablaAgrupada();
+  } else {
+    $('viewTabla').classList.add('hidden');
+    $('listPend').classList.remove('hidden');
+    renderPendientes();
+  }
+}
+
+$('btnVistaToggle').onclick = () => {
+  if (vista !== "pendientes") {
+    alert("🔹 La tabla agrupada solo aplica en Pendientes.");
+    return;
+  }
+  vistaTabla = !vistaTabla;
+  localStorage.setItem("vistaTabla", vistaTabla);
+  aplicarVistaTabla();
+};
+
+// Aplicar vista guardada al entrar
+window.addEventListener("load", () => {
+  if (vista === "pendientes") aplicarVistaTabla();
+});
+
 
   function renderTablaAgrupada() {
     const { turno, fechaISO: fBase } = turnoDetallado();
@@ -1800,22 +1847,31 @@
   $("btnRecargarPlanos").onclick = cargarPlanos;
 
   // ===== Modal PDF control (anti descarga básica) =====
-  function abrirPdfEnModal(nombre, url){
-    $('pdfTitulo').textContent = nombre;
-    const frame = $('pdfFrame');
-    frame.src = url;
-    $('modalPlanoPdf').style.display = 'flex';
+  function abrirPdfEnModal(nombre, url) {
+  const modal = $('modalPlanoPdf');
+  const frame = $('pdfFrame');
+  const shield = $('pdfShield');
 
-    // Bloqueos básicos
-    document.addEventListener('keydown', antiKeys);
-    $('pdfShield').oncontextmenu = ()=>false;
-    $('pdfShield').onmousedown = ()=>false;
-  }
-  function cerrarPdfModal(){
-    $('modalPlanoPdf').style.display = 'none';
-    $('pdfFrame').src = '';
-    document.removeEventListener('keydown', antiKeys);
-  }
+  $('pdfTitulo').textContent = nombre;
+  frame.src = url;
+
+  // Asegurar visibilidad
+  modal.style.display = 'flex';
+  frame.style.display = 'block';
+  shield.style.display = 'block';
+
+  // Desbloquear clics internos del visor
+  frame.removeAttribute('sandbox');
+  frame.setAttribute('allow', 'fullscreen; clipboard-read; clipboard-write');
+  frame.setAttribute('referrerpolicy', 'no-referrer');
+
+  // Asegura que no se bloqueen eventos del modal
+  shield.oncontextmenu = () => false;
+  shield.onclick = (e) => e.stopPropagation();
+
+  document.addEventListener('keydown', antiKeys);
+}
+
   function antiKeys(e){
     // Bloquear imprimir, guardar, ver código, etc.
     if (
