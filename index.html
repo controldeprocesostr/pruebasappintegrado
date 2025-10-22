@@ -5,194 +5,455 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#121212">
-  <title>ERP Producción – Tecnoglass</title>
+  <title>Registro de Temperaturas + Inventario</title>
 
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- Firebase -->
+  <!-- Firebase compat (v9 compat) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
   <style>
     :root{
-      --bg:#121212; --panel:#1e1e1e; --panel2:#151515;
-      --accent:#00e5ff; --accent2:#ffae00;
-      --muted:#9aa9b1; --input-bg:#fff; --input-color:#000;
-      --ok:#10b981; --warn:#f59e0b; --danger:#e74c3c;
-      --soft:#222; --border:#333;
+      --bg:#121212; --panel:#1e1e1e; --panel-2:#151515;
+      --accent:#00e5ff; --accent-2:#ffae00; --muted:#9aa9b1;
+      --input-bg:#fff; --input-color:#000;
+      --ok:#10b981; --warn:#f59e0b; --border:#2b2b2b; --soft:#222;
     }
-
-    html,body{margin:0;height:100%;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff}
-    .wrap{max-width:1120px;margin:10px auto;padding:10px}
+    html,body{height:100%;margin:0;background:var(--bg);font-family:Arial,Helvetica,sans-serif;color:#fff}
+    .wrap{max-width:1120px;margin:12px auto;padding:12px}
 
     /* Header */
-    .header-bar{display:flex;align-items:center;justify-content:center;gap:10px;position:relative;margin-bottom:12px}
-    .header-title{color:var(--accent);font-size:22px;font-weight:800;text-align:center}
-    .hamb{position:absolute;left:0;top:50%;transform:translateY(-50%);border:1px solid var(--soft);background:transparent;color:#fff;border-radius:8px;padding:8px 10px;cursor:pointer}
-    .user-chip{position:absolute;right:0;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:6px}
-    .user-chip button{border:1px solid var(--soft);border-radius:8px;padding:6px 10px;background:transparent;color:#fff;cursor:pointer}
-    .user-chip small{color:var(--muted)}
+    .header-bar{display:flex;align-items:center;gap:10px;justify-content:center;position:relative;margin-bottom:10px}
+    .header-title{color:var(--accent);font-weight:800;font-size:22px;text-align:center}
+    .hamb{position:absolute;left:0;top:50%;transform:translateY(-50%);background:transparent;border:1px solid var(--soft);color:#fff;border-radius:8px;padding:8px 10px;cursor:pointer}
+    .hamb:active{filter:brightness(.9)}
 
     /* Cards */
-    .card{background:var(--panel);border:1px solid var(--soft);border-radius:12px;padding:14px;margin-bottom:14px;box-shadow:0 2px 6px rgba(0,0,0,.4)}
-    label{font-weight:700;margin:6px 0 4px;display:block;color:#ddd}
-    input,select,button{border-radius:6px;padding:8px;border:1px solid var(--border)}
-    input,select{width:100%;background:var(--input-bg);color:var(--input-color)}
-    button{cursor:pointer;font-weight:700}
-    .btn-primary{background:var(--accent);color:#000}
-    .btn-outline{border:2px solid var(--accent);background:transparent;color:var(--accent)}
-    .btn-danger{background:var(--accent2);color:#000}
+    .card{background:#1b1b1b;border:1px solid #2e2e2e;border-radius:12px;padding:14px;margin-bottom:14px;box-shadow:0 2px 6px rgba(0,0,0,.35);transition:transform .15s ease, box-shadow .2s ease}
+    .card:hover{transform:translateY(-2px);box-shadow:0 4px 10px rgba(0,0,0,.5)}
 
-    .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+    label{display:block;margin:6px 0 4px;font-weight:700;color:#ddd}
+    input, select, textarea, button{box-sizing:border-box;border-radius:6px;border:1px solid var(--border);padding:8px}
+    input,select,textarea{width:100%;background:#fff;color:#000;border:1px solid #ccc}
+
+    button{cursor:pointer;border:none;font-weight:700}
+    .btn-primary{background:var(--accent);color:#000}
+    .btn-outline{background:transparent;border:2px solid var(--accent);color:var(--accent)}
+    .btn-danger{background:var(--accent-2);color:#000}
+    .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+    .actions{display:flex;gap:10px;align-items:center}
+    .hint{color:var(--muted);font-size:13px;margin-top:8px}
+    .table-wrap{overflow:auto;margin-top:12px;border-radius:8px;border:1px solid var(--soft)}
+    table{width:100%;border-collapse:collapse;background:transparent}
+    th,td{padding:10px;border-bottom:1px solid var(--border);text-align:center;color:#eee}
+    th{background:#171717}
+    td input{width:100%;padding:6px;border-radius:4px;border:1px solid #ccc;background:#fff;color:#000}
+    .btn-row{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+    canvas{width:100% !important;height:360px !important;background:#151515;border-radius:6px}
+    .cabecera{color:var(--muted);font-size:13px;margin-top:10px}
     .hidden{display:none!important}
 
     /* Drawer */
-    .drawer-mask{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;z-index:900}
-    .drawer{position:fixed;right:0;top:0;width:300px;height:100%;max-width:92vw;background:#0f0f0f;border-left:1px solid var(--soft);transform:translateX(100%);transition:.3s;z-index:1000;display:flex;flex-direction:column}
+    .drawer-mask{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;z-index:900}
+    .drawer{position:fixed;right:0;top:0;height:100%;width:300px;max-width:92vw;background:#0f0f0f;border-left:1px solid var(--soft);transform:translateX(100%);transition:transform .25s ease;z-index:1000;display:flex;flex-direction:column}
     .drawer.open{transform:translateX(0)}
-    .drawer .head{padding:12px;border-bottom:1px solid var(--soft);display:flex;justify-content:space-between;align-items:center;font-weight:800}
+    .drawer .head{padding:14px;border-bottom:1px solid var(--soft);font-weight:800;color:#fff;display:flex;justify-content:space-between;align-items:center}
+    .drawer .head button{background:transparent;color:#fff;border:1px solid var(--soft)}
     .drawer .body{padding:10px;display:flex;flex-direction:column;gap:8px}
-    .drawer .opt{background:#1a1a1a;border:1px solid var(--soft);border-radius:10px;padding:12px;cursor:pointer}
-    .drawer .opt:hover{filter:brightness(1.1)}
-    .drawer small{color:var(--muted)}
+    .drawer .opt{background:#121212;border:1px solid var(--soft);padding:12px;border-radius:10px;cursor:pointer}
+    .drawer .opt:hover{filter:brightness(1.05)}
+    .drawer small{color:#9aa9b1}
 
-    /* Planos tabla */
-    #tablaPlanos{width:100%;border-collapse:collapse;background:#1b1b1b;border-radius:8px;overflow:hidden}
-    #tablaPlanos th,#tablaPlanos td{padding:8px;text-align:center;border-bottom:1px solid var(--soft)}
-    #tablaPlanos th{background:#111;color:var(--accent);font-weight:700}
-    #tablaPlanos tr:hover{background:#222;cursor:pointer}
+    /* Inventario */
+    .inv-toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+    .inv-pill{background:#161616;border:1px solid var(--soft);border-radius:10px;padding:6px 8px;display:flex;gap:8px;align-items:center}
+    .inv-pill label{margin:0;color:#cfeaf0;font-weight:700}
+    .inv-toolbar select,.inv-toolbar input[type="text"]{border:1px solid #ccc;border-radius:8px;padding:6px 8px;background:#fff;color:#000;min-width:140px}
+    .inv-btn{border:1px solid var(--soft);background:#0f0f0f;border-radius:8px;padding:8px 12px;cursor:pointer;color:#fff}
+    .inv-btn.primary{background:var(--accent);color:#000;border-color:var(--accent);font-weight:800}
+    .inv-info{font-size:12px;color:#b4c1c8}
+    .inv-tabs{display:flex;gap:8px;margin:10px 0 14px}
+    .inv-tab{border:1px solid var(--soft);background:#0f0f0f;border-radius:999px;padding:6px 12px;cursor:pointer}
+    .inv-tab.active{background:var(--accent);color:#000;border-color:var(--accent);font-weight:800}
+    .inv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px}
+    .inv-card{background:#1b1b1b;border:1px solid #2e2e2e;border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px;box-shadow:0 2px 6px rgba(0,0,0,.35);transition:transform .15s ease, box-shadow .2s ease}
+    .inv-card:hover{transform:translateY(-2px);box-shadow:0 4px 10px rgba(0,0,0,.5)}
+    .inv-head{display:flex;justify-content:space-between;gap:8px;align-items:center}
+    .inv-head .m{font-weight:800;color:#00e5ff}
+    .inv-meta{display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12.5px;color:#e1e1e1}
+    .inv-meta b{color:#bfefff}
+    .badge{display:inline-block;padding:2px 6px;border-radius:999px;font-size:11px;border:1px solid var(--soft);background:#0f0f0f;color:#cfeaf0}
+    .inv-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px}
+    .btn-mini{border:1px solid var(--soft);background:#0f0f0f;border-radius:10px;padding:7px 10px;cursor:pointer;font-size:13px;color:#fff}
+    .btn-mini.ok{background:var(--ok);color:#000;border-color:var(--ok);font-weight:800}
+    .btn-mini.rev{background:#0b2a30;border-color:#0d3f47}
+    .btn-mini.warn{background:#222}
 
-    /* Modal */
-    .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:1200}
-    .win{background:#1a1a1a;border:1px solid var(--border);border-radius:12px;max-width:900px;width:96vw;max-height:90vh;display:flex;flex-direction:column;overflow:hidden}
+    .totales-bar{display:flex;flex-wrap:wrap;gap:10px;margin:8px 0}
+    .t-chip{background:#171717;border:1px solid #2b2b2b;border-radius:10px;padding:8px 10px;color:#e1e1e1;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+    .t-chip b{color:#bfefff}
+    .t-chip .pct{font-weight:800;color:#00e676}
+
+    .kpi-por-mac{margin:8px 0 2px;color:#9aa9b1;font-size:12px}
+    .kpi-por-mac b{color:#cfeaf0}
+
+    /* Modal Inventario */
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:14px;z-index:1200}
+    .win{background:#1a1a1a;border:1px solid #333;border-radius:14px;max-width:920px;width:98vw;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;color:#fff;box-shadow:0 4px 14px rgba(0,0,0,.7)}
     .win .head{padding:10px;border-bottom:1px solid var(--soft);display:flex;justify-content:space-between;align-items:center}
-    .win .body{flex:1;overflow:auto;padding:0;background:#0b0b0b}
-    .pdf-frame{width:100%;height:80vh;border:0}
-    .close{border:1px solid var(--soft);background:#151515;color:#fff;padding:6px 10px;border-radius:8px;cursor:pointer}
+    .win .body{padding:10px;overflow:auto}
+    .close{border:1px solid var(--soft);background:#151515;border-radius:8px;padding:6px 10px;cursor:pointer;color:#fff}
+    .kv{display:grid;grid-template-columns:160px 1fr;gap:6px;font-size:13px}
+    .kv b{color:#bfefff}
+    .modal .actions{padding:10px;border-top:1px solid var(--soft);display:flex;gap:8px}
+    .modal input, .modal textarea, .modal select{background:#fff;color:#000;border:1px solid #ccc}
 
-    /* Admin */
-    .admin-only{display:none}
-
-    @media(max-width:900px){
+    /* Responsive */
+    @media (max-width:900px){
       .grid4{grid-template-columns:repeat(2,1fr)}
+      canvas{height:320px !important}
     }
-    @media(max-width:600px){
+    @media (max-width:520px){
       .grid4{grid-template-columns:1fr}
+      .actions{flex-direction:column;align-items:stretch}
     }
+    @media (max-width:768px){
+      .inv-grid{grid-template-columns:1fr !important}
+      .inv-card{padding:10px;border-radius:12px}
+      .inv-meta{grid-template-columns:1fr !important;font-size:12px}
+      .inv-head .m{font-size:14px}
+      .inv-actions{flex-direction:column;align-items:stretch}
+      .btn-mini{width:100%;font-size:13px;padding:8px}
+      .inv-pill{flex-direction:column;align-items:flex-start}
+      .inv-toolbar{flex-direction:column;align-items:stretch}
+      .inv-toolbar select,.inv-toolbar input[type="text"]{width:100%}
+    }
+
+    /* Vista Tabla agrupada */
+    #viewTabla table th, #viewTabla table td { border-bottom: 1px solid var(--border); text-align: center; padding: 8px; color: #eee; font-size: 14px; }
+    #viewTabla table th { background: #171717; color: var(--accent); font-weight: 700; }
+    #viewTabla .btn-mini { padding: 4px 8px; font-size: 13px; }
+    #viewTabla select { background: #fff; color: #000; border-radius: 6px; padding: 6px; }
+    #viewTabla { padding-bottom: 20px; }
+    .grupoTabla { margin-bottom: 22px; background: var(--panel); border-radius: 12px; padding: 10px; box-shadow: 0 0 6px rgba(0,0,0,0.3); }
+    .titulo-grupo { margin: 0 0 8px 4px; font-size: 15px; color: var(--accent); text-transform: uppercase; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tabla-grupo { width: 100%; border-collapse: collapse; border-radius: 10px; overflow: hidden; display: block; }
+    .tabla-grupo thead { background: #171717; display: block; border-bottom: 2px solid var(--accent); }
+    .tabla-grupo tbody { display: block; }
+    .tabla-grupo tr { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); border-bottom: 1px solid var(--border); padding: 4px 0; }
+    .tabla-grupo th,.tabla-grupo td { text-align: center; font-size: 14px; padding: 6px; color: #e0e0e0; word-break: break-word; white-space: normal; }
+    .tabla-grupo th { color: var(--accent); font-weight: 600; padding: 8px 6px; text-transform: uppercase; font-size: 13px; }
+    .tabla-grupo tr:nth-child(even) { background: rgba(255,255,255,0.03); }
+    .acciones-cell { display: flex; justify-content: center; align-items: center; gap: 8px; }
+    .btn-mini { padding: 10px 16px; border-radius: 10px; font-size: 15px; border: none; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
+    .btn-mini.ok { background: #00c853; color: #fff; }
+    .btn-mini.warn { background: #ffab00; color: #000; }
+    .btn-mini:active { transform: scale(0.95); }
+    .btn-mini.confirmed { animation: confirmPulse 0.4s ease; background: #1de9b6 !important; }
+    @keyframes confirmPulse { 0%{transform:scale(1); box-shadow:0 0 0 rgba(0,255,0,.6);} 50%{transform:scale(1.1); box-shadow:0 0 12px rgba(0,255,0,.8);} 100%{transform:scale(1); box-shadow:0 0 0 rgba(0,255,0,0);} }
+
+    /* Tabla Planos */
+    #tablaPlanos { width:100%; border-collapse:collapse; font-size:14px; background:#1a1a1a; border-radius:10px; overflow:hidden; }
+    #tablaPlanos thead th { position:sticky; top:0; background:#111; color:#00e5ff; font-weight:bold; text-align:left; padding:10px; border-bottom:1px solid #333; z-index:2;}
+    #tablaPlanos tbody tr.fila-plano{ transition:background .2s; }
+    #tablaPlanos tbody tr.fila-plano:hover{ background:#222; }
+    .celda-nombre{ padding:8px 10px; border-bottom:1px solid #333; color:#e0e0e0; font-weight:500; }
+    .celda-link{ padding:8px 10px; border-bottom:1px solid #333; }
+    .celda-link a{ color:#00e5ff; text-decoration:none; font-weight:bold; }
+    .celda-link a:hover{ text-decoration:underline; }
   </style>
 </head>
-
-<body class="no-select">
+<body>
   <div class="wrap">
+    <!-- Header -->
     <div class="header-bar">
-      <button id="btnMenu" class="hamb">☰</button>
-      <div id="topTitle" class="header-title">Registro de Temperaturas</div>
-      <div class="user-chip">
-        <small id="lblUser">—</small>
-        <button id="btnLogin">Iniciar sesión</button>
-        <button id="btnLogout" class="hidden">Salir</button>
-      </div>
+      <button class="hamb" id="btnMenu">☰</button>
+      <div class="header-title" id="topTitle">Registro de Temperaturas</div>
     </div>
 
-    <!-- ===== VISTA: TEMPERATURAS ===== -->
+    <!-- ======== Vista: Registro de Temperaturas ======== -->
     <div id="view-temperaturas">
       <div class="card">
-        <h3 style="margin:0;color:var(--accent)">Registro de Temperaturas</h3>
         <div class="grid4">
-          <div><label>Horno</label><select id="horno">
-            <option>Horno 5</option><option>Horno 7-3</option><option>Horno 9-1</option>
-            <option>Horno 9-2</option><option>Horno Italiano</option>
-          </select></div>
-          <div><label>Fecha</label><input type="date" id="fecha"></div>
-          <div><label>Turno</label><select id="turno"><option>T1</option><option>T2</option></select></div>
-          <div><label>Operario</label><input id="operarioInicio" placeholder="nombre"></div>
+          <div>
+            <label for="horno">Horno</label>
+            <select id="horno">
+              <option value="">-- Selecciona --</option>
+              <option>Horno 5</option><option>Horno 7-3</option><option>Horno 9-1</option>
+              <option>Horno 9-2</option><option>Horno Italiano</option><option>Horno 7-4</option>
+              <option>Horno 7-5</option><option>Horno 9-3</option><option>Horno 10</option>
+            </select>
+          </div>
+          <div>
+            <label for="fecha">Fecha</label>
+            <input type="date" id="fecha">
+          </div>
+          <div>
+            <label for="turno">Turno</label>
+            <select id="turno">
+              <option value="">-- Selecciona --</option>
+              <option value="T1">T1</option><option value="T2">T2</option>
+            </select>
+          </div>
+          <div>
+            <label for="selActivos">Ciclos activos</label>
+            <select id="selActivos"><option value="">-- Ninguno --</option></select>
+          </div>
         </div>
-        <button class="btn-primary" id="btnNuevo">Iniciar ciclo</button>
+
+        <div class="grid4" style="margin-top:12px">
+          <div>
+            <label for="horaInicio">Hora inicio</label>
+            <input type="time" id="horaInicio">
+          </div>
+          <div>
+            <label for="horaFin">Hora fin (auto +10h)</label>
+            <input type="time" id="horaFin">
+          </div>
+          <div>
+            <label for="operarioInicio">Operario (inicia)</label>
+            <input type="text" id="operarioInicio" placeholder="nombre">
+          </div>
+          <div class="actions">
+            <div style="width:100%">
+              <label style="visibility:hidden">actions</label>
+              <div style="display:flex;gap:8px">
+                <button id="btnNuevo" class="btn-primary">Iniciar ciclo</button>
+                <button id="btnRecargar" class="btn-outline">Recargar ciclos</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="hint">Si existe un ciclo activo (mismo Horno/Fecha/Turno) aparecerá en "Ciclos activos".</div>
       </div>
 
       <div class="card">
-        <canvas id="chart"></canvas>
-      </div>
-    </div>
-
-    <!-- ===== VISTA: INVENTARIO ===== -->
-    <div id="view-inventario" class="hidden">
-      <div class="card">
-        <div style="display:flex;gap:8px;align-items:center">
-          <input id="fBuscar" placeholder="Buscar...">
-          <button id="btnActualizarInv" class="btn-primary">Actualizar</button>
-          <button id="btnVistaToggle" class="btn-outline">📋 Vista Tabla</button>
-        </div>
-        <div id="listPend" style="margin-top:10px"></div>
-      </div>
-    </div>
-
-    <!-- ===== VISTA: PLANOS ===== -->
-    <div id="view-planos" class="hidden">
-      <div class="card">
-        <div style="display:flex;gap:10px;align-items:center">
-          <input id="buscarPlano" placeholder="Buscar plano...">
-          <button id="btnRecargarPlanos" class="btn-primary">🔄 Recargar</button>
-        </div>
-        <div style="max-height:70vh;overflow:auto;margin-top:10px">
-          <table id="tablaPlanos">
-            <thead><tr><th>Nombre</th><th>Enlace</th></tr></thead>
-            <tbody id="tbodyPlanos"></tbody>
+        <h3 style="color:var(--accent);margin:0 0 12px">Agregar lecturas por hora</h3>
+        <div class="table-wrap">
+          <table id="tabla">
+            <thead>
+              <tr><th>Hora</th><th>Zona 1</th><th>Zona 2</th><th>Zona 3</th><th>Zona 4</th><th>SetPoint</th><th>Quitar</th></tr>
+            </thead>
+            <tbody id="tbody">
+              <tr>
+                <td><input type="time" class="hora"></td>
+                <td><input type="number" class="zona1" step="0.1"></td>
+                <td><input type="number" class="zona2" step="0.1"></td>
+                <td><input type="number" class="zona3" step="0.1"></td>
+                <td><input type="number" class="zona4" step="0.1"></td>
+                <td><input type="number" class="setPoint" step="0.1"></td>
+                <td><button class="del" type="button" style="background:var(--accent);color:#000">✕</button></td>
+              </tr>
+            </tbody>
           </table>
         </div>
-      </div>
-    </div>
 
-    <!-- ===== MODAL ===== -->
-    <div class="modal" id="modalInv">
-      <div class="win">
-        <div class="head"><b id="mdTitulo"></b><button id="btnCloseInv" class="close">Cerrar</button></div>
-        <div class="body">
-          <iframe id="framePlano" class="pdf-frame"></iframe>
-        </div>
-      </div>
-    </div>
-
-    <!-- ===== DRAWER ===== -->
-    <div id="drawer" class="drawer">
-      <div class="head"><span>Menú</span><button id="btnCloseDrawer">✕</button></div>
-      <div class="body">
-        <div class="opt" data-target="temperaturas"><b>Registro de Temperaturas</b></div>
-        <div class="opt" data-target="inventario"><b>Inventario Por Templar</b></div>
-        <div class="opt" data-target="planos"><b>Consulta de Planos</b></div>
-        <div class="opt admin-only" data-target="admin"><b>👑 Panel Administrador</b></div>
-      </div>
-    </div>
-    <div id="drawerMask" class="drawer-mask"></div>
-
-    <!-- ===== VISTA ADMIN ===== -->
-    <div id="view-admin" class="hidden">
-      <div class="card">
-        <h3 style="color:var(--accent)">Gestión de usuarios y permisos</h3>
-        <div class="grid4">
-          <div><label>Correo</label><input id="admCorreo" type="email" placeholder="nombre@tecnoglass.com"></div>
-          <div><label>Rol</label><select id="admRol"><option>user</option><option>admin</option></select></div>
-          <div><label>Zona</label><select id="admZona"><option>TecnoglassBarranquilla</option><option>Libre</option></select></div>
-          <div><button id="btnAdmAgregar" class="btn-primary">Guardar</button><button id="btnAdmEliminar" class="btn-danger">Eliminar</button></div>
+        <div class="btn-row">
+          <button id="btnAgregarFila" class="btn-primary" type="button">Agregar lectura</button>
+          <button id="btnGuardar" class="btn-primary" type="button">Guardar lecturas</button>
+          <button id="btnFinalizar" class="btn-danger" type="button">Finalizar ciclo</button>
         </div>
       </div>
 
       <div class="card">
-        <h3 style="color:var(--accent)">Actualizar zona Tecnoglass</h3>
-        <div class="grid4">
-          <div><label>Latitud</label><input id="admLat" type="number" step="0.0001" value="11.0000"></div>
-          <div><label>Longitud</label><input id="admLng" type="number" step="0.0001" value="-74.8300"></div>
-          <div><label>Radio (km)</label><input id="admRad" type="number" step="0.1" value="2.0"></div>
-          <div><button id="btnAdmZona" class="btn-primary">Guardar zona</button></div>
+        <h3 style="color:var(--accent);margin:0 0 12px">Gráfica del ciclo seleccionado (en tiempo real)</h3>
+        <canvas id="chart"></canvas>
+        <div class="cabecera" id="cabecera"></div>
+      </div>
+    </div>
+
+    <!-- ======== Vista: Inventario ======== -->
+    <div id="view-inventario" class="hidden">
+      <div class="card" style="background:var(--panel-2)">
+        <div class="inv-toolbar">
+          <div class="inv-pill">
+            <label>Planta</label>
+            <select id="fPlanta">
+              <option value="">Todas</option>
+              <option>A1</option><option>A2</option><option>A3</option><option>OTRA</option>
+            </select>
+            <label>Máquina</label>
+            <select id="fMaquina"><option value="">Todas</option></select>
+          </div>
+          <div class="inv-pill">
+            <label>Buscar</label>
+            <input id="fBuscar" type="text" placeholder="soitem, part, desc...">
+          </div>
+          <div class="inv-pill">
+            <label>Ordenar</label>
+            <select id="fOrden">
+              <option value="fecha_desc">Fecha reciente</option>
+              <option value="fecha_asc">Fecha antigua</option>
+              <option value="machine">Máquina</option>
+              <option value="part">Part</option>
+              <option value="kg_desc">Kg ↓</option>
+              <option value="kg_asc">Kg ↑</option>
+              <option value="desc">Descripción (A-Z)</option>
+              <option value="desc_rev">Descripción (Z-A)</option>
+            </select>
+          </div>
+          <button class="inv-btn" id="btnActualizarInv">Actualizar</button>
+          <div class="inv-info" id="ultimaInfoInv">Última actualización: -</div>
+          <button class="inv-btn" id="btnVistaToggle">📋 Vista Tabla</button>
+          <div class="inv-info"><b>Turno actual:</b> <span id="lblTurno">-</span></div>
         </div>
+
+        <div class="inv-tabs">
+          <div class="inv-tab active" id="tabPend">Pendientes</div>
+          <div class="inv-tab" id="tabRevis">Revisados</div>
+          <div class="inv-tab" id="tabHist">Historial</div>
+        </div>
+
+        <div class="totales-bar" id="totalesBar">
+          <div class="t-chip"><b>Total general:</b> <span id="tTotalGeneral">0</span> Kg</div>
+          <div class="t-chip"><b>Pendientes por revisar:</b> <span id="tPendientes">0</span> Kg</div>
+          <div class="t-chip"><b>Revisados:</b> <span id="tRevisados">0</span> Kg</div>
+          <div class="t-chip"><b>Avance:</b> <span class="pct" id="tAvance">0%</span></div>
+        </div>
+
+        <div class="kpi-por-mac" id="kpiPorMac"></div>
+      </div>
+
+      <div id="listPend" class="inv-grid"></div>
+      <div id="listRevis" class="inv-grid hidden"></div>
+      <div id="listHist" class="inv-grid hidden"></div>
+    </div>
+  </div>
+
+  <!-- ===== Vista Tabla agrupada Pendientes ===== -->
+  <div id="viewTabla" class="hidden">
+    <div class="card" style="background:var(--panel-2)">
+      <div class="inv-toolbar" style="justify-content:space-between;align-items:center">
+        <div class="inv-pill">
+          <label>Agrupar por</label>
+          <select id="agrupacionTabla">
+            <option value="part">Part</option>
+            <option value="desc">Descripción</option>
+          </select>
+        </div>
+        <button class="inv-btn primary" id="btnRecargarTabla">🔄 Recargar</button>
+      </div>
+      <div class="table-wrap" id="tablaAgrupada"></div>
+    </div>
+  </div>
+
+  <!-- ======== Vista: Planos ======== -->
+  <div id="view-planos" class="hidden">
+    <div class="card" style="background:var(--panel-2)">
+      <div class="inv-toolbar">
+        <div class="inv-pill">
+          <label>Buscar plano</label>
+          <input id="buscarPlano" type="text" placeholder="Nombre del plano...">
+        </div>
+        <button class="inv-btn primary" id="btnRecargarPlanos">🔄 Recargar</button>
+      </div>
+
+      <div class="tabla-container" style="max-height:70vh;overflow-y:auto;border-radius:10px;">
+        <table id="tablaPlanos" style="width:100%;border-collapse:collapse;">
+          <thead>
+            <tr style="background:#222;color:#00e5ff;">
+              <th style="padding:8px;border-bottom:1px solid #333;text-align:left;">Nombre</th>
+              <th style="padding:8px;border-bottom:1px solid #333;text-align:left;">Enlace</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyPlanos" style="color:#e0e0e0;"></tbody>
+        </table>
       </div>
     </div>
   </div>
+
+  <!-- ===== Modal Inventario ===== -->
+  <div class="modal" id="modalInv">
+    <div class="win" role="dialog" aria-modal="true">
+      <div class="head">
+        <div><b id="mdTitulo">Detalle</b></div>
+        <button class="close" id="btnCloseInv">Cerrar</button>
+      </div>
+      <div class="body">
+        <div class="kv">
+          <b>SOITEM</b><div id="mdSoitem"></div>
+          <b>Part</b><div id="mdPart"></div>
+          <b>Descripción</b><div id="mdDesc"></div>
+          <b>Prioridad</b><div id="mdPrio"></div>
+          <b>Longitud</b><div id="mdLong"></div>
+          <b>Pzs Pend</b><div id="mdPzs"></div>
+          <b>Kg Pend</b><div id="mdKg"></div>
+          <b>Máquina</b><div id="mdMac"></div>
+          <b>Planta</b><div id="mdPlanta"></div>
+          <b>Fecha</b><div id="mdFec"></div>
+        </div>
+
+        <hr style="margin:10px 0;border:0;border-top:1px solid var(--soft)">
+
+        <div class="kv">
+          <b>Comentario</b>
+          <div><input id="mdCmt" type="text" placeholder="Agregar/editar comentario..."></div>
+          <b>Trazabilidad</b>
+          <div id="mdTrace" style="font-size:12.5px;color:#ddd">(sin registros)</div>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn-mini warn" id="btnGuardarCmt">💬 Guardar comentario</button>
+        <button class="btn-mini ok" id="btnOk">✅ OK</button>
+        <button class="btn-mini rev" id="btnRegresar">↩️ Regresar a pendientes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Drawer ===== -->
+  <div class="drawer" id="drawer">
+    <div class="head">
+      <span>Menú principal</span>
+      <button id="btnCloseDrawer">✕</button>
+    </div>
+    <div class="body">
+      <div class="opt" data-target="temperaturas">
+        <b>Registro de Temperaturas</b><br>
+        <small>Lecturas por zona y ciclo</small>
+      </div>
+      <div class="opt gate" data-target="inventario">
+        <b>Inventario Por Templar</b><br>
+        <small>Gestión y trazabilidad</small>
+      </div>
+      <div class="opt gate" data-target="planos">
+        <b>Consulta de Planos</b><br>
+        <small>Acceso directo a los planos en Excel</small>
+      </div>
+
+      <div class="opt" onclick="actualizarZonaTecnoglass()" style="border-top:1px solid #333;margin-top:8px;">
+        <b>🛠️ Actualizar zona Tecnoglass</b><br>
+        <small>Solo administrador</small>
+      </div>
+      <div class="opt" onclick="cambiarCorreo()">
+        <b>👤 Cambiar usuario</b><br>
+        <small>Permite volver a iniciar con otro correo</small>
+      </div>
+    </div>
+  </div>
+  <div class="drawer-mask" id="drawerMask"></div>
+
+  <!-- Panel GPS y botón -->
+  <div id="panelGPS"
+       style="position:fixed;bottom:60px;right:10px;background:#111;padding:10px 14px;
+       border:1px solid #00e5ff;border-radius:10px;color:#0ff;font-size:12px;
+       font-family:monospace;z-index:9999;box-shadow:0 0 10px rgba(0,229,255,0.5);display:none;">
+    <div>📍 <b>Lat:</b> — | <b>Lng:</b> —</div>
+    <div>🏭 <b>Centro:</b> 10.9846, -74.8181</div>
+    <div>📏 <b>Distancia:</b> — km</div>
+    <div>✅ <b>Estado:</b> —</div>
+  </div>
+  <button id="btnGPS"
+          style="position:fixed;bottom:10px;right:10px;background:#00e5ff;color:#000;
+          border:none;padding:6px 10px;border-radius:8px;font-weight:bold;cursor:pointer;
+          z-index:10000;box-shadow:0 0 10px rgba(0,229,255,0.5);">
+    🛰️ GPS
+  </button>
+
   <script>
-  // ==========================
-  // CONFIGURACIÓN FIREBASE
-  // ==========================
+  "use strict";
+
+  /* ==================== Firebase ==================== */
   const firebaseConfig = {
     apiKey: "AIzaSyAB4UlwaVJzc4U4VbmddLf4mejKAOvTufw",
     authDomain: "hornosapp-60887.firebaseapp.com",
@@ -201,343 +462,1230 @@
   };
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
-  const auth = firebase.auth();
+  const dbInv = db.ref("inventarioPorTemplar");
 
-  // ==========================
-  // VARIABLES GLOBALES
-  // ==========================
-  let usuarioActual = null;
-  let rolActual = "user";
-  let permisosActual = {
-    planos:false, api:false, inventario:false, sinGeocerca:false
-  };
-  let zonaTecnoglass = {lat:11.0, lng:-74.83, radio_km:2};
-
-  // ==========================
-  // INICIO DE SESIÓN CON GOOGLE
-  // ==========================
-  const lblUser = document.getElementById("lblUser");
-  const btnLogin = document.getElementById("btnLogin");
-  const btnLogout = document.getElementById("btnLogout");
-
-  btnLogin.onclick = async () => {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    await auth.signInWithPopup(provider);
-  };
-  btnLogout.onclick = () => auth.signOut();
-
-  auth.onAuthStateChanged(async (user)=>{
-    if(user){
-      usuarioActual = user;
-      lblUser.textContent = user.email;
-      btnLogin.classList.add("hidden");
-      btnLogout.classList.remove("hidden");
-      await inicializarUsuario(user.email);
-    }else{
-      usuarioActual=null;
-      lblUser.textContent="—";
-      btnLogin.classList.remove("hidden");
-      btnLogout.classList.add("hidden");
-      desactivarMenus();
-    }
-  });
-
-  // ==========================
-  // INICIALIZAR USUARIO
-  // ==========================
-  async function inicializarUsuario(email){
-    const clave = email.replace(/\./g,"_").replace(/@/g,"_");
-    const ref = db.ref("seguridad/usuarios/"+clave);
+  /* ============ Seguridad inicial (si faltan nodos, crearlos) ============ */
+  async function inicializarSeguridad() {
+    const ref = firebase.database().ref("seguridad");
     const snap = await ref.once("value");
-    let data = snap.val();
-
-    if(!data){
-      // crear usuario por defecto
-      data = {
-        autorizado:true,
-        rol: email==="gary.maldonado@tecnoglass.com"?"superadmin":"user",
-        zona:"TecnoglassBarranquilla",
-        permisos:{planos:false,api:false,inventario:false,sinGeocerca:false}
-      };
-      await ref.set(data);
-    }
-
-    rolActual = data.rol || "user";
-    permisosActual = data.permisos || {planos:false,api:false,inventario:false,sinGeocerca:false};
-
-    // cargar zona
-    const snapZ = await db.ref("seguridad/zonas/TecnoglassBarranquilla").once("value");
-    if(snapZ.exists()) zonaTecnoglass = snapZ.val();
-
-    verificarAcceso();
-  }
-
-  // ==========================
-  // VERIFICAR ACCESO
-  // ==========================
-  async function verificarAcceso(){
-    // superadmin tiene acceso total
-    if(rolActual==="superadmin"){activarMenusTotal();return;}
-
-    // geocerca
-    if(!permisosActual.sinGeocerca){
-      const dentro = await verificarZona();
-      if(!dentro){
-        alert("🚫 Estás fuera del área permitida de Tecnoglass.");
-        desactivarMenus();
-        return;
+    if (snap.exists()) return;
+    const dataInicial = {
+      zonas: {
+        TecnoglassBarranquilla: {
+          nombre: "Tecnoglass S.A.S - Barranquilla",
+          lat: 11.0000,
+          lng: -74.8300,
+          radio_km: 8
+        }
+      },
+      usuarios: {
+        "gary_maldonado_tecnoglass_com": { autorizado: true, zona: "TecnoglassBarranquilla" },
+        "operario1_tecnoglass_com":     { autorizado: true, zona: "TecnoglassBarranquilla" },
+        "externo_gmail_com":            { autorizado: true, zona: "Libre" }
       }
-    }
-    activarMenusPorPermiso();
+    };
+    await ref.set(dataInicial);
   }
+  inicializarSeguridad();
 
-  // ==========================
-  // GEOLOCALIZACIÓN
-  // ==========================
-  function distanciaKm(lat1, lon1, lat2, lon2){
+  // Nodo de permisos Planos si no existe
+  const permisosRef = firebase.database().ref("planosAcceso");
+  permisosRef.once("value", s => {
+    if (!s.exists()) {
+      permisosRef.set({
+        "gary_maldonado_tecnoglass_com": true,
+        "supervisor_tecnoglass_net": true,
+        "operario_tecnoglass_net": true
+      });
+    }
+  });
+
+  /* ==================== Variables globales ==================== */
+  const $ = id => document.getElementById(id);
+  const pad2 = n => String(n).padStart(2,'0');
+  const hoyISO = () => new Date().toISOString().slice(0,10);
+  const toNum = v => isNaN(+v)?0:+v;
+
+  let usuarioCorreoActual = "";
+  let accesoPermitido = false; // solo controla Inventario/Planos
+  let currentCicloId = "";
+  let liveRef = null;
+
+  const API_URL = "https://optima.tecnoglass.net/api/alutions_production/reports-producion/Detalle-produccion";
+
+  /* ==================== Utilidades ==================== */
+  function addHoursToHHMM(hhmm, plus=10){
+    if(!hhmm) return "";
+    const [h,m] = hhmm.split(':').map(Number);
+    const dt = new Date(); dt.setHours(h||0,m||0,0,0); dt.setHours(dt.getHours()+plus);
+    return pad2(dt.getHours())+':'+pad2(dt.getMinutes());
+  }
+  function horaAhoraHHMM(){ const d = new Date(); return pad2(d.getHours())+':'+pad2(d.getMinutes()); }
+  function toAMPM(hhmm){
+    if(!hhmm) return '';
+    const [h,m] = hhmm.split(':').map(Number);
+    let hour = h % 12 || 12; const ampm = h >= 12 ? 'PM' : 'AM';
+    return `${hour}:${pad2(m)} ${ampm}`;
+  }
+  function turnoDetallado(){
+    const ahora = new Date();
+    const h = ahora.getHours();
+    let turno = (h >= 7 && h < 19) ? "T1" : "T2";
+    let fechaBase = new Date(ahora);
+    if (turno === "T2" && h < 7) { fechaBase.setDate(fechaBase.getDate()-1); }
+    return { turno, fechaISO: fechaBase.toISOString().slice(0,10) };
+  }
+  function fFecha(iso){ if(!iso) return ""; const d=new Date(iso); if(isNaN(d)) return ""; return d.toLocaleString("es-CO",{hour12:true}); }
+  function getPlanta(machine){
+    const m=(machine||"").trim().toUpperCase();
+    if(["PRENSA 7-1","PRENSA 7-2","PRENSA 7-3","PRENSA 7-6","PRENSA 7-7","PRENSA 7-8"].includes(m)) return "A1";
+    if(["PRENSA 7-4"].includes(m)) return "A2";
+    if(["PRENSA 7-5","PRENSA 7-9","PRENSA 7-10"].includes(m)) return "A3";
+    return "OTRA";
+  }
+  function isAdmin(c){ return (c||"").toLowerCase().includes("gary.maldonado"); }
+
+  /* ==================== Geolocalización / Zona ==================== */
+  function obtenerUbicacionActual() {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) return reject("Geolocalización no soportada");
+      navigator.geolocation.getCurrentPosition(
+        pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        err => reject(err.message || "Error al obtener ubicación"),
+        { enableHighAccuracy: true, timeout: 7000 }
+      );
+    });
+  }
+  function distanciaKm(lat1, lon1, lat2, lon2) {
     const R = 6371;
-    const dLat = (lat2-lat1)*Math.PI/180;
-    const dLon = (lon2-lon1)*Math.PI/180;
-    const a = Math.sin(dLat/2)**2 +
-              Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
-    return R * 2 * Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) ** 2 +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon / 2) ** 2;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
   }
 
-  async function verificarZona(){
-    return new Promise((resolve)=>{
-      if(!navigator.geolocation){resolve(false);return;}
-      navigator.geolocation.getCurrentPosition(pos=>{
-        const d = distanciaKm(pos.coords.latitude,pos.coords.longitude,
-                              zonaTecnoglass.lat,zonaTecnoglass.lng);
-        resolve(d <= zonaTecnoglass.radio_km);
-      },()=>resolve(false),{timeout:4000});
-    });
-  }
+  async function verificarZonaPermitida(correoUsuario) {
+    try {
+      const snap = await firebase.database().ref("seguridad").once("value");
+      const seguridad = snap.val() || {};
+      const usuarioKey = correoUsuario.toLowerCase().replace(/\./g, "_").replace(/@/g, "_");
+      const usuario = seguridad.usuarios?.[usuarioKey];
 
-  // ==========================
-  // ACTIVAR / DESACTIVAR MENÚS
-  // ==========================
-  const drawerOpts = document.querySelectorAll(".drawer .opt");
-  function desactivarMenus(){
-    drawerOpts.forEach(o=>{
-      o.style.opacity=".4";
-      o.style.pointerEvents="none";
-    });
-  }
-
-  function activarMenusTotal(){
-    drawerOpts.forEach(o=>{
-      o.style.opacity="1";
-      o.style.pointerEvents="auto";
-    });
-    document.querySelectorAll(".admin-only").forEach(e=>e.style.display="block");
-  }
-
-  function activarMenusPorPermiso(){
-    drawerOpts.forEach(o=>{o.style.opacity=".4";o.style.pointerEvents="none";});
-    if(permisosActual.inventario){
-      document.querySelector('[data-target="inventario"]').style.opacity="1";
-      document.querySelector('[data-target="inventario"]').style.pointerEvents="auto";
-    }
-    if(permisosActual.planos){
-      document.querySelector('[data-target="planos"]').style.opacity="1";
-      document.querySelector('[data-target="planos"]').style.pointerEvents="auto";
-    }
-    document.querySelector('[data-target="temperaturas"]').style.opacity="1";
-    document.querySelector('[data-target="temperaturas"]').style.pointerEvents="auto";
-  }
-
-  // ==========================
-  // DRAWER MENÚ
-  // ==========================
-  const drawer = document.getElementById("drawer");
-  const mask = document.getElementById("drawerMask");
-  const btnMenu = document.getElementById("btnMenu");
-  const btnCloseDrawer = document.getElementById("btnCloseDrawer");
-  btnMenu.onclick = ()=>{drawer.classList.add("open");mask.style.display="block";};
-  btnCloseDrawer.onclick = cerrarDrawer;
-  mask.onclick = cerrarDrawer;
-  function cerrarDrawer(){drawer.classList.remove("open");mask.style.display="none";}
-
-  // Navegación
-  const vistas=["view-temperaturas","view-inventario","view-planos","view-admin"];
-  document.querySelectorAll(".drawer .opt").forEach(opt=>{
-    opt.onclick=()=>{
-      const target=opt.dataset.target;
-      vistas.forEach(v=>document.getElementById(v).classList.add("hidden"));
-      document.getElementById("view-"+target).classList.remove("hidden");
-      cerrarDrawer();
-    };
-  });
-
-  // ==========================
-  // ADMIN PANEL (solo superadmin)
-  // ==========================
-  const admCorreo=$("#admCorreo"),admRol=$("#admRol"),admZona=$("#admZona");
-  const admLat=$("#admLat"),admLng=$("#admLng"),admRad=$("#admRad");
-  const btnAdmAgregar=$("#btnAdmAgregar"),btnAdmEliminar=$("#btnAdmEliminar"),btnAdmZona=$("#btnAdmZona");
-
-  btnAdmAgregar.onclick=async()=>{
-    if(rolActual!=="superadmin"){alert("Solo el superadmin puede editar.");return;}
-    const email=admCorreo.value.trim().toLowerCase();if(!email)return;
-    const key=email.replace(/\./g,"_").replace(/@/g,"_");
-    const data={
-      autorizado:true,
-      rol:admRol.value,
-      zona:admZona.value,
-      permisos:{planos:true,api:true,inventario:true,sinGeocerca:false}
-    };
-    await db.ref("seguridad/usuarios/"+key).set(data);
-    alert("Usuario guardado.");
-  };
-
-  btnAdmEliminar.onclick=async()=>{
-    if(rolActual!=="superadmin"){alert("Solo el superadmin puede eliminar.");return;}
-    const email=admCorreo.value.trim().toLowerCase();if(!email)return;
-    const key=email.replace(/\./g,"_").replace(/@/g,"_");
-    await db.ref("seguridad/usuarios/"+key).remove();
-    alert("Usuario eliminado.");
-  };
-
-  btnAdmZona.onclick=async()=>{
-    if(rolActual!=="superadmin"){alert("Solo el superadmin puede modificar zona.");return;}
-    const zona={
-      lat:parseFloat(admLat.value)||11.0,
-      lng:parseFloat(admLng.value)||-74.83,
-      radio_km:parseFloat(admRad.value)||2
-    };
-    await db.ref("seguridad/zonas/TecnoglassBarranquilla").set(zona);
-    alert("Zona Tecnoglass actualizada.");
-  };
-
-  // util
-  function $(sel){return document.querySelector(sel);}
-  </script>
-  <script>
-  // ==========================
-  // PLANOS (buscador + modal)
-  // ==========================
-  const tbodyPlanos = $("#tbodyPlanos");
-  const buscarPlano = $("#buscarPlano");
-  const modalInv = $("#modalInv");
-  const framePlano = $("#framePlano");
-  const mdTitulo = $("#mdTitulo");
-
-  async function cargarPlanos(){
-    try{
-      const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTt0pEjemplo/pub?output=csv";
-      const res = await fetch(url);
-      const text = await res.text();
-      const rows = text.split("\n").map(r=>r.split(","));
-      tbodyPlanos.innerHTML="";
-      rows.slice(1).forEach(r=>{
-        const [nombre, , enlace] = r;
-        if(!nombre || !enlace) return;
-        const tr=document.createElement("tr");
-        tr.innerHTML=`<td>${nombre}</td><td><button class='btn-outline'>Ver</button></td>`;
-        tr.querySelector("button").onclick=()=>abrirPlano(nombre,enlace);
-        tbodyPlanos.appendChild(tr);
-      });
-    }catch(e){console.error(e);}
-  }
-  cargarPlanos();
-
-  function abrirPlano(nombre,url){
-    mdTitulo.textContent = nombre;
-    framePlano.src = url;
-    modalInv.style.display="flex";
-  }
-  $("#btnCloseInv").onclick=()=>{
-    modalInv.style.display="none";
-    framePlano.src="";
-  };
-  $("#btnRecargarPlanos").onclick=cargarPlanos;
-
-  buscarPlano.addEventListener("input",()=>{
-    const filtro = buscarPlano.value.toLowerCase();
-    for(const fila of tbodyPlanos.querySelectorAll("tr")){
-      const nombre=fila.cells[0].textContent.toLowerCase();
-      fila.style.display = nombre.includes(filtro)?"":"none";
-    }
-  });
-
-  // ==========================
-  // INVENTARIO (cards/tabla)
-  // ==========================
-  const listPend=$("#listPend");
-  const btnVista=$("#btnVistaToggle");
-  let vistaActual = localStorage.getItem("vistaInventario")||"cards";
-
-  btnVista.onclick=()=>{
-    vistaActual = vistaActual==="cards"?"tabla":"cards";
-    localStorage.setItem("vistaInventario",vistaActual);
-    mostrarInventario();
-  };
-
-  async function mostrarInventario(){
-    const data = [
-      {so:"SO123",item:"001",desc:"Perfil A",kg:2300},
-      {so:"SO456",item:"002",desc:"Perfil B",kg:1500},
-    ];
-    let html="";
-    if(vistaActual==="cards"){
-      btnVista.textContent="📋 Vista Tabla";
-      data.forEach(d=>{
-        html+=`<div class='card'>
-          <b>${d.desc}</b><br>SO:${d.so}-${d.item}<br>${d.kg} Kg
-        </div>`;
-      });
-    }else{
-      btnVista.textContent="🧱 Vista Cards";
-      html=`<table style='width:100%;border-collapse:collapse;text-align:center'>
-        <thead><tr><th>SO</th><th>ITEM</th><th>DESCRIPCIÓN</th><th>KG</th></tr></thead><tbody>`;
-      data.forEach(d=>{
-        html+=`<tr><td>${d.so}</td><td>${d.item}</td><td>${d.desc}</td><td>${d.kg}</td></tr>`;
-      });
-      html+="</tbody></table>";
-    }
-    listPend.innerHTML=html;
-  }
-  mostrarInventario();
-
-  $("#btnActualizarInv").onclick=()=>{
-    alert("🔄 Datos del inventario actualizados (demo).");
-    mostrarInventario();
-  };
-
-  // ==========================
-  // REGISTRO DE TEMPERATURAS
-  // ==========================
-  const ctx=document.getElementById("chart");
-  const chart=new Chart(ctx,{
-    type:"line",
-    data:{
-      labels:["1 AM","2 AM","3 AM","4 AM","5 AM","6 AM"],
-      datasets:[{
-        label:"Temperatura (°C)",
-        data:[380,385,390,400,405,398],
-        borderColor:"#00e5ff",
-        tension:0.3
-      }]
-    },
-    options:{
-      responsive:true,
-      plugins:{legend:{labels:{color:"#fff"}}},
-      scales:{
-        x:{ticks:{color:"#fff"}},
-        y:{ticks:{color:"#fff"}}
+      if (!usuario) {
+        alert("🚫 Este usuario no está registrado en la base de seguridad.");
+        return false;
       }
+      if (usuario.zona === "Libre") return true;
+
+      const zona = seguridad.zonas?.[usuario.zona];
+      if (!zona) {
+        alert("⚠️ La zona asignada no existe en Firebase.");
+        return false;
+      }
+      const pos = await obtenerUbicacionActual();
+      const distancia = distanciaKm(pos.lat, pos.lng, zona.lat, zona.lng);
+      const dentro = distancia <= zona.radio_km + 2; // tolerancia
+
+      // Actualiza panel GPS si está abierto
+      actualizarPanel(pos.lat, pos.lng);
+
+      return dentro;
+    } catch (err) {
+      console.error("Error verificando zona:", err);
+      alert("⚠️ No se pudo verificar la zona: " + err);
+      return false;
     }
+  }
+
+  function habilitarAccesoTotal() {
+    accesoPermitido = true;
+    localStorage.setItem("accesoPermitido", "true");
+    document.querySelectorAll(".drawer .opt.gate").forEach(o => {
+      o.style.opacity = "1";
+      o.style.pointerEvents = "auto";
+    });
+  }
+  function deshabilitarAcceso() {
+    accesoPermitido = false;
+    localStorage.removeItem("accesoPermitido");
+    document.querySelectorAll(".drawer .opt.gate").forEach(o => {
+      o.style.opacity = "0.5";
+      o.style.pointerEvents = "none";
+    });
+  }
+
+  /* ==================== Login: pedir correo solo 1ra vez ==================== */
+  window.addEventListener("DOMContentLoaded", async () => {
+    let correo = localStorage.getItem("correo_autorizado");
+    if (!correo) {
+      correo = prompt("Introduce tu correo corporativo (ej: gary.maldonado@tecnoglass.com):");
+      if (!correo) {
+        alert("⚠️ No se puede continuar sin correo autorizado.");
+        correo = "externo@gmail.com"; // fallback para no romper UI
+      }
+      localStorage.setItem("correo_autorizado", correo);
+    }
+    usuarioCorreoActual = correo;
+
+    // Verificar zona (no bloquea menús generales)
+    const dentro = isAdmin(correo) ? true : await verificarZonaPermitida(correo);
+    if (dentro) habilitarAccesoTotal(); else deshabilitarAcceso();
+
+    $('lblTurno').textContent = `${turnoDetallado().turno} (${turnoDetallado().fechaISO})`;
+
+    // Defaults Temperaturas
+    $('fecha').value = hoyISO();
+    $('horaInicio').value = horaAhoraHHMM();
+    $('horaFin').value = addHoursToHHMM($('horaInicio').value,10);
+    $('selActivos').innerHTML = '<option value="">-- Ninguno --</option>';
+
+    // Iniciar inventario solo si hay acceso permitido
+    if (accesoPermitido) { try { await cargarInventario(); } catch(e){} }
   });
 
-  $("#btnNuevo").onclick=()=>{
-    alert("🔥 Nuevo ciclo iniciado (demo).");
+  /* ==================== Botón Admin: actualizar zona ==================== */
+  async function actualizarZonaTecnoglass() {
+    let correo = localStorage.getItem("correo_autorizado") || "";
+    if (!isAdmin(correo)) {
+      alert("🚫 Solo administradores pueden actualizar la zona.");
+      return;
+    }
+    const confirmar = confirm("¿Actualizar zona TecnoglassBarranquilla en Firebase?");
+    if (!confirmar) return;
+    await firebase.database().ref("seguridad/zonas/TecnoglassBarranquilla").update({
+      lat: 11.0000, lng: -74.8300, radio_km: 8
+    });
+    alert("✅ Zona TecnoglassBarranquilla actualizada correctamente.");
+  }
+  window.actualizarZonaTecnoglass = actualizarZonaTecnoglass;
+
+  /* ==================== Drawer ==================== */
+  const drawer = document.getElementById("drawer");
+  const mask   = document.getElementById("drawerMask");
+  function openDrawer(){ drawer.classList.add("open"); mask.style.display="block"; }
+  function closeDrawer(){ drawer.classList.remove("open"); mask.style.display="none"; }
+
+  $('btnMenu').addEventListener('click', async ()=>{
+    openDrawer();
+    // Revalidar acceso sin bloquear acciones
+    const correo = localStorage.getItem("correo_autorizado");
+    if (correo) {
+      const dentro = isAdmin(correo) ? true : await verificarZonaPermitida(correo);
+      if (dentro) habilitarAccesoTotal(); else deshabilitarAcceso();
+    }
+  });
+  $('btnCloseDrawer').addEventListener('click', closeDrawer);
+  $('drawerMask').addEventListener('click', closeDrawer);
+
+  document.querySelectorAll(".drawer .opt").forEach(opt=>{
+    opt.addEventListener("click", ()=>{
+      const target = opt.dataset.target;
+      if (target === "temperaturas") {
+        mostrarVista("temperaturas");
+      } else if (target === "inventario") {
+        if (!accesoPermitido) { alert("🚫 Fuera de zona o no autorizado."); return; }
+        mostrarVista("inventario");
+      } else if (target === "planos") {
+        if (!accesoPermitido) { alert("🚫 Fuera de zona o no autorizado."); return; }
+        mostrarVista("planos");
+        verificarAccesoPlanos();
+      }
+    });
+  });
+
+  function mostrarVista(vista) {
+    ["view-temperaturas","view-inventario","view-planos","viewTabla"].forEach(id=>$(id).classList.add("hidden"));
+    $("view-" + vista).classList.remove("hidden");
+    $("topTitle").textContent =
+      vista === "temperaturas" ? "Registro de Temperaturas" :
+      vista === "inventario"   ? "Inventario Por Templar" :
+      "Consulta de Planos";
+    setTimeout(closeDrawer, 120);
+  }
+
+  /* ==================== GPS ==================== */
+  let centro = { lat: 11.0000, lng: -74.8300, radio_km: 8 };
+  firebase.database().ref("seguridad/zonas/TecnoglassBarranquilla").on("value", snap => {
+    if (snap.exists()) centro = snap.val();
+  });
+
+  function actualizarPanel(lat, lng) {
+    const panel = $('panelGPS');
+    const dist = distanciaKm(lat, lng, centro.lat, centro.lng);
+    const dentro = dist <= (centro.radio_km + 2);
+    panel.innerHTML = `
+      <div>📍 <b>Lat:</b> ${lat.toFixed(5)} | <b>Lng:</b> ${lng.toFixed(5)}</div>
+      <div>🏭 <b>Centro:</b> ${centro.lat.toFixed(4)}, ${centro.lng.toFixed(4)}</div>
+      <div>📏 <b>Distancia:</b> ${dist.toFixed(2)} km</div>
+      <div>${dentro ? "✅ <b>Dentro del área</b>" : "🚫 <b>Fuera del área</b>"}</div>
+    `;
+  }
+  function iniciarGPS() {
+    if (!navigator.geolocation) {
+      $('panelGPS').innerHTML = "⚠️ Geolocalización no soportada";
+      return;
+    }
+    navigator.geolocation.watchPosition(
+      pos => {
+        const { latitude: lat, longitude: lng } = pos.coords;
+        actualizarPanel(lat, lng);
+        const dist = distanciaKm(lat, lng, centro.lat, centro.lng);
+        const dentro = dist <= (centro.radio_km + 2);
+        if (!dentro && accesoPermitido) deshabilitarAcceso();
+      },
+      err => { $('panelGPS').innerHTML = "❌ Error GPS: " + err.message; },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }
+  $('btnGPS').addEventListener('click', ()=>{
+    const panel = $('panelGPS');
+    if (panel.style.display === "none") { panel.style.display="block"; iniciarGPS(); }
+    else { panel.style.display="none"; }
+  });
+
+  /* ==================== Cambiar correo ==================== */
+  function cambiarCorreo() {
+    localStorage.removeItem("correo_autorizado");
+    localStorage.removeItem("accesoPermitido");
+    alert("🔄 Correo eliminado. Recarga la página para ingresar uno nuevo.");
+    location.reload();
+  }
+  window.cambiarCorreo = cambiarCorreo;
+
+  /* ==================== Temperaturas ==================== */
+  function bindDeletes(){
+    document.querySelectorAll('#tbody .del').forEach(btn=>{
+      btn.onclick = ()=> btn.closest('tr').remove();
+    });
+  }
+  bindDeletes();
+  $('btnAgregarFila').onclick = ()=>{
+    const now = horaAhoraHHMM();
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="time" class="hora" value="${now}"></td>
+      <td><input type="number" class="zona1" step="0.1"></td>
+      <td><input type="number" class="zona2" step="0.1"></td>
+      <td><input type="number" class="zona3" step="0.1"></td>
+      <td><input type="number" class="zona4" step="0.1"></td>
+      <td><input type="number" class="setPoint" step="0.1"></td>
+      <td><button class="del" type="button" style="background:var(--accent);color:#000">✕</button></td>
+    `;
+    $('tbody').appendChild(tr);
+    bindDeletes();
   };
 
-  // ==========================
-  // FIN BLOQUE 3
-  // ==========================
+  const chart = new Chart($('chart').getContext('2d'), {
+    type:'line',
+    data:{ labels: [], datasets:[
+      {label:'Zona 1', data:[], borderColor:'red', fill:false, tension:0.2},
+      {label:'Zona 2', data:[], borderColor:'green', fill:false, tension:0.2},
+      {label:'Zona 3', data:[], borderColor:'blue', fill:false, tension:0.2},
+      {label:'Zona 4', data:[], borderColor:'purple', fill:false, tension:0.2},
+      {label:'SetPoint', data:[], borderColor:'orange', borderDash:[6,4], fill:false, tension:0}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,animation:false}
+  });
+
+  async function cargarActivosSelect(){
+    const horno = $('horno').value, fecha = $('fecha').value, turno = $('turno').value;
+    const snap = await db.ref('ciclosActivos').once('value');
+    const sel = $('selActivos');
+    sel.innerHTML = `<option value="">-- Ninguno --</option>`;
+    snap.forEach(ch=>{
+      const meta = ch.val().meta || {};
+      if(meta.horno === horno && meta.fecha === fecha && meta.turno === turno){
+        const opt = document.createElement('option');
+        opt.value = ch.key;
+        opt.textContent = `${meta.horno} • ${meta.fecha} • ${meta.turno} • ${meta.horaInicio||'--'}`;
+        sel.appendChild(opt);
+      }
+    });
+  }
+  $('btnRecargar').addEventListener('click', cargarActivosSelect);
+  ['horno','fecha','turno'].forEach(id=> $(id).addEventListener('change', cargarActivosSelect));
+
+  function detachLive(){
+    if(liveRef){ liveRef.off(); liveRef=null; }
+    chart.data.labels=[]; chart.data.datasets.forEach(ds=>ds.data=[]); chart.update();
+    $('cabecera').textContent='';
+    currentCicloId="";
+  }
+  function attachLive(cicloId){
+    detachLive();
+    if(!cicloId) return;
+    currentCicloId=cicloId;
+
+    db.ref(`ciclosActivos/${cicloId}/meta`).once('value').then(s=>{
+      const meta=s.val()||{};
+      $('horaInicio').value=meta.horaInicio||horaAhoraHHMM();
+      $('horaFin').value=meta.horaFin||addHoursToHHMM(meta.horaInicio||horaAhoraHHMM(),10);
+      $('operarioInicio').value=meta.operarioInicio||'';
+      $('cabecera').textContent=`Ciclo: ${meta.horno||''} | ${meta.fecha||''} | ${meta.turno||''}`;
+    });
+
+    liveRef=db.ref(`ciclosActivos/${cicloId}/lecturas`);
+    liveRef.on('value', snap=>{
+      const arr=[];
+      snap.forEach(ch=>{
+        const v=ch.val()||{};
+        arr.push({
+          hora: v.hora || horaAhoraHHMM(),
+          zona1: v.zona1 ?? '',
+          zona2: v.zona2 ?? '',
+          zona3: v.zona3 ?? '',
+          zona4: v.zona4 ?? '',
+          setPoint: v.setPoint ?? ''
+        });
+      });
+      arr.sort((a,b)=>a.hora.localeCompare(b.hora));
+
+      chart.data.labels = arr.map(r => toAMPM(r.hora));
+      chart.data.datasets[0].data = arr.map(r => (r.zona1!=='' && r.zona1!=null && !isNaN(r.zona1)) ? Number(r.zona1) : null);
+      chart.data.datasets[1].data = arr.map(r => (r.zona2!=='' && r.zona2!=null && !isNaN(r.zona2)) ? Number(r.zona2) : null);
+      chart.data.datasets[2].data = arr.map(r => (r.zona3!=='' && r.zona3!=null && !isNaN(r.zona3)) ? Number(r.zona3) : null);
+      chart.data.datasets[3].data = arr.map(r => (r.zona4!=='' && r.zona4!=null && !isNaN(r.zona4)) ? Number(r.zona4) : null);
+      chart.data.datasets[4].data = arr.map(r => (r.setPoint!=='' && r.setPoint!=null && !isNaN(r.setPoint)) ? Number(r.setPoint) : null);
+      chart.update();
+
+      const tbody = $('tbody');
+      tbody.innerHTML = '';
+      if(arr.length === 0){
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><input type="time" class="hora" value="${horaAhoraHHMM()}"></td>
+          <td><input type="number" class="zona1" step="0.1"></td>
+          <td><input type="number" class="zona2" step="0.1"></td>
+          <td><input type="number" class="zona3" step="0.1"></td>
+          <td><input type="number" class="zona4" step="0.1"></td>
+          <td><input type="number" class="setPoint" step="0.1"></td>
+          <td><button class="del" type="button" style="background:var(--accent);color:#000">✕</button></td>`;
+        tbody.appendChild(tr);
+      } else {
+        arr.forEach(r=>{
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><input type="time" class="hora" value="${r.hora}"></td>
+            <td><input type="number" class="zona1" step="0.1" value="${r.zona1}"></td>
+            <td><input type="number" class="zona2" step="0.1" value="${r.zona2}"></td>
+            <td><input type="number" class="zona3" step="0.1" value="${r.zona3}"></td>
+            <td><input type="number" class="zona4" step="0.1" value="${r.zona4}"></td>
+            <td><input type="number" class="setPoint" step="0.1" value="${r.setPoint}"></td>
+            <td><button class="del" type="button" style="background:var(--accent);color:#000">✕</button></td>`;
+          tbody.appendChild(tr);
+        });
+      }
+      bindDeletes();
+    });
+  }
+  $('selActivos').addEventListener('change',e=>{
+    const id=e.target.value;
+    if(!id){ detachLive(); return; }
+    attachLive(id);
+  });
+
+  $('btnNuevo').addEventListener('click', async ()=> {
+    const horno = $('horno').value.trim();
+    const fecha = $('fecha').value.trim();
+    const turno = $('turno').value.trim();
+    const horaInicio = $('horaInicio').value || horaAhoraHHMM();
+    const horaFin = $('horaFin').value || addHoursToHHMM(horaInicio,10);
+    const operarioInicio = $('operarioInicio').value.trim();
+
+    if(!horno || !fecha || !turno){
+      alert('⚠️ Debes seleccionar Horno, Fecha y Turno antes de iniciar.');
+      return;
+    }
+    const snapshot = await db.ref('ciclosActivos').once('value');
+    let duplicado = false;
+    snapshot.forEach(ch=>{
+      const meta = ch.val().meta || {};
+      if(meta.horno===horno && meta.fecha===fecha && meta.turno===turno){
+        duplicado = true;
+      }
+    });
+    if(duplicado){
+      alert('🚫 Ya existe un ciclo activo para este Horno, Fecha y Turno.');
+      return;
+    }
+
+    const meta = { horno, fecha, turno, horaInicio, horaFin, operarioInicio };
+    const newRef = await db.ref('ciclosActivos').push({ meta, lecturas: {} });
+    await cargarActivosSelect();
+    $('selActivos').value = newRef.key;
+    attachLive(newRef.key);
+    alert('✅ Ciclo iniciado correctamente.');
+  });
+
+  $('btnGuardar').addEventListener('click', async ()=> {
+    if(!currentCicloId){
+      alert('⚠️ Primero inicia o selecciona un ciclo activo.');
+      return;
+    }
+    const rows = Array.from(document.querySelectorAll('#tbody tr'));
+    if(rows.length === 0){
+      alert('No hay lecturas para guardar.');
+      return;
+    }
+    const refLecturas = db.ref(`ciclosActivos/${currentCicloId}/lecturas`);
+    const snap = await refLecturas.once('value');
+    const existentes = {};
+    snap.forEach(ch => {
+      const val = ch.val();
+      if(val && val.hora) existentes[val.hora] = ch.key;
+    });
+
+    const ops = [];
+    for(const tr of rows){
+      const hora = tr.querySelector('.hora').value;
+      if(!hora) continue;
+      const data = {
+        hora,
+        zona1: tr.querySelector('.zona1').value === '' ? null : parseFloat(tr.querySelector('.zona1').value),
+        zona2: tr.querySelector('.zona2').value === '' ? null : parseFloat(tr.querySelector('.zona2').value),
+        zona3: tr.querySelector('.zona3').value === '' ? null : parseFloat(tr.querySelector('.zona3').value),
+        zona4: tr.querySelector('.zona4').value === '' ? null : parseFloat(tr.querySelector('.zona4').value),
+        setPoint: tr.querySelector('.setPoint').value === '' ? null : parseFloat(tr.querySelector('.setPoint').value)
+      };
+      if(existentes[hora]) ops.push(refLecturas.child(existentes[hora]).set(data));
+      else ops.push(refLecturas.push(data));
+    }
+    if(ops.length === 0){
+      alert('No hay lecturas válidas.');
+      return;
+    }
+    await Promise.all(ops);
+    alert('✅ Lecturas guardadas o actualizadas correctamente.');
+  });
+
+  $('btnFinalizar').addEventListener('click', async ()=> {
+    if(!currentCicloId){
+      alert('Selecciona o inicia primero un ciclo activo.');
+      return;
+    }
+    const horaFinPrompt = prompt('Hora fin del ciclo (HH:MM):', $('horaFin').value || horaAhoraHHMM());
+    if(horaFinPrompt === null) return;
+    const operarioFin = prompt('Operario que finaliza:', '');
+    if(operarioFin === null) return;
+    const observaciones = prompt('Observaciones (opcional):', '') || '';
+
+    const snap = await db.ref(`ciclosActivos/${currentCicloId}`).once('value');
+    const node = snap.val();
+    if(!node){ alert('No se encontró el ciclo activo.'); return; }
+
+    node.meta = node.meta || {};
+    node.meta.horaFin = horaFinPrompt;
+    node.meta.operarioFin = operarioFin;
+    node.meta.observaciones = observaciones;
+
+    await db.ref('historicos').push(node);
+    await db.ref(`ciclosActivos/${currentCicloId}`).remove();
+
+    detachLive();
+    $('tbody').innerHTML = `<tr>
+      <td><input type="time" class="hora" value="${horaAhoraHHMM()}"></td>
+      <td><input type="number" class="zona1" step="0.1"></td>
+      <td><input type="number" class="zona2" step="0.1"></td>
+      <td><input type="number" class="zona3" step="0.1"></td>
+      <td><input type="number" class="zona4" step="0.1"></td>
+      <td><input type="number" class="setPoint" step="0.1"></td>
+      <td><button class="del" type="button" style="background:var(--accent);color:#000">✕</button></td>
+    </tr>`;
+    bindDeletes();
+
+    $('horaInicio').value = horaAhoraHHMM();
+    $('horaFin').value = addHoursToHHMM($('horaInicio').value,10);
+    $('operarioInicio').value = '';
+    await cargarActivosSelect();
+    alert('✅ Ciclo finalizado y movido a históricos.');
+  });
+
+  /* ==================== Inventario por templar ==================== */
+  let basePendientes = [];
+  let maquinasSet = new Set();
+  let vista = "pendientes";
+  let cacheRevisadosTurno = {};
+
+  function escucharRevisadosTurno(){
+    const {turno, fechaISO: fBase} = turnoDetallado();
+    const k = `${fBase}_${turno}`;
+    dbInv.child("revisados").child(fBase).child(turno).on("value", snap=>{
+      cacheRevisadosTurno[k] = snap.val() || {};
+      render();
+    });
+  }
+  escucharRevisadosTurno();
+
+  async function fetchDep(fi,ff,dep){
+    const resp=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({Fecha_inicial:fi,Fecha_final:ff,Departamento:dep})});
+    const json=await resp.json(); let det=[]; if(json?.data) json.data.forEach(d=>{ if(Array.isArray(d.DetalleProduccion)) det=det.concat(d.DetalleProduccion); });
+    return det;
+  }
+  function fechaISO(){ return new Date().toISOString().slice(0,10); }
+
+  async function cargarPendientes(){
+    const fi="2025-01-01", ff=fechaISO();
+    const [extrude,tmpin] = await Promise.all([fetchDep(fi,ff,"EXTRUDE"), fetchDep(fi,ff,"TMP-IN")]);
+
+    const exMap={}, tmMap={};
+    extrude.forEach(e=>{
+      const k=`${e.sonum}-${e.soitemnum}`;
+      if(!exMap[k]) exMap[k]={pzs:0,kg:0,ultima:null,mac:"-",Part:e.Part||"-",desc:e.descrip||"-",long:e.long||"-",prio:e.prio||"-",cli:e.cliente||"-"};
+      exMap[k].pzs += toNum(e.PcProd);
+      exMap[k].kg  += toNum(e.KgProd);
+      if(!exMap[k].ultima || new Date(e.dt)>new Date(exMap[k].ultima)){
+        exMap[k].ultima = e.dt;
+        exMap[k].mac    = (e.MachineName||"-").trim();
+      }
+    });
+    tmpin.forEach(t=>{
+      const k=`${t.sonum}-${t.soitemnum}`;
+      if(!tmMap[k]) tmMap[k]={pzs:0,kg:0};
+      tmMap[k].pzs += toNum(t.PcProd);
+      tmMap[k].kg  += toNum(t.KgProd);
+    });
+
+    basePendientes = [];
+    maquinasSet.clear();
+
+    Object.entries(exMap).forEach(([k,v])=>{
+      const tm = tmMap[k] || {pzs:0,kg:0};
+      const pzPend = (v.pzs||0) - (tm.pzs||0);
+      const kgPend = (v.kg||0)  - (tm.kg||0);
+      if(pzPend>0){
+        const planta = getPlanta(v.mac);
+        basePendientes.push({
+          clave:k, piezasPend:pzPend, kgPend, ultimaMachine:v.mac, planta,
+          ultimaFechaRaw:v.ultima, Part:v.Part, descrip:v.desc, long:v.long, prio:v.prio, cliente:v.cli
+        });
+        maquinasSet.add(v.mac);
+      }
+    });
+
+    popularSelectMaquinas();
+    $('ultimaInfoInv').textContent = "Última actualización: "+ new Date().toLocaleString("es-CO",{hour12:true});
+    render();
+  }
+
+  async function cargarInventario() {
+    if (!usuarioCorreoActual) {
+      alert("⚠️ Ingresa tu correo primero (opción Cambiar usuario).");
+      return;
+    }
+    const dentroZona = isAdmin(usuarioCorreoActual) ? true : await verificarZonaPermitida(usuarioCorreoActual);
+    if (!dentroZona) { alert("🚫 Fuera de zona permitida."); return; }
+    await cargarPendientes();
+  }
+
+  function popularSelectMaquinas(){
+    const sel = $('fMaquina'), cur = sel.value;
+    sel.innerHTML = '<option value="">Todas</option>';
+    Array.from(maquinasSet).sort((a,b)=>a.localeCompare(b,'es',{numeric:true})).forEach(m=>{
+      const o=document.createElement("option"); o.value=m; o.textContent=m; sel.appendChild(o);
+    });
+    if([...sel.options].some(o=>o.value===cur)) sel.value=cur;
+  }
+
+  function filtrarOrdenar(arr){
+    const planta = $('fPlanta').value||"";
+    const maq = $('fMaquina').value||"";
+    const q = ($('fBuscar').value||"").toLowerCase();
+    const ord = $('fOrden').value;
+
+    let res = arr.filter(r=>{
+      if(planta && r.planta!==planta) return false;
+      if(maq && r.ultimaMachine!==maq) return false;
+      if(q){
+        const blob = `${r.clave} ${r.Part} ${r.descrip}`.toLowerCase();
+        if(!blob.includes(q)) return false;
+      }
+      return true;
+    });
+
+    res.sort((a,b)=>{
+      if(ord==="fecha_desc") return new Date(b.ultimaFechaRaw) - new Date(a.ultimaFechaRaw);
+      if(ord==="fecha_asc")  return new Date(a.ultimaFechaRaw) - new Date(b.ultimaFechaRaw);
+      if(ord==="kg_desc")    return toNum(b.kgPend) - toNum(a.kgPend);
+      if(ord==="kg_asc")     return toNum(a.kgPend) - toNum(b.kgPend);
+      if(ord==="machine")    return (a.ultimaMachine||"").localeCompare((b.ultimaMachine||""),"es",{numeric:true});
+      if(ord==="part")       return (a.Part||"").localeCompare((b.Part||""),"es",{numeric:true});
+      if(ord==="desc")       return (a.descrip||"").localeCompare((b.descrip||""),"es",{numeric:true});
+      if(ord==="desc_rev")   return (b.descrip||"").localeCompare((a.descrip||""),"es",{numeric:true});
+      return 0;
+    });
+
+    return res;
+  }
+
+  function actualizarTotales(){
+    const {turno, fechaISO: fBase} = turnoDetallado();
+    const revisadosTurno = cacheRevisadosTurno[`${fBase}_${turno}`] || {};
+
+    const totalGeneral = basePendientes.reduce((s,r)=> s + toNum(r.kgPend), 0);
+
+    const pendientesNoRevisados = basePendientes.filter(r => !revisadosTurno[r.clave]);
+    const pendVisibles = filtrarOrdenar(pendientesNoRevisados);
+    const totalPendVis = pendVisibles.reduce((s,r)=> s + toNum(r.kgPend), 0);
+
+    const arrRev = Object.values(revisadosTurno).map(x=>x.record);
+    const revVisibles = filtrarOrdenar(arrRev);
+    const totalRevVis = revVisibles.reduce((s,r)=> s + toNum(r.kgPend), 0);
+
+    const avance = totalGeneral>0 ? ((totalRevVis/totalGeneral)*100).toFixed(1) : "0.0";
+
+    $('tTotalGeneral').textContent = Math.round(totalGeneral).toLocaleString();
+    $('tPendientes').textContent   = Math.round(totalPendVis).toLocaleString();
+    $('tRevisados').textContent    = Math.round(totalRevVis).toLocaleString();
+    $('tAvance').textContent       = `${avance}%`;
+
+    // KPI por máquina
+    const porMac = {};
+    pendVisibles.forEach(r=>{
+      const m=r.ultimaMachine||"-";
+      porMac[m] = porMac[m] || {pend:0, rev:0};
+      porMac[m].pend += toNum(r.kgPend);
+    });
+    revVisibles.forEach(r=>{
+      const m=r.ultimaMachine||"-";
+      porMac[m] = porMac[m] || {pend:0, rev:0};
+      porMac[m].rev += toNum(r.kgPend);
+    });
+
+    const kpi = Object.entries(porMac)
+      .sort((a,b)=>a[0].localeCompare(b[0],'es',{numeric:true}))
+      .map(([m, v])=>{
+        const tot = v.pend + v.rev;
+        const p = tot>0 ? ((v.rev/tot)*100).toFixed(1) : "0.0";
+        return `<span><b>${m}</b>: ${p}%</span>`;
+      }).join(" · ");
+
+    $('kpiPorMac').innerHTML = kpi ? (`<b>Avance por máquina:</b> ${kpi}`) : "";
+  }
+
+  function renderPendientes(){
+    const cont = $('listPend'); cont.innerHTML="";
+    const {turno, fechaISO: fBase} = turnoDetallado();
+    const revisadosTurno = cacheRevisadosTurno[`${fBase}_${turno}`] || {};
+    const baseNoRevisados = basePendientes.filter(r => !revisadosTurno[r.clave]);
+    const arr = filtrarOrdenar(baseNoRevisados);
+
+    const frag=document.createDocumentFragment();
+    arr.forEach(r=>{
+      const el=document.createElement("div");
+      el.className="inv-card";
+      el.innerHTML = `
+        <div class="inv-head">
+          <div class="m">Máquina: ${r.ultimaMachine}</div>
+          <span class="badge">${r.planta}</span>
+        </div>
+        <div class="inv-meta">
+          <div><b>SOITEM:</b> ${r.clave}</div>
+          <div><b>Fecha:</b> ${fFecha(r.ultimaFechaRaw)}</div>
+          <div><b>Part:</b> ${r.Part}</div>
+          <div><b>Prioridad:</b> ${r.prio}</div>
+          <div><b>Descripción:</b> ${r.descrip}</div>
+          <div><b>Long:</b> ${r.long}</div>
+          <div><b>Pzs Pend:</b> ${r.piezasPend}</div>
+          <div><b>Kg Pend:</b> ${Math.round(r.kgPend||0)}</div>
+        </div>
+        <div class="inv-actions">
+          <button class="btn-mini" data-act="comentario">💬 Comentario</button>
+          <button class="btn-mini ok" data-act="ok">✅ OK</button>
+          <button class="btn-mini warn" data-act="detalle">🔎 Detalle</button>
+        </div>
+      `;
+      el.addEventListener("click",(ev)=>{
+        const act=ev.target?.dataset?.act;
+        if(act==="comentario"){
+          const texto = prompt("Comentario:");
+          if(texto === null || !texto.trim()) return;
+          guardarRevisado(r,{comentario:texto.trim(), ok:false});
+        }
+        if (act === "ok") {
+          if (!confirm("¿Confirmar revisión OK?")) return;
+          ev.target.classList.add('confirmed');
+          guardarRevisado(r, { comentario: null, ok: true });
+        }
+        if(act==="detalle") abrirModal(r, "pendiente");
+      });
+      frag.appendChild(el);
+    });
+    cont.appendChild(frag);
+  }
+
+  function renderRevisados(){
+    const cont=$('listRevis'); cont.innerHTML="";
+    const {turno, fechaISO: fBase} = turnoDetallado();
+    const revMap = cacheRevisadosTurno[`${fBase}_${turno}`] || {};
+    let arr = Object.values(revMap).map(x=>x);
+
+    arr = arr.filter(it=>{
+      const r=it.record;
+      return filtrarOrdenar([r]).length>0;
+    }).sort((a,b)=> new Date(b.fechaOK) - new Date(a.fechaOK));
+
+    const frag=document.createDocumentFragment();
+    arr.forEach(it=>{
+      const r=it.record;
+      const estado = it.comentario ? `💬 ${it.comentario}` : `✅ OK`;
+      const el=document.createElement("div");
+      el.className="inv-card";
+      el.innerHTML=`
+        <div class="inv-head">
+          <div class="m">Máquina: ${r.ultimaMachine}</div>
+          <span class="badge">${r.planta}</span>
+        </div>
+        <div class="inv-meta">
+          <div><b>SOITEM:</b> ${r.clave}</div>
+          <div><b>Marcado:</b> ${fFecha(it.fechaOK)}</div>
+          <div><b>Part:</b> ${r.Part}</div>
+          <div><b>Prioridad:</b> ${r.prio}</div>
+          <div><b>Descripción:</b> ${r.descrip}</div>
+          <div><b>Long:</b> ${r.long}</div>
+          <div><b>Pzs Pend:</b> ${r.piezasPend}</div>
+          <div><b>Kg Pend:</b> ${Math.round(r.kgPend||0)}</div>
+          <div><b>Estado:</b> ${estado}</div>
+        </div>
+        <div class="inv-actions">
+          <button class="btn-mini warn" data-act="editar">✏️ Editar</button>
+          <button class="btn-mini rev" data-act="volver">↩️ Regresar</button>
+          <button class="btn-mini" data-act="detalle">🔎 Detalle</button>
+        </div>
+      `;
+      el.addEventListener("click",(ev)=>{
+        const act=ev.target?.dataset?.act;
+        if(act==="editar"){
+          const nuevo = prompt("Editar comentario:", it.comentario || "");
+          if(nuevo===null) return;
+          const {turno, fechaISO: fBase} = turnoDetallado();
+          dbInv.child("revisados").child(fBase).child(turno).child(r.clave)
+            .update({ comentario: (nuevo.trim()? nuevo.trim(): null) });
+        }
+        if(act==="volver"){
+          const {turno, fechaISO: fBase} = turnoDetallado();
+          dbInv.child("revisados").child(fBase).child(turno).child(r.clave).remove();
+        }
+        if(act==="detalle") abrirModal(r, "revisado");
+      });
+      frag.appendChild(el);
+    });
+    cont.appendChild(frag);
+  }
+
+  async function renderHistorial(){
+    const cont = $('listHist'); 
+    cont.innerHTML = "";
+    const root = await dbInv.child("revisados").once("value");
+    const registros = [];
+
+    root.forEach(diaSnap=>{
+      const fecha = diaSnap.key;
+      diaSnap.forEach(turnoSnap=>{
+        const turno = turnoSnap.key;
+        turnoSnap.forEach(itemSnap=>{
+          const v = itemSnap.val()||{};
+          const r = v.record||{};
+          registros.push({
+            fechaPend: r.ultimaFechaRaw,
+            fechaMarcado: v.fechaOK,
+            turno,
+            clave: r.clave,
+            ultimaMachine: r.ultimaMachine,
+            planta: r.planta,
+            part: r.Part,
+            descrip: r.descrip,
+            long: r.long,
+            prio: r.prio,
+            piezasPend: r.piezasPend,
+            kgPend: r.kgPend,
+            comentario: v.comentario,
+            ok: !!v.ok
+          });
+        });
+      });
+    });
+
+    let arr = registros.filter(x=>{
+      const obj = {
+        planta:x.planta, ultimaMachine:x.ultimaMachine, clave:x.clave,
+        Part:x.part, descrip:x.descrip, kgPend:x.kgPend, ultimaFechaRaw:x.fechaPend
+      };
+      return filtrarOrdenar([obj]).length>0;
+    }).sort((a,b)=> new Date(b.fechaMarcado||b.fechaPend) - new Date(a.fechaMarcado||a.fechaPend));
+
+    if(arr.length===0){
+      cont.innerHTML = "<div class='inv-info'>Sin registros en el historial.</div>";
+      return;
+    }
+
+    const frag = document.createDocumentFragment();
+    arr.forEach(x=>{
+      const el=document.createElement("div");
+      el.className="inv-card";
+      const estado = x.comentario ? `💬 ${x.comentario}` : (x.ok ? "✅ OK" : "—");
+      el.innerHTML = `
+        <div class="inv-head">
+          <div class="m">${x.clave}</div>
+          <span class="badge">${x.planta||"-"}</span>
+        </div>
+        <div class="inv-meta">
+          <div><b>Fecha pendiente:</b> ${fFecha(x.fechaPend)}</div>
+          <div><b>Fecha revisado:</b> ${fFecha(x.fechaMarcado)}</div>
+          <div><b>Turno:</b> ${x.turno}</div>
+          <div><b>Máquina:</b> ${x.ultimaMachine||"-"}</div>
+          <div><b>Part:</b> ${x.part||"-"}</div>
+          <div><b>Prioridad:</b> ${x.prio||"-"}</div>
+          <div><b>Descripción:</b> ${x.descrip||"-"}</div>
+          <div><b>Long:</b> ${x.long||"-"}</div>
+          <div><b>Kg Pend (momento):</b> ${Math.round(x.kgPend||0)}</div>
+          <div><b>Estado:</b> ${estado}</div>
+        </div>
+      `;
+      el.addEventListener("click", ()=>{
+        abrirModal({
+          clave:x.clave, Part:x.part, descrip:x.descrip, prio:x.prio,
+          long:x.long, piezasPend:x.piezasPend, kgPend:x.kgPend,
+          ultimaMachine:x.ultimaMachine, planta:x.planta,
+          ultimaFechaRaw:x.fechaPend
+        }, "historial");
+      });
+      frag.appendChild(el);
+    });
+    cont.appendChild(frag);
+  }
+
+  function render(){
+    if(vista==="pendientes"){ 
+      $('listPend').classList.remove('hidden');
+      $('listRevis').classList.add('hidden');
+      $('listHist').classList.add('hidden');
+      $('viewTabla').classList.add('hidden');
+      renderPendientes(); 
+    } else if(vista==="revisados"){ 
+      $('listPend').classList.add('hidden');
+      $('listRevis').classList.remove('hidden');
+      $('listHist').classList.add('hidden');
+      $('viewTabla').classList.add('hidden');
+      renderRevisados(); 
+    } else {
+      $('listPend').classList.add('hidden');
+      $('listRevis').classList.add('hidden');
+      $('listHist').classList.remove('hidden');
+      $('viewTabla').classList.add('hidden');
+      renderHistorial();
+    }
+    actualizarTotales();
+  }
+
+  function guardarRevisado(record,{comentario=null, ok=false}){
+    const {turno, fechaISO: fBase} = turnoDetallado();
+    const path = dbInv.child("revisados").child(fBase).child(turno).child(record.clave);
+    const payload = {
+      clave:record.clave,
+      record,
+      comentario: comentario && comentario.trim() ? comentario.trim() : null,
+      ok,
+      fechaOK: new Date().toISOString(),
+      turno
+    };
+    path.set(payload);
+  }
+
+  // Toggle Vista Tabla Pendientes
+  let vistaTabla = false;
+  $('btnVistaToggle').onclick = () => {
+    if (vista !== "pendientes") {
+      alert("🔹 La tabla agrupada está disponible en Pendientes.");
+      return;
+    }
+    vistaTabla = !vistaTabla;
+    $('btnVistaToggle').textContent = vistaTabla ? '🃏 Vista Cards' : '📋 Vista Tabla';
+    if (vistaTabla) { $('viewTabla').classList.remove('hidden'); renderTablaAgrupada(); $('listPend').classList.add('hidden'); }
+    else { $('viewTabla').classList.add('hidden'); $('listPend').classList.remove('hidden'); }
+  };
+  $('agrupacionTabla').onchange = renderTablaAgrupada;
+  $('btnRecargarTabla').onclick = renderTablaAgrupada;
+
+  function renderTablaAgrupada() {
+    const { turno, fechaISO: fBase } = turnoDetallado();
+    const revisadosTurno = cacheRevisadosTurno[`${fBase}_${turno}`] || {};
+    const baseNoRevisados = basePendientes.filter(r => !revisadosTurno[r.clave]);
+    const arr = filtrarOrdenar(baseNoRevisados);
+
+    const agr = $('agrupacionTabla').value; // 'part' o 'desc'
+    const grupos = {};
+    arr.forEach(r => {
+      const key = agr === 'part' ? r.Part : r.descrip;
+      if (!grupos[key]) grupos[key] = [];
+      grupos[key].push(r);
+    });
+
+    const cont = $('tablaAgrupada');
+    cont.innerHTML = '';
+
+    Object.entries(grupos).forEach(([key, items]) => {
+      const groupDiv = document.createElement('div');
+      groupDiv.className = 'grupoTabla';
+
+      const titulo = document.createElement('h3');
+      titulo.textContent = key;
+      titulo.className = 'titulo-grupo';
+      groupDiv.appendChild(titulo);
+
+      const colExtra = agr === 'part' ? 'Descripción' : 'Part';
+
+      const table = document.createElement('div');
+      table.className = 'tabla-scroll';
+      table.innerHTML = `
+        <table class="tabla-grupo">
+          <thead>
+            <tr>
+              <th>SOITEM</th>
+              <th>Máquina</th>
+              <th>Pzs Pend</th>
+              <th>Kg Pend</th>
+              <th>Long</th>
+              <th>${colExtra}</th>
+              <th>Prioridad</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      `;
+      const tbody = table.querySelector('tbody');
+
+      items.forEach(r => {
+        const tr = document.createElement('tr');
+        const extraValue = agr === 'part' ? r.descrip : r.Part;
+        tr.innerHTML = `
+          <td>${r.clave}</td>
+          <td>${r.ultimaMachine}</td>
+          <td>${r.piezasPend}</td>
+          <td>${Math.round(r.kgPend)}</td>
+          <td>${r.long}</td>
+          <td>${extraValue}</td>
+          <td>${r.prio}</td>
+          <td class="acciones-cell">
+            <button class="btn-mini ok" data-act="ok">✅</button>
+            <button class="btn-mini warn" data-act="coment">💬</button>
+          </td>
+        `;
+        tr.querySelector('[data-act="ok"]').onclick = (ev) => {
+          if (!confirm("¿Confirmar revisión OK?")) return;
+          ev.target.classList.add('confirmed');
+          guardarRevisado(r, { ok: true });
+          tr.style.opacity = '0.5';
+        };
+        tr.querySelector('[data-act="coment"]').onclick = () => {
+          abrirModal(r, 'pendiente');
+        };
+        tbody.appendChild(tr);
+      });
+
+      groupDiv.appendChild(table);
+      cont.appendChild(groupDiv);
+    });
+  }
+
+  // Filtros y controles Inventario
+  $('btnActualizarInv').onclick = async ()=>{
+    const b=$('btnActualizarInv'); b.disabled=true; const old=b.textContent; b.textContent="Cargando...";
+    try { await cargarInventario(); } catch(e){ alert("Error: "+(e.message||e)); }
+    b.disabled=false; b.textContent=old;
+  };
+  ['fPlanta','fMaquina','fOrden'].forEach(id=> $(id).addEventListener('change', render));
+  $('fBuscar').addEventListener('input', render);
+
+  // Tabs
+  $('tabPend').onclick = ()=>{ vista="pendientes"; ['tabPend','tabRevis','tabHist'].forEach(i=>$(i).classList.remove('active')); $('tabPend').classList.add('active'); render(); };
+  $('tabRevis').onclick = ()=>{ vista="revisados"; ['tabPend','tabRevis','tabHist'].forEach(i=>$(i).classList.remove('active')); $('tabRevis').classList.add('active'); render(); };
+  $('tabHist').onclick = ()=>{ vista="historial"; ['tabPend','tabRevis','tabHist'].forEach(i=>$(i).classList.remove('active')); $('tabHist').classList.add('active'); render(); };
+
+  /* ==================== Modal Inventario ==================== */
+  let modalData = null;
+  function abrirModal(record, origen){
+    modalData = {record, origen};
+    $('mdTitulo').textContent = `SOITEM ${record.clave}`;
+    $('mdSoitem').textContent = record.clave;
+    $('mdPart').textContent   = record.Part || "-";
+    $('mdDesc').textContent   = record.descrip || "-";
+    $('mdPrio').textContent   = record.prio || "-";
+    $('mdLong').textContent   = record.long || "-";
+    $('mdPzs').textContent    = record.piezasPend ?? "-";
+    $('mdKg').textContent     = Math.round(record.kgPend||0);
+    $('mdMac').textContent    = record.ultimaMachine || "-";
+    $('mdPlanta').textContent = record.planta || "-";
+    $('mdFec').textContent    = fFecha(record.ultimaFechaRaw);
+    $('mdCmt').value          = "";
+
+    cargarTrazabilidad(record.clave).then(html=>{ $('mdTrace').innerHTML = html; });
+
+    $('btnOk').style.display        = (origen==="pendiente") ? "inline-block" : "none";
+    $('btnRegresar').style.display  = (origen==="revisado")  ? "inline-block" : "none";
+
+    $('modalInv').style.display = "flex";
+  }
+  function cerrarModal(){ $('modalInv').style.display = "none"; modalData=null; }
+  $('btnCloseInv').onclick = cerrarModal;
+
+  $('btnGuardarCmt').onclick = ()=>{
+    if(!modalData) return;
+    const cmt = $('mdCmt').value || "";
+    if(modalData.origen==="pendiente"){
+      if(!cmt.trim()) return;
+      guardarRevisado(modalData.record, {comentario:cmt.trim(), ok:false});
+    }else if(modalData.origen==="revisado"){
+      const {turno, fechaISO: fBase} = turnoDetallado();
+      const clave = modalData.record.clave;
+      dbInv.child("revisados").child(fBase).child(turno).child(clave)
+        .update({comentario: cmt.trim()? cmt.trim() : null});
+    }
+    $('mdCmt').value="";
+  };
+  $('btnOk').onclick = ()=>{
+    if(!modalData) return;
+    guardarRevisado(modalData.record, {comentario: ($('mdCmt').value||"").trim()||null, ok:true});
+    cerrarModal();
+  };
+  $('btnRegresar').onclick = ()=>{
+    if(!modalData) return;
+    const {turno, fechaISO: fBase} = turnoDetallado();
+    dbInv.child("revisados").child(fBase).child(turno).child(modalData.record.clave).remove();
+    cerrarModal();
+  };
+
+  async function cargarTrazabilidad(clave){
+    const root = await dbInv.child("revisados").once("value");
+    const html = [];
+    root.forEach(diaSnap=>{
+      const fecha = diaSnap.key;
+      diaSnap.forEach(turnoSnap=>{
+        const turno = turnoSnap.key;
+        const node = turnoSnap.child(clave);
+        if(node.exists()){
+          const v = node.val();
+          html.push(`<div>📌 <b>${fecha}</b> · <b>${turno}</b> · ${fFecha(v.fechaOK)} · ${v.comentario?('💬 '+v.comentario):'✅ OK'}</div>`);
+        }
+      });
+    });
+    return html.length ? html.join("") : "(sin registros)";
+  }
+
+  /* ==================== Planos ==================== */
+  let planosData = [];
+  let filtrados = [];
+  let indexRender = 0;
+  const PAGE_SIZE = 200;
+  const PLANOS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTlsUCkIwRggf4CcUkfq239hl5UKRE86B3FycdB14sgIs5OIeFuqKQjlhzezzNNWJa6WEPy_URJtDB_/pub?gid=1893719309&single=true&output=csv";
+  const CACHE_KEY = "planosCacheCSV";
+
+  async function verificarAccesoPlanos() {
+    try {
+      let correo = localStorage.getItem("correo_autorizado");
+      if (!correo) {
+        correo = prompt("Introduce tu correo corporativo:");
+        if (!correo) { alert("🚫 Acceso cancelado."); ocultarVistaPlanos(); return; }
+        localStorage.setItem("correo_autorizado", correo);
+      }
+      usuarioCorreoActual = correo;
+      const dentro = isAdmin(correo) ? true : await verificarZonaPermitida(correo);
+      if (!dentro) { ocultarVistaPlanos(); accesoPermitido=false; return; }
+
+      const usuarioKey = correo.toLowerCase().replace(/\./g, "_").replace(/@/g, "_");
+      const snap = await firebase.database().ref("seguridad/usuarios/" + usuarioKey).once("value");
+      const usuario = snap.val();
+
+      if (!usuario || usuario.autorizado !== true) {
+        alert("🚫 No estás autorizado para acceder a los módulos.");
+        ocultarVistaPlanos(); accesoPermitido=false; return;
+      }
+      accesoPermitido = true; localStorage.setItem("accesoPermitido","true");
+      document.querySelectorAll(".drawer .opt.gate").forEach(o=>o.style.opacity="1");
+
+      $("view-planos").classList.remove("hidden");
+      $("topTitle").textContent = "Consulta de Planos";
+      cargarPlanos();
+    } catch (err) {
+      console.error("Error verificando acceso:", err);
+      alert("⚠️ Error verificando acceso a planos.");
+      accesoPermitido = false;
+      ocultarVistaPlanos();
+    }
+  }
+  function ocultarVistaPlanos() {
+    $("view-planos").classList.add("hidden");
+    $("topTitle").textContent = "Acceso restringido";
+  }
+
+  async function cargarPlanos() {
+    const cuerpo = $("tbodyPlanos");
+    cuerpo.innerHTML = "<tr><td colspan='2' style='padding:10px;'>Cargando planos...</td></tr>";
+
+    const cache = localStorage.getItem(CACHE_KEY);
+    if (cache) planosData = parseCSV(cache);
+
+    try {
+      const resp = await fetch(PLANOS_URL);
+      const csv = await resp.text();
+      if (csv.length > 100) {
+        localStorage.setItem(CACHE_KEY, csv);
+        planosData = parseCSV(csv);
+      }
+    } catch (err) {
+      console.warn("Sin conexión, usando cache local.");
+    }
+    renderPlanos();
+  }
+  function parseCSV(csv) {
+    const rows = csv.trim().split("\n").map(r => r.split(","));
+    const headers = rows[0].map(h => h.trim());
+    return rows.slice(1).map(r => {
+      const o = {}; headers.forEach((h, i) => o[h] = (r[i] || "").trim()); return o;
+    });
+  }
+  function renderPlanos(reset = true) {
+    const cuerpo = $("tbodyPlanos");
+    if (reset) {
+      const q = ($("buscarPlano").value || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      filtrados = planosData.filter(p => {
+        const nombre = (p.NOMBRE || p.Nombre || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        return nombre.includes(q);
+      });
+      indexRender = 0;
+      cuerpo.innerHTML = "";
+    }
+    const next = filtrados.slice(indexRender, indexRender + PAGE_SIZE);
+    const frag = document.createDocumentFragment();
+
+    next.forEach(p => {
+      const nombre = (p.NOMBRE || p.Nombre || "").replace(".pdf", "").trim();
+      const link = p.LINK || p.Link || p.ARCHIVO || "#";
+      const fila = document.createElement("tr");
+      fila.className = "fila-plano";
+      fila.innerHTML = `
+        <td class="celda-nombre">${nombre || "Sin nombre"}</td>
+        <td class="celda-link"><a href="${link}" target="_blank">Abrir</a></td>
+      `;
+      fila.onclick = () => { if (link && link !== "#") window.open(link, "_blank"); };
+      frag.appendChild(fila);
+    });
+
+    cuerpo.appendChild(frag);
+    indexRender += PAGE_SIZE;
+  }
+  $("tablaPlanos").parentElement.onscroll = e => {
+    const el = e.target;
+    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 30 && indexRender < filtrados.length) {
+      renderPlanos(false);
+    }
+  };
+  $("buscarPlano").oninput = () => renderPlanos(true);
+  $("btnRecargarPlanos").onclick = cargarPlanos;
+
   </script>
 </body>
 </html>
-
