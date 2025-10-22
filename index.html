@@ -1834,6 +1834,16 @@ $("tabHist").onclick = () => {
 ["fPlanta","fMaquina","fOrden"].forEach(id => $(id).addEventListener("change", actualizarVistaPendientes));
 $("fBuscar").addEventListener("input", actualizarVistaPendientes);
 
+// ==================== 🔐 Activador automático de acceso (solo admin) ====================
+if (!localStorage.getItem("correo_autorizado")) {
+  localStorage.setItem("correo_autorizado", "gary.maldonado@tecnoglass.com");
+  console.log("📧 Correo administrador configurado automáticamente");
+}
+if (!localStorage.getItem("accesoPermitido")) {
+  localStorage.setItem("accesoPermitido", "true");
+  console.log("✅ Acceso forzado habilitado (modo administrador)");
+}
+
 // ==================== 🔑 Solicitar correo al iniciar si no está guardado ====================
 // ==================== 🔑 Verificación inicial de acceso ====================
 window.addEventListener("DOMContentLoaded", async () => {
