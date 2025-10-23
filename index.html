@@ -12,6 +12,13 @@
   <!-- Firebase compat (v9 compat) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+  <!-- PDF.js viewer para visor interno de planos -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/web/viewer.css">
+  <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.js"></script>
+  <!-- Usamos el viewer empaquetado -->
+  <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/web/viewer.js"></script>
 
   <style>
     :root{
@@ -29,14 +36,13 @@
     .hamb{position:absolute;left:0;top:50%;transform:translateY(-50%);background:transparent;border:1px solid var(--soft);color:#fff;border-radius:8px;padding:8px 10px;cursor:pointer}
     .hamb:active{filter:brightness(.9)}
 
-    /* Cards (resaltadas) */
+    /* Cards */
     .card{background:#1b1b1b;border:1px solid #2e2e2e;border-radius:12px;padding:14px;margin-bottom:14px;box-shadow:0 2px 6px rgba(0,0,0,.35);transition:transform .15s ease, box-shadow .2s ease}
     .card:hover{transform:translateY(-2px);box-shadow:0 4px 10px rgba(0,0,0,.5)}
 
     label{display:block;margin:6px 0 4px;font-weight:700;color:#ddd}
     input, select, textarea, button{box-sizing:border-box;border-radius:6px;border:1px solid var(--border);padding:8px}
     input,select,textarea{width:100%;background:var(--input-bg);color:var(--input-color)}
-    /* Unificado para todos los inputs (incluye inventario y modal) */
     input, select, textarea { background:#fff; color:#000; border:1px solid #ccc }
 
     button{cursor:pointer;border:none;font-weight:700}
@@ -79,7 +85,7 @@
     .inv-tab{border:1px solid var(--soft);background:#0f0f0f;border-radius:999px;padding:6px 12px;cursor:pointer}
     .inv-tab.active{background:var(--accent);color:#000;border-color:var(--accent);font-weight:800}
 
-    /* Inventario listas (tarjetas mejoradas) */
+    /* Inventario listas */
     .inv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px}
     .inv-card{background:#1b1b1b;border:1px solid #2e2e2e;border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px;box-shadow:0 2px 6px rgba(0,0,0,.35);transition:transform .15s ease, box-shadow .2s ease}
     .inv-card:hover{transform:translateY(-2px);box-shadow:0 4px 10px rgba(0,0,0,.5)}
@@ -134,160 +140,45 @@
       .inv-toolbar select,.inv-toolbar input[type="text"]{width:100%}
     }
 
-#viewTabla table th, #viewTabla table td {
-  border-bottom: 1px solid var(--border);
-  text-align: center;
-  padding: 8px;
-  color: #eee;
-  font-size: 14px;
-}
-#viewTabla table th {
-  background: #171717;
-  color: var(--accent);
-  font-weight: 700;
-}
-#viewTabla .btn-mini {
-  padding: 4px 8px;
-  font-size: 13px;
-}
-#viewTabla select {
-  background: #fff;
-  color: #000;
-  border-radius: 6px;
-  padding: 6px;
-}
+    /* ===== Tabla (vista tabla) ===== */
+    #viewTabla table th, #viewTabla table td {
+      border-bottom: 1px solid var(--border);
+      text-align: center;
+      padding: 8px;
+      color: #eee;
+      font-size: 14px;
+    }
+    #viewTabla table th { background: #171717; color: var(--accent); font-weight: 700; }
+    #viewTabla .btn-mini { padding: 4px 8px; font-size: 13px; }
+    #viewTabla select { background: #fff; color: #000; border-radius: 6px; padding: 6px; }
+    #viewTabla { padding-bottom: 20px; }
 
-#viewTabla {
-  padding-bottom: 20px;
-}
-/* ==== Tabla agrupada SIN scroll (adaptativa móvil) ==== */
-.grupoTabla {
-  margin-bottom: 22px;
-  background: var(--panel);
-  border-radius: 12px;
-  padding: 10px;
-  box-shadow: 0 0 6px rgba(0,0,0,0.3);
-}
+    .grupoTabla { margin-bottom: 22px; background: var(--panel); border-radius: 12px; padding: 10px; box-shadow: 0 0 6px rgba(0,0,0,0.3); }
+    .titulo-grupo { margin: 0 0 8px 4px; font-size: 15px; color: var(--accent); text-transform: uppercase; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tabla-grupo { width: 100%; border-collapse: collapse; border-radius: 10px; overflow: hidden; display: block; }
+    .tabla-grupo thead { background: #171717; display: block; border-bottom: 2px solid var(--accent); }
+    .tabla-grupo tbody { display: block; }
+    .tabla-grupo tr { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); border-bottom: 1px solid var(--border); padding: 4px 0; }
+    .tabla-grupo th, .tabla-grupo td { text-align: center; font-size: 14px; padding: 6px; color: #e0e0e0; word-break: break-word; white-space: normal; }
+    .tabla-grupo th { color: var(--accent); font-weight: 600; padding: 8px 6px; text-transform: uppercase; font-size: 13px; }
+    .tabla-grupo tr:nth-child(even) { background: rgba(255,255,255,0.03); }
+    .acciones-cell { display: flex; justify-content: center; align-items: center; gap: 8px; }
+    .btn-mini { padding: 10px 16px; border-radius: 10px; font-size: 15px; border: none; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
+    .btn-mini.ok { background: #00c853; color: #fff; }
+    .btn-mini.warn { background: #ffab00; color: #000; }
+    .btn-mini:active { transform: scale(0.95); }
+    .btn-mini.confirmed { animation: confirmPulse 0.4s ease; background: #1de9b6 !important; }
+    @keyframes confirmPulse { 0%{transform:scale(1); box-shadow:0 0 0 rgba(0,255,0,.6);} 50%{transform:scale(1.1); box-shadow:0 0 12px rgba(0,255,0,.8);} 100%{transform:scale(1); box-shadow:0 0 0 rgba(0,255,0,0);} }
 
-/* título del grupo */
-.titulo-grupo {
-  margin: 0 0 8px 4px;
-  font-size: 15px;
-  color: var(--accent);
-  text-transform: uppercase;
-  font-weight: bold;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* tabla responsive nativa */
-.tabla-grupo {
-  width: 100%;
-  border-collapse: collapse;
-  border-radius: 10px;
-  overflow: hidden;
-  display: block;
-}
-
-.tabla-grupo thead {
-  background: #171717;
-  display: block;
-  border-bottom: 2px solid var(--accent);
-}
-
-.tabla-grupo tbody {
-  display: block;
-}
-
-.tabla-grupo tr {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-  border-bottom: 1px solid var(--border);
-  padding: 4px 0;
-}
-
-.tabla-grupo th,
-.tabla-grupo td {
-  text-align: center;
-  font-size: 14px;
-  padding: 6px;
-  color: #e0e0e0;
-  word-break: break-word;
-  white-space: normal;
-}
-
-/* encabezados */
-.tabla-grupo th {
-  color: var(--accent);
-  font-weight: 600;
-  padding: 8px 6px;
-  text-transform: uppercase;
-  font-size: 13px;
-}
-
-/* celdas alternas para legibilidad */
-.tabla-grupo tr:nth-child(even) {
-  background: rgba(255,255,255,0.03);
-}
-
-/* acciones centradas y grandes */
-.acciones-cell {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
-}
-
-/* botones táctiles grandes */
-.btn-mini {
-  padding: 10px 16px;
-  border-radius: 10px;
-  font-size: 15px;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-}
-
-.btn-mini.ok {
-  background: #00c853;
-  color: #fff;
-}
-.btn-mini.warn {
-  background: #ffab00;
-  color: #000;
-}
-.btn-mini:active {
-  transform: scale(0.95);
-}
-
-/* animación confirmación */
-.btn-mini.confirmed {
-  animation: confirmPulse 0.4s ease;
-  background: #1de9b6 !important;
-}
-@keyframes confirmPulse {
-  0% { transform: scale(1); box-shadow: 0 0 0 rgba(0,255,0,0.6); }
-  50% { transform: scale(1.1); box-shadow: 0 0 12px rgba(0,255,0,0.8); }
-  100% { transform: scale(1); box-shadow: 0 0 0 rgba(0,255,0,0); }
-}
-
-/* ✅ Adaptación móvil */
-@media (max-width: 600px) {
-  .tabla-grupo tr {
-    grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
-  }
-  .tabla-grupo th, .tabla-grupo td {
-    font-size: 13px;
-    padding: 4px;
-  }
-  .btn-mini {
-    padding: 8px 12px;
-    font-size: 14px;
-  }
-}
-
+    /* ===== Visor de Planos (modal PDF.js) ===== */
+    #visorPlanosModal{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;z-index:1600}
+    #visorCont{background:#0f0f0f;border:1px solid #333;border-radius:12px;width:96vw;height:92vh;position:relative;overflow:hidden}
+    #visorHeader{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-bottom:1px solid #222}
+    #visorHeader b{color:#00e5ff}
+    #btnCerrarVisor{border:1px solid var(--soft);background:#151515;border-radius:8px;padding:6px 10px;cursor:pointer;color:#fff}
+    #visorIframe{width:100%;height:calc(100% - 44px);border:0}
+    /* Bloqueos básicos de UI para evitar copiar/descargar */
+    #visorCont, #visorCont *{user-select:none;-webkit-user-select:none}
   </style>
 </head>
 <body>
@@ -298,7 +189,7 @@
       <div class="header-title" id="topTitle">Registro de Temperaturas</div>
     </div>
 
-    <!-- ======== Vista: Registro de Temperaturas (por defecto) ======== -->
+    <!-- ======== Vista: Registro de Temperaturas ======== -->
     <div id="view-temperaturas">
       <div class="card">
         <div class="grid4">
@@ -417,7 +308,6 @@
               <option value="kg_asc">Kg ↑</option>
               <option value="desc">Descripción (A-Z)</option>
               <option value="desc_rev">Descripción (Z-A)</option>
-
             </select>
           </div>
           <button class="inv-btn" id="btnActualizarInv">Actualizar</button>
@@ -447,48 +337,54 @@
       <div id="listHist" class="inv-grid hidden"></div>
     </div>
   </div>
-<div id="viewTabla" class="hidden">
-  <div class="card" style="background:var(--panel-2)">
-    <div class="inv-toolbar" style="justify-content:space-between;align-items:center">
-      <div class="inv-pill">
-        <label>Agrupar por</label>
-        <select id="agrupacionTabla">
-          <option value="part">Part</option>
-          <option value="desc">Descripción</option>
-        </select>
+
+  <!-- ===== Vista Tabla Pendientes ===== -->
+  <div id="viewTabla" class="hidden">
+    <div class="card" style="background:var(--panel-2)">
+      <div class="inv-toolbar" style="justify-content:space-between;align-items:center">
+        <div class="inv-pill">
+          <label>Agrupar por</label>
+          <select id="agrupacionTabla">
+            <option value="part">Part</option>
+            <option value="desc">Descripción</option>
+          </select>
+        </div>
+        <button class="inv-btn primary" id="btnRecargarTabla">🔄 Recargar</button>
       </div>
-      <button class="inv-btn primary" id="btnRecargarTabla">🔄 Recargar</button>
-    </div>
-
-    <div class="table-wrap" id="tablaAgrupada"></div>
-  </div>
-</div>
-
-<!-- ======== Vista: Planos (Tabla ligera) ======== -->
-<div id="view-planos" class="hidden">
-  <div class="card" style="background:var(--panel-2)">
-    <div class="inv-toolbar">
-      <div class="inv-pill">
-        <label>Buscar plano</label>
-        <input id="buscarPlano" type="text" placeholder="Nombre del plano...">
-      </div>
-      <button class="inv-btn primary" id="btnRecargarPlanos">🔄 Recargar</button>
-    </div>
-
-    <div class="tabla-container" style="max-height:70vh;overflow-y:auto;border-radius:10px;">
-      <table id="tablaPlanos" style="width:100%;border-collapse:collapse;">
-        <thead>
-          <tr style="background:#222;color:#00e5ff;">
-            <th style="padding:8px;border-bottom:1px solid #333;text-align:left;">Nombre</th>
-            <th style="padding:8px;border-bottom:1px solid #333;text-align:left;">Enlace</th>
-          </tr>
-        </thead>
-        <tbody id="tbodyPlanos" style="color:#e0e0e0;"></tbody>
-      </table>
+      <div class="table-wrap" id="tablaAgrupada"></div>
     </div>
   </div>
-</div>
 
+  <!-- ======== Vista: Planos ======== -->
+  <div id="view-planos" class="hidden">
+    <div class="card" style="background:var(--panel-2)">
+      <div class="inv-toolbar">
+        <div class="inv-pill">
+          <label>Buscar plano</label>
+          <input id="buscarPlano" type="text" placeholder="Nombre del plano...">
+        </div>
+        <div class="inv-pill" id="estadoLoginPlanos">
+          <span id="lblPlanosUsuario" style="color:#9aa9b1">No autenticado</span>
+          <button class="inv-btn primary" id="btnLoginGoogle">Iniciar con Google</button>
+          <button class="inv-btn" id="btnLogoutGoogle" style="display:none">Salir</button>
+        </div>
+        <button class="inv-btn primary" id="btnRecargarPlanos">🔄 Recargar</button>
+      </div>
+
+      <div class="tabla-container" style="max-height:70vh;overflow-y:auto;border-radius:10px;">
+        <table id="tablaPlanos" style="width:100%;border-collapse:collapse;">
+          <thead>
+            <tr style="background:#222;color:#00e5ff;">
+              <th style="padding:8px;border-bottom:1px solid #333;text-align:left;">Nombre</th>
+              <th style="padding:8px;border-bottom:1px solid #333;text-align:left;">Acción</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyPlanos" style="color:#e0e0e0;"></tbody>
+        </table>
+      </div>
+      <div id="msgPlanos" class="inv-info" style="margin-top:8px;"></div>
+    </div>
+  </div>
 
   <!-- ===== Modal Inventario ===== -->
   <div class="modal" id="modalInv">
@@ -510,13 +406,10 @@
           <b>Planta</b><div id="mdPlanta"></div>
           <b>Fecha</b><div id="mdFec"></div>
         </div>
-
         <hr style="margin:10px 0;border:0;border-top:1px solid var(--soft)">
-
         <div class="kv">
           <b>Comentario</b>
           <div><input id="mdCmt" type="text" placeholder="Agregar/editar comentario..."></div>
-
           <b>Trazabilidad</b>
           <div id="mdTrace" style="font-size:12.5px;color:#ddd">(sin registros)</div>
         </div>
@@ -531,641 +424,581 @@
 
   <!-- ===== Drawer ===== -->
   <div class="drawer" id="drawer">
-  <div class="head">
-    <span>Menú principal</span>
-    <button id="btnCloseDrawer">✕</button>
+    <div class="head">
+      <span>Menú principal</span>
+      <button id="btnCloseDrawer">✕</button>
+    </div>
+    <div class="body">
+      <div class="opt" data-target="temperaturas">
+        <b>Registro de Temperaturas</b><br>
+        <small>Lecturas por zona y ciclo</small>
+      </div>
+      <div class="opt" data-target="inventario">
+        <b>Inventario Por Templar</b><br>
+        <small>Gestión y trazabilidad</small>
+      </div>
+      <div class="opt" data-target="planos">
+        <b>Consulta de Planos</b><br>
+        <small>Acceso directo a los planos</small>
+      </div>
+    </div>
   </div>
-  <div class="body">
-    <div class="opt" data-target="temperaturas">
-      <b>Registro de Temperaturas</b><br>
-      <small>Lecturas por zona y ciclo</small>
-    </div>
-    <div class="opt" data-target="inventario">
-      <b>Inventario Por Templar</b><br>
-      <small>Gestión y trazabilidad</small>
-    </div>
+  <div class="drawer-mask" id="drawerMask"></div>
 
-    <!-- ✅ Mueve aquí esta parte -->
-    <div class="opt" data-target="planos">
-      <b>Consulta de Planos</b><br>
-      <small>Acceso directo a los planos en Excel</small>
+  <!-- ===== Visor de Planos (modal con PDF.js) ===== -->
+  <div id="visorPlanosModal">
+    <div id="visorCont" oncontextmenu="return false;">
+      <div id="visorHeader">
+        <b id="visorTitulo">Plano</b>
+        <button id="btnCerrarVisor">Cerrar</button>
+      </div>
+      <iframe id="visorIframe" src="about:blank" sandbox="allow-scripts allow-same-origin"></iframe>
     </div>
   </div>
-</div>
 
-<!-- ✅ Agrega este bloque -->
-<div class="drawer-mask" id="drawerMask"></div>
+<script>
+"use strict";
 
+/* ==================== Firebase ==================== */
+const firebaseConfig = {
+  apiKey: "AIzaSyAB4UlwaVJzc4U4VbmddLf4mejKAOvTufw",
+  authDomain: "hornosapp-60887.firebaseapp.com",
+  databaseURL: "https://hornosapp-60887-default-rtdb.firebaseio.com",
+  projectId: "hornosapp-60887",
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const auth = firebase.auth();
+const dbInv = db.ref("inventarioPorTemplar");
 
-  <script>
-  "use strict";
-
-  /* ==================== Firebase ==================== */
-  const firebaseConfig = {
-    apiKey: "AIzaSyAB4UlwaVJzc4U4VbmddLf4mejKAOvTufw",
-    authDomain: "hornosapp-60887.firebaseapp.com",
-    databaseURL: "https://hornosapp-60887-default-rtdb.firebaseio.com",
-    projectId: "hornosapp-60887",
-  };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
-  const dbInv = db.ref("inventarioPorTemplar");
-
-// === Crear nodo planosAcceso si no existe ===
-const permisosRef = firebase.database().ref("planosAcceso");
-
-permisosRef.once("value", snapshot => {
-  if (!snapshot.exists()) {
-    const nuevosPermisos = {
-      "gary_maldonado@tecnoglass_com": true,
-      "supervisor@tecnoglass_net": true,
-      "operario@tecnoglass_net": true
-    };
-    permisosRef.set(nuevosPermisos)
-      .then(() => console.log("✅ Nodo planosAcceso creado en Firebase"))
-      .catch(err => console.error("❌ Error creando nodo:", err));
-  } else {
-    console.log("ℹ️ Nodo planosAcceso ya existe.");
-  }
-});
-
-
-  /* ==================== Helpers globales ==================== */
-  const $ = id => document.getElementById(id);
-  const pad2 = n => String(n).padStart(2,'0');
-  const hoyISO = () => new Date().toISOString().slice(0,10);
-  function addHoursToHHMM(hhmm, plus=10){
-    if(!hhmm) return "";
-    const [h,m] = hhmm.split(':').map(Number);
-    const dt = new Date(); dt.setHours(h||0,m||0,0,0); dt.setHours(dt.getHours()+plus);
-    return pad2(dt.getHours())+':'+pad2(dt.getMinutes());
-  }
-  function horaAhoraHHMM(){ const d = new Date(); return pad2(d.getHours())+':'+pad2(d.getMinutes()); }
-  function toAMPM(hhmm){
-    if(!hhmm) return '';
-    const [h,m] = hhmm.split(':').map(Number);
-    let hour = h % 12 || 12; const ampm = h >= 12 ? 'PM' : 'AM';
-    return `${hour}:${pad2(m)} ${ampm}`;
-  }
-
-  /* ==================== Estado Temperaturas ==================== */
-  let currentCicloId = "";
-  let liveRef = null;
-
-  /* Defaults Temperaturas */
-  $('fecha').value = hoyISO();
-  $('horaInicio').value = horaAhoraHHMM();
-  $('horaFin').value = addHoursToHHMM($('horaInicio').value,10);
-  $('horno').value = '';
-  $('turno').value = '';
-  $('operarioInicio').value = '';
-  $('selActivos').innerHTML = '<option value="">-- Ninguno --</option>';
-
-  /* Tabla lecturas: quitar fila */
-  function bindDeletes(){
-    document.querySelectorAll('#tbody .del').forEach(btn=>{
-      btn.onclick = ()=> btn.closest('tr').remove();
-    });
-  }
-  bindDeletes();
-
-  /* Agregar fila lectura */
-  $('btnAgregarFila').onclick = ()=>{
-    const now = horaAhoraHHMM();
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td><input type="time" class="hora" value="${now}"></td>
-      <td><input type="number" class="zona1" step="0.1"></td>
-      <td><input type="number" class="zona2" step="0.1"></td>
-      <td><input type="number" class="zona3" step="0.1"></td>
-      <td><input type="number" class="zona4" step="0.1"></td>
-      <td><input type="number" class="setPoint" step="0.1"></td>
-      <td><button class="del" type="button" style="background:var(--accent);color:#000">✕</button></td>
-    `;
-    $('tbody').appendChild(tr);
-    bindDeletes();
-  };
-
-  /* Chart temperaturas */
-  const chart = new Chart($('chart').getContext('2d'), {
-    type:'line',
-    data:{ labels: [], datasets:[
-      {label:'Zona 1', data:[], borderColor:'red', fill:false, tension:0.2},
-      {label:'Zona 2', data:[], borderColor:'green', fill:false, tension:0.2},
-      {label:'Zona 3', data:[], borderColor:'blue', fill:false, tension:0.2},
-      {label:'Zona 4', data:[], borderColor:'purple', fill:false, tension:0.2},
-      {label:'SetPoint', data:[], borderColor:'orange', borderDash:[6,4], fill:false, tension:0}
-    ]},
-    options:{responsive:true,maintainAspectRatio:false,animation:false}
-  });
-
-  /* Cargar ciclos activos en select */
-  async function cargarActivosSelect(){
-    const horno = $('horno').value, fecha = $('fecha').value, turno = $('turno').value;
-    const snap = await db.ref('ciclosActivos').once('value');
-    const sel = $('selActivos');
-    sel.innerHTML = `<option value="">-- Ninguno --</option>`;
-    snap.forEach(ch=>{
-      const meta = ch.val().meta || {};
-      if(meta.horno === horno && meta.fecha === fecha && meta.turno === turno){
-        const opt = document.createElement('option');
-        opt.value = ch.key;
-        opt.textContent = `${meta.horno} • ${meta.fecha} • ${meta.turno} • ${meta.horaInicio||'--'}`;
-        sel.appendChild(opt);
-      }
-    });
-  }
-  $('btnRecargar').addEventListener('click', cargarActivosSelect);
-  ['horno','fecha','turno'].forEach(id=> $(id).addEventListener('change', cargarActivosSelect));
-
-  function detachLive(){
-    if(liveRef){ liveRef.off(); liveRef=null; }
-    chart.data.labels=[]; chart.data.datasets.forEach(ds=>ds.data=[]); chart.update();
-    $('cabecera').textContent='';
-    currentCicloId="";
-  }
-  function attachLive(cicloId){
-    detachLive();
-    if(!cicloId) return;
-    currentCicloId=cicloId;
-
-    db.ref(`ciclosActivos/${cicloId}/meta`).once('value').then(s=>{
-      const meta=s.val()||{};
-      $('horaInicio').value=meta.horaInicio||horaAhoraHHMM();
-      $('horaFin').value=meta.horaFin||addHoursToHHMM(meta.horaInicio||horaAhoraHHMM(),10);
-      $('operarioInicio').value=meta.operarioInicio||'';
-      $('cabecera').textContent=`Ciclo: ${meta.horno||''} | ${meta.fecha||''} | ${meta.turno||''}`;
-    });
-
-    liveRef=db.ref(`ciclosActivos/${cicloId}/lecturas`);
-    liveRef.on('value', snap=>{
-      const arr=[];
-      snap.forEach(ch=>{
-        const v=ch.val()||{};
-        arr.push({
-          hora: v.hora || horaAhoraHHMM(),
-          zona1: v.zona1 ?? '',
-          zona2: v.zona2 ?? '',
-          zona3: v.zona3 ?? '',
-          zona4: v.zona4 ?? '',
-          setPoint: v.setPoint ?? ''
-        });
-      });
-      arr.sort((a,b)=>a.hora.localeCompare(b.hora));
-
-      chart.data.labels = arr.map(r => toAMPM(r.hora));
-      chart.data.datasets[0].data = arr.map(r => (r.zona1!=='' && r.zona1!=null && !isNaN(r.zona1)) ? Number(r.zona1) : null);
-      chart.data.datasets[1].data = arr.map(r => (r.zona2!=='' && r.zona2!=null && !isNaN(r.zona2)) ? Number(r.zona2) : null);
-      chart.data.datasets[2].data = arr.map(r => (r.zona3!=='' && r.zona3!=null && !isNaN(r.zona3)) ? Number(r.zona3) : null);
-      chart.data.datasets[3].data = arr.map(r => (r.zona4!=='' && r.zona4!=null && !isNaN(r.zona4)) ? Number(r.zona4) : null);
-      chart.data.datasets[4].data = arr.map(r => (r.setPoint!=='' && r.setPoint!=null && !isNaN(r.setPoint)) ? Number(r.setPoint) : null);
-      chart.update();
-
-      const tbody = $('tbody');
-      tbody.innerHTML = '';
-      if(arr.length === 0){
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td><input type="time" class="hora" value="${horaAhoraHHMM()}"></td>
-          <td><input type="number" class="zona1" step="0.1"></td>
-          <td><input type="number" class="zona2" step="0.1"></td>
-          <td><input type="number" class="zona3" step="0.1"></td>
-          <td><input type="number" class="zona4" step="0.1"></td>
-          <td><input type="number" class="setPoint" step="0.1"></td>
-          <td><button class="del" type="button" style="background:var(--accent);color:#000">✕</button></td>`;
-        tbody.appendChild(tr);
-      } else {
-        arr.forEach(r=>{
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td><input type="time" class="hora" value="${r.hora}"></td>
-            <td><input type="number" class="zona1" step="0.1" value="${r.zona1}"></td>
-            <td><input type="number" class="zona2" step="0.1" value="${r.zona2}"></td>
-            <td><input type="number" class="zona3" step="0.1" value="${r.zona3}"></td>
-            <td><input type="number" class="zona4" step="0.1" value="${r.zona4}"></td>
-            <td><input type="number" class="setPoint" step="0.1" value="${r.setPoint}"></td>
-            <td><button class="del" type="button" style="background:var(--accent);color:#000">✕</button></td>`;
-          tbody.appendChild(tr);
-        });
-      }
-      bindDeletes();
-    });
-  }
-  $('selActivos').addEventListener('change',e=>{
-    const id=e.target.value;
-    if(!id){ detachLive(); return; }
-    attachLive(id);
-  });
-
-  /* Iniciar ciclo */
-  $('btnNuevo').addEventListener('click', async ()=> {
-    const horno = $('horno').value.trim();
-    const fecha = $('fecha').value.trim();
-    const turno = $('turno').value.trim();
-    const horaInicio = $('horaInicio').value || horaAhoraHHMM();
-    const horaFin = $('horaFin').value || addHoursToHHMM(horaInicio,10);
-    const operarioInicio = $('operarioInicio').value.trim();
-
-    if(!horno || !fecha || !turno){
-      alert('⚠️ Debes seleccionar Horno, Fecha y Turno antes de iniciar.');
-      return;
-    }
-    const snapshot = await db.ref('ciclosActivos').once('value');
-    let duplicado = false;
-    snapshot.forEach(ch=>{
-      const meta = ch.val().meta || {};
-      if(meta.horno===horno && meta.fecha===fecha && meta.turno===turno){
-        duplicado = true;
-      }
-    });
-    if(duplicado){
-      alert('🚫 Ya existe un ciclo activo para este Horno, Fecha y Turno.');
-      return;
-    }
-
-    const meta = { horno, fecha, turno, horaInicio, horaFin, operarioInicio };
-    const newRef = await db.ref('ciclosActivos').push({ meta, lecturas: {} });
-    await cargarActivosSelect();
-    $('selActivos').value = newRef.key;
-    attachLive(newRef.key);
-    alert('✅ Ciclo iniciado correctamente.');
-  });
-
-  /* Guardar lecturas */
-  $('btnGuardar').addEventListener('click', async ()=> {
-    if(!currentCicloId){
-      alert('⚠️ Primero inicia o selecciona un ciclo activo.');
-      return;
-    }
-    const rows = Array.from(document.querySelectorAll('#tbody tr'));
-    if(rows.length === 0){
-      alert('No hay lecturas para guardar.');
-      return;
-    }
-    const refLecturas = db.ref(`ciclosActivos/${currentCicloId}/lecturas`);
-    const snap = await refLecturas.once('value');
-    const existentes = {};
-    snap.forEach(ch => {
-      const val = ch.val();
-      if(val && val.hora) existentes[val.hora] = ch.key;
-    });
-
-    const ops = [];
-    for(const tr of rows){
-      const hora = tr.querySelector('.hora').value;
-      if(!hora) continue;
-      const data = {
-        hora,
-        zona1: tr.querySelector('.zona1').value === '' ? null : parseFloat(tr.querySelector('.zona1').value),
-        zona2: tr.querySelector('.zona2').value === '' ? null : parseFloat(tr.querySelector('.zona2').value),
-        zona3: tr.querySelector('.zona3').value === '' ? null : parseFloat(tr.querySelector('.zona3').value),
-        zona4: tr.querySelector('.zona4').value === '' ? null : parseFloat(tr.querySelector('.zona4').value),
-        setPoint: tr.querySelector('.setPoint').value === '' ? null : parseFloat(tr.querySelector('.setPoint').value)
-      };
-      if(existentes[hora]) ops.push(refLecturas.child(existentes[hora]).set(data));
-      else ops.push(refLecturas.push(data));
-    }
-    if(ops.length === 0){
-      alert('No hay lecturas válidas.');
-      return;
-    }
-    await Promise.all(ops);
-    alert('✅ Lecturas guardadas o actualizadas correctamente.');
-  });
-
-  /* Finalizar ciclo */
-  $('btnFinalizar').addEventListener('click', async ()=> {
-    if(!currentCicloId){
-      alert('Selecciona o inicia primero un ciclo activo.');
-      return;
-    }
-    const horaFinPrompt = prompt('Hora fin del ciclo (HH:MM):', $('horaFin').value || horaAhoraHHMM());
-    if(horaFinPrompt === null) return;
-    const operarioFin = prompt('Operario que finaliza:', '');
-    if(operarioFin === null) return;
-    const observaciones = prompt('Observaciones (opcional):', '') || '';
-
-    const snap = await db.ref(`ciclosActivos/${currentCicloId}`).once('value');
-    const node = snap.val();
-    if(!node){ alert('No se encontró el ciclo activo.'); return; }
-
-    node.meta = node.meta || {};
-    node.meta.horaFin = horaFinPrompt;
-    node.meta.operarioFin = operarioFin;
-    node.meta.observaciones = observaciones;
-
-    await db.ref('historicos').push(node);
-    await db.ref(`ciclosActivos/${currentCicloId}`).remove();
-
-    detachLive();
-    $('tbody').innerHTML = `<tr>
-      <td><input type="time" class="hora" value="${horaAhoraHHMM()}"></td>
-      <td><input type="number" class="zona1" step="0.1"></td>
-      <td><input type="number" class="zona2" step="0.1"></td>
-      <td><input type="number" class="zona3" step="0.1"></td>
-      <td><input type="number" class="zona4" step="0.1"></td>
-      <td><input type="number" class="setPoint" step="0.1"></td>
-      <td><button class="del" type="button" style="background:var(--accent);color:#000">✕</button></td>
-    </tr>`;
-    bindDeletes();
-
-    $('horaInicio').value = horaAhoraHHMM();
-    $('horaFin').value = addHoursToHHMM($('horaInicio').value,10);
-    $('operarioInicio').value = '';
-    await cargarActivosSelect();
-    alert('✅ Ciclo finalizado y movido a históricos.');
-  });
-
-  /* ==================== Inventario por templar ==================== */
-
-  const API_URL="https://optima.tecnoglass.net/api/alutions_production/reports-producion/Detalle-produccion";
-
-  /* Turnos: T1 07:00–18:59, T2 19:00–06:59 con fecha base del T2 en el día anterior */
-  function turnoDetallado(){
-    const ahora = new Date();
-    const h = ahora.getHours();
-    let turno = (h >= 7 && h < 19) ? "T1" : "T2";
-    let fechaBase = new Date(ahora);
-    if (turno === "T2" && h < 7) { // madrugada: T2 del día anterior
-      fechaBase.setDate(fechaBase.getDate()-1);
-    }
-    return { turno, fechaISO: fechaBase.toISOString().slice(0,10) };
-  }
-
-  function obtenerTurnoActual(){ return turnoDetallado().turno; }
-  function fechaISO(){ return new Date().toISOString().slice(0,10); }
-  $('lblTurno').textContent = `${turnoDetallado().turno} (${turnoDetallado().fechaISO})`;
-
-  const toNum = v => isNaN(+v)?0:+v;
-  function fFecha(iso){ if(!iso) return ""; const d=new Date(iso); if(isNaN(d)) return ""; return d.toLocaleString("es-CO",{hour12:true}); }
-  function getPlanta(machine){
-    const m=(machine||"").trim().toUpperCase();
-    if(["PRENSA 7-1","PRENSA 7-2","PRENSA 7-3","PRENSA 7-6","PRENSA 7-7","PRENSA 7-8"].includes(m)) return "A1";
-    if(["PRENSA 7-4"].includes(m)) return "A2";
-    if(["PRENSA 7-5","PRENSA 7-9","PRENSA 7-10"].includes(m)) return "A3";
-    return "OTRA";
-  }
-
-  let basePendientes = [];
-  let maquinasSet = new Set();
-  let vista = "pendientes"; // "revisados" | "historial"
-  let cacheRevisadosTurno = {};  // {fecha_turno: {clave:payload,...}}
-
-  function escucharRevisadosTurno(){
-    const {turno, fechaISO: fBase} = turnoDetallado();
-    const k = `${fBase}_${turno}`;
-    dbInv.child("revisados").child(fBase).child(turno).on("value", snap=>{
-      cacheRevisadosTurno[k] = snap.val() || {};
-      render(); // refresca vistas y totales
-    });
-  }
-  escucharRevisadosTurno();
-
-  async function fetchDep(fi,ff,dep){
-    const resp=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({Fecha_inicial:fi,Fecha_final:ff,Departamento:dep})});
-    const json=await resp.json(); let det=[]; if(json?.data) json.data.forEach(d=>{ if(Array.isArray(d.DetalleProduccion)) det=det.concat(d.DetalleProduccion); });
-    return det;
-  }
-  async function cargarPendientes(){
-    const fi="2025-01-01", ff=fechaISO();
-    const [extrude,tmpin] = await Promise.all([fetchDep(fi,ff,"EXTRUDE"), fetchDep(fi,ff,"TMP-IN")]);
-
-    const exMap={}, tmMap={};
-    extrude.forEach(e=>{
-      const k=`${e.sonum}-${e.soitemnum}`;
-      if(!exMap[k]) exMap[k]={pzs:0,kg:0,ultima:null,mac:"-",Part:e.Part||"-",desc:e.descrip||"-",long:e.long||"-",prio:e.prio||"-",cli:e.cliente||"-"};
-      exMap[k].pzs += toNum(e.PcProd);
-      exMap[k].kg  += toNum(e.KgProd);
-      if(!exMap[k].ultima || new Date(e.dt)>new Date(exMap[k].ultima)){
-        exMap[k].ultima = e.dt;
-        exMap[k].mac    = (e.MachineName||"-").trim();
-      }
-    });
-    tmpin.forEach(t=>{
-      const k=`${t.sonum}-${t.soitemnum}`;
-      if(!tmMap[k]) tmMap[k]={pzs:0,kg:0};
-      tmMap[k].pzs += toNum(t.PcProd);
-      tmMap[k].kg  += toNum(t.KgProd);
-    });
-
-    basePendientes = [];
-    maquinasSet.clear();
-
-    Object.entries(exMap).forEach(([k,v])=>{
-      const tm = tmMap[k] || {pzs:0,kg:0};
-      const pzPend = (v.pzs||0) - (tm.pzs||0);
-      const kgPend = (v.kg||0)  - (tm.kg||0);
-      if(pzPend>0){
-        const planta = getPlanta(v.mac);
-        basePendientes.push({
-          clave:k, piezasPend:pzPend, kgPend, ultimaMachine:v.mac, planta,
-          ultimaFechaRaw:v.ultima, Part:v.Part, descrip:v.desc, long:v.long, prio:v.prio, cliente:v.cli
-        });
-        maquinasSet.add(v.mac);
-      }
-    });
-
-    popularSelectMaquinas();
-    $('ultimaInfoInv').textContent = "Última actualización: "+ new Date().toLocaleString("es-CO",{hour12:true});
-    render();
-  }
-  function popularSelectMaquinas(){
-    const sel = $('fMaquina'), cur = sel.value;
-    sel.innerHTML = '<option value="">Todas</option>';
-    Array.from(maquinasSet).sort((a,b)=>a.localeCompare(b,'es',{numeric:true})).forEach(m=>{
-      const o=document.createElement("option"); o.value=m; o.textContent=m; sel.appendChild(o);
-    });
-    if([...sel.options].some(o=>o.value===cur)) sel.value=cur;
-  }
-
-  function filtrarOrdenar(arr){
-    const planta = $('fPlanta').value||"";
-    const maq = $('fMaquina').value||"";
-    const q = ($('fBuscar').value||"").toLowerCase();
-    const ord = $('fOrden').value;
-
-    let res = arr.filter(r=>{
-      if(planta && r.planta!==planta) return false;
-      if(maq && r.ultimaMachine!==maq) return false;
-      if(q){
-        const blob = `${r.clave} ${r.Part} ${r.descrip}`.toLowerCase();
-        if(!blob.includes(q)) return false;
-      }
-      return true;
-    });
-
-    res.sort((a,b)=>{
-      if(ord==="fecha_desc") return new Date(b.ultimaFechaRaw) - new Date(a.ultimaFechaRaw);
-      if(ord==="fecha_asc")  return new Date(a.ultimaFechaRaw) - new Date(b.ultimaFechaRaw);
-      if(ord==="kg_desc")    return toNum(b.kgPend) - toNum(a.kgPend);
-      if(ord==="kg_asc")     return toNum(a.kgPend) - toNum(b.kgPend);
-      if(ord==="machine")    return (a.ultimaMachine||"").localeCompare((b.ultimaMachine||""),"es",{numeric:true});
-      if(ord==="part")       return (a.Part||"").localeCompare((b.Part||""),"es",{numeric:true});
-      if(ord==="desc")       return (a.descrip||"").localeCompare((b.descrip||""),"es",{numeric:true});
-      if(ord==="desc_rev")   return (b.descrip||"").localeCompare((a.descrip||""),"es",{numeric:true});
-      return 0;
-    });
-
-    return res;
-  }
-
-  function actualizarTotales(){
-    const {turno, fechaISO: fBase} = turnoDetallado();
-    const revisadosTurno = cacheRevisadosTurno[`${fBase}_${turno}`] || {};
-
-    const totalGeneral = basePendientes.reduce((s,r)=> s + toNum(r.kgPend), 0);
-
-    const pendientesNoRevisados = basePendientes.filter(r => !revisadosTurno[r.clave]);
-    const pendVisibles = filtrarOrdenar(pendientesNoRevisados);
-    const totalPendVis = pendVisibles.reduce((s,r)=> s + toNum(r.kgPend), 0);
-
-    const arrRev = Object.values(revisadosTurno).map(x=>x.record);
-    const revVisibles = filtrarOrdenar(arrRev);
-    const totalRevVis = revVisibles.reduce((s,r)=> s + toNum(r.kgPend), 0);
-
-    const avance = totalGeneral>0 ? ((totalRevVis/totalGeneral)*100).toFixed(1) : "0.0";
-
-    $('tTotalGeneral').textContent = Math.round(totalGeneral).toLocaleString();
-    $('tPendientes').textContent   = Math.round(totalPendVis).toLocaleString();
-    $('tRevisados').textContent    = Math.round(totalRevVis).toLocaleString();
-    $('tAvance').textContent       = `${avance}%`;
-
-    // KPI por máquina (en lo que se está viendo)
-    const porMac = {};
-    pendVisibles.forEach(r=>{
-      const m=r.ultimaMachine||"-";
-      porMac[m] = porMac[m] || {pend:0, rev:0};
-      porMac[m].pend += toNum(r.kgPend);
-    });
-    revVisibles.forEach(r=>{
-      const m=r.ultimaMachine||"-";
-      porMac[m] = porMac[m] || {pend:0, rev:0};
-      porMac[m].rev += toNum(r.kgPend);
-    });
-
-    const kpi = Object.entries(porMac)
-      .sort((a,b)=>a[0].localeCompare(b[0],'es',{numeric:true}))
-      .map(([m, v])=>{
-        const tot = v.pend + v.rev;
-        const p = tot>0 ? ((v.rev/tot)*100).toFixed(1) : "0.0";
-        return `<span><b>${m}</b>: ${p}%</span>`;
-      }).join(" · ");
-
-    $('kpiPorMac').innerHTML = kpi ? (`<b>Avance por máquina:</b> ${kpi}`) : "";
-  }
-
-  function renderPendientes(){
-    const cont = $('listPend'); cont.innerHTML="";
-    const {turno, fechaISO: fBase} = turnoDetallado();
-    const revisadosTurno = cacheRevisadosTurno[`${fBase}_${turno}`] || {};
-
-    const baseNoRevisados = basePendientes.filter(r => !revisadosTurno[r.clave]);
-    const arr = filtrarOrdenar(baseNoRevisados);
-
-    const frag=document.createDocumentFragment();
-    arr.forEach(r=>{
-      const el=document.createElement("div");
-      el.className="inv-card";
-      el.innerHTML = `
-        <div class="inv-head">
-          <div class="m">Máquina: ${r.ultimaMachine}</div>
-          <span class="badge">${r.planta}</span>
-        </div>
-        <div class="inv-meta">
-          <div><b>SOITEM:</b> ${r.clave}</div>
-          <div><b>Fecha:</b> ${fFecha(r.ultimaFechaRaw)}</div>
-          <div><b>Part:</b> ${r.Part}</div>
-          <div><b>Prioridad:</b> ${r.prio}</div>
-          <div><b>Descripción:</b> ${r.descrip}</div>
-          <div><b>Long:</b> ${r.long}</div>
-          <div><b>Pzs Pend:</b> ${r.piezasPend}</div>
-          <div><b>Kg Pend:</b> ${Math.round(r.kgPend||0)}</div>
-        </div>
-        <div class="inv-actions">
-          <button class="btn-mini" data-act="comentario">💬 Comentario</button>
-          <button class="btn-mini ok" data-act="ok">✅ OK</button>
-          <button class="btn-mini warn" data-act="detalle">🔎 Detalle</button>
-        </div>
-      `;
-      el.addEventListener("click",(ev)=>{
-        const act=ev.target?.dataset?.act;
-        if(act==="comentario"){
-          const texto = prompt("Comentario:");
-          if(texto === null) return;                // 🔒 cancelar: no mueve
-          if(texto.trim().length === 0) return;     // 🔒 vacío: no mueve
-          guardarRevisado(r,{comentario:texto.trim(), ok:false});
-        }
-        if (act === "ok") {
-  const confirmacion = confirm("¿Confirmar revisión OK?");
-  if (!confirmacion) return;
-  ev.target.classList.add('confirmed');
-  guardarRevisado(r, { comentario: null, ok: true });
+/* ==================== Helpers ==================== */
+const $ = id => document.getElementById(id);
+const pad2 = n => String(n).padStart(2,'0');
+const hoyISO = () => new Date().toISOString().slice(0,10);
+function addHoursToHHMM(hhmm, plus=10){
+  if(!hhmm) return "";
+  const [h,m] = hhmm.split(':').map(Number);
+  const dt = new Date(); dt.setHours(h||0,m||0,0,0); dt.setHours(dt.getHours()+plus);
+  return pad2(dt.getHours())+':'+pad2(dt.getMinutes());
+}
+function horaAhoraHHMM(){ const d = new Date(); return pad2(d.getHours())+':'+pad2(d.getMinutes()); }
+function toAMPM(hhmm){
+  if(!hhmm) return '';
+  const [h,m] = hhmm.split(':').map(Number);
+  let hour = h % 12 || 12; const ampm = h >= 12 ? 'PM' : 'AM';
+  return `${hour}:${pad2(m)} ${ampm}`;
 }
 
-        if(act==="detalle") abrirModal(r, "pendiente");
+/* ==================== Estado Temperaturas (igual que antes) ==================== */
+let currentCicloId = "";
+let liveRef = null;
+$('fecha').value = hoyISO();
+$('horaInicio').value = horaAhoraHHMM();
+$('horaFin').value = addHoursToHHMM($('horaInicio').value,10);
+$('horno').value = '';
+$('turno').value = '';
+$('selActivos').innerHTML = '<option value="">-- Ninguno --</option>';
+
+function bindDeletes(){
+  document.querySelectorAll('#tbody .del').forEach(btn=>{
+    btn.onclick = ()=> btn.closest('tr').remove();
+  });
+}
+bindDeletes();
+
+$('btnAgregarFila').onclick = ()=>{
+  const now = horaAhoraHHMM();
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input type="time" class="hora" value="${now}"></td>
+    <td><input type="number" class="zona1" step="0.1"></td>
+    <td><input type="number" class="zona2" step="0.1"></td>
+    <td><input type="number" class="zona3" step="0.1"></td>
+    <td><input type="number" class="zona4" step="0.1"></td>
+    <td><input type="number" class="setPoint" step="0.1"></td>
+    <td><button class="del" type="button" style="background:var(--accent);color:#000">✕</button></td>
+  `;
+  $('tbody').appendChild(tr);
+  bindDeletes();
+};
+
+const chart = new Chart($('chart').getContext('2d'), {
+  type:'line',
+  data:{ labels: [], datasets:[
+    {label:'Zona 1', data:[], borderColor:'red', fill:false, tension:0.2},
+    {label:'Zona 2', data:[], borderColor:'green', fill:false, tension:0.2},
+    {label:'Zona 3', data:[], borderColor:'blue', fill:false, tension:0.2},
+    {label:'Zona 4', data:[], borderColor:'purple', fill:false, tension:0.2},
+    {label:'SetPoint', data:[], borderColor:'orange', borderDash:[6,4], fill:false, tension:0}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,animation:false}
+});
+
+async function cargarActivosSelect(){
+  const horno = $('horno').value, fecha = $('fecha').value, turno = $('turno').value;
+  const snap = await db.ref('ciclosActivos').once('value');
+  const sel = $('selActivos');
+  sel.innerHTML = `<option value="">-- Ninguno --</option>`;
+  snap.forEach(ch=>{
+    const meta = ch.val().meta || {};
+    if(meta.horno === horno && meta.fecha === fecha && meta.turno === turno){
+      const opt = document.createElement('option');
+      opt.value = ch.key;
+      opt.textContent = `${meta.horno} • ${meta.fecha} • ${meta.turno} • ${meta.horaInicio||'--'}`;
+      sel.appendChild(opt);
+    }
+  });
+}
+$('btnRecargar').addEventListener('click', cargarActivosSelect);
+['horno','fecha','turno'].forEach(id=> $(id).addEventListener('change', cargarActivosSelect));
+
+function detachLive(){
+  if(liveRef){ liveRef.off(); liveRef=null; }
+  chart.data.labels=[]; chart.data.datasets.forEach(ds=>ds.data=[]); chart.update();
+  $('cabecera').textContent='';
+  currentCicloId="";
+}
+function attachLive(cicloId){
+  detachLive();
+  if(!cicloId) return;
+  currentCicloId=cicloId;
+
+  db.ref(`ciclosActivos/${cicloId}/meta`).once('value').then(s=>{
+    const meta=s.val()||{};
+    $('horaInicio').value=meta.horaInicio||horaAhoraHHMM();
+    $('horaFin').value=meta.horaFin||addHoursToHHMM(meta.horaInicio||horaAhoraHHMM(),10);
+    $('operarioInicio').value=meta.operarioInicio||'';
+    $('cabecera').textContent=`Ciclo: ${meta.horno||''} | ${meta.fecha||''} | ${meta.turno||''}`;
+  });
+
+  liveRef=db.ref(`ciclosActivos/${cicloId}/lecturas`);
+  liveRef.on('value', snap=>{
+    const arr=[];
+    snap.forEach(ch=>{
+      const v=ch.val()||{};
+      arr.push({
+        hora: v.hora || horaAhoraHHMM(),
+        zona1: v.zona1 ?? '',
+        zona2: v.zona2 ?? '',
+        zona3: v.zona3 ?? '',
+        zona4: v.zona4 ?? '',
+        setPoint: v.setPoint ?? ''
       });
-      frag.appendChild(el);
     });
-    cont.appendChild(frag);
-  }
+    arr.sort((a,b)=>a.hora.localeCompare(b.hora));
 
-  function renderRevisados(){
-    const cont=$('listRevis'); cont.innerHTML="";
-    const {turno, fechaISO: fBase} = turnoDetallado();
-    const revMap = cacheRevisadosTurno[`${fBase}_${turno}`] || {};
-    let arr = Object.values(revMap).map(x=>x);
+    chart.data.labels = arr.map(r => toAMPM(r.hora));
+    chart.data.datasets[0].data = arr.map(r => (r.zona1!=='' && r.zona1!=null && !isNaN(r.zona1)) ? Number(r.zona1) : null);
+    chart.data.datasets[1].data = arr.map(r => (r.zona2!=='' && r.zona2!=null && !isNaN(r.zona2)) ? Number(r.zona2) : null);
+    chart.data.datasets[2].data = arr.map(r => (r.zona3!=='' && r.zona3!=null && !isNaN(r.zona3)) ? Number(r.zona3) : null);
+    chart.data.datasets[3].data = arr.map(r => (r.zona4!=='' && r.zona4!=null && !isNaN(r.zona4)) ? Number(r.zona4) : null);
+    chart.data.datasets[4].data = arr.map(r => (r.setPoint!=='' && r.setPoint!=null && !isNaN(r.setPoint)) ? Number(r.setPoint) : null);
+    chart.update();
 
-    arr = arr.filter(it=>{
-      const r=it.record;
-      return filtrarOrdenar([r]).length>0;
-    }).sort((a,b)=> new Date(b.fechaOK) - new Date(a.fechaOK));
-
-    const frag=document.createDocumentFragment();
-    arr.forEach(it=>{
-      const r=it.record;
-      const estado = it.comentario ? `💬 ${it.comentario}` : `✅ OK`;
-      const el=document.createElement("div");
-      el.className="inv-card";
-      el.innerHTML=`
-        <div class="inv-head">
-          <div class="m">Máquina: ${r.ultimaMachine}</div>
-          <span class="badge">${r.planta}</span>
-        </div>
-        <div class="inv-meta">
-          <div><b>SOITEM:</b> ${r.clave}</div>
-          <div><b>Marcado:</b> ${fFecha(it.fechaOK)}</div>
-          <div><b>Part:</b> ${r.Part}</div>
-          <div><b>Prioridad:</b> ${r.prio}</div>
-          <div><b>Descripción:</b> ${r.descrip}</div>
-          <div><b>Long:</b> ${r.long}</div>
-          <div><b>Pzs Pend:</b> ${r.piezasPend}</div>
-          <div><b>Kg Pend:</b> ${Math.round(r.kgPend||0)}</div>
-          <div><b>Estado:</b> ${estado}</div>
-        </div>
-        <div class="inv-actions">
-          <button class="btn-mini warn" data-act="editar">✏️ Editar</button>
-          <button class="btn-mini rev" data-act="volver">↩️ Regresar</button>
-          <button class="btn-mini" data-act="detalle">🔎 Detalle</button>
-        </div>
-      `;
-      el.addEventListener("click",(ev)=>{
-        const act=ev.target?.dataset?.act;
-        if(act==="editar") editarComentario(r.clave);
-        if(act==="volver") regresarAPendientes(r.clave);
-        if(act==="detalle") abrirModal(r, "revisado");
+    const tbody = $('tbody');
+    tbody.innerHTML = '';
+    if(arr.length === 0){
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><input type="time" class="hora" value="${horaAhoraHHMM()}"></td>
+        <td><input type="number" class="zona1" step="0.1"></td>
+        <td><input type="number" class="zona2" step="0.1"></td>
+        <td><input type="number" class="zona3" step="0.1"></td>
+        <td><input type="number" class="zona4" step="0.1"></td>
+        <td><input type="number" class="setPoint" step="0.1"></td>
+        <td><button class="del" type="button" style="background:var(--accent);color:#000">✕</button></td>`;
+      tbody.appendChild(tr);
+    } else {
+      arr.forEach(r=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><input type="time" class="hora" value="${r.hora}"></td>
+          <td><input type="number" class="zona1" step="0.1" value="${r.zona1}"></td>
+          <td><input type="number" class="zona2" step="0.1" value="${r.zona2}"></td>
+          <td><input type="number" class="zona3" step="0.1" value="${r.zona3}"></td>
+          <td><input type="number" class="zona4" step="0.1" value="${r.zona4}"></td>
+          <td><input type="number" class="setPoint" step="0.1" value="${r.setPoint}"></td>
+          <td><button class="del" type="button" style="background:var(--accent);color:#000">✕</button></td>`;
+        tbody.appendChild(tr);
       });
-      frag.appendChild(el);
-    });
-    cont.appendChild(frag);
-  }
+    }
+    bindDeletes();
+  });
+}
+$('selActivos').addEventListener('change',e=>{
+  const id=e.target.value;
+  if(!id){ detachLive(); return; }
+  attachLive(id);
+});
 
- /* ===== Render Historial ===== */
+$('btnNuevo').addEventListener('click', async ()=> {
+  const horno = $('horno').value.trim();
+  const fecha = $('fecha').value.trim();
+  const turno = $('turno').value.trim();
+  const horaInicio = $('horaInicio').value || horaAhoraHHMM();
+  const horaFin = $('horaFin').value || addHoursToHHMM(horaInicio,10);
+  const operarioInicio = $('operarioInicio').value.trim();
+
+  if(!horno || !fecha || !turno){
+    alert('⚠️ Debes seleccionar Horno, Fecha y Turno antes de iniciar.');
+    return;
+  }
+  const snapshot = await db.ref('ciclosActivos').once('value');
+  let duplicado = false;
+  snapshot.forEach(ch=>{
+    const meta = ch.val().meta || {};
+    if(meta.horno===horno && meta.fecha===fecha && meta.turno===turno){ duplicado = true; }
+  });
+  if(duplicado){ alert('🚫 Ya existe un ciclo activo para este Horno, Fecha y Turno.'); return; }
+
+  const meta = { horno, fecha, turno, horaInicio, horaFin, operarioInicio };
+  const newRef = await db.ref('ciclosActivos').push({ meta, lecturas: {} });
+  await cargarActivosSelect();
+  $('selActivos').value = newRef.key;
+  attachLive(newRef.key);
+  alert('✅ Ciclo iniciado correctamente.');
+});
+
+$('btnGuardar').addEventListener('click', async ()=> {
+  if(!currentCicloId){ alert('⚠️ Primero inicia o selecciona un ciclo activo.'); return; }
+  const rows = Array.from(document.querySelectorAll('#tbody tr'));
+  if(rows.length === 0){ alert('No hay lecturas para guardar.'); return; }
+  const refLecturas = db.ref(`ciclosActivos/${currentCicloId}/lecturas`);
+  const snap = await refLecturas.once('value');
+  const existentes = {};
+  snap.forEach(ch => { const val = ch.val(); if(val && val.hora) existentes[val.hora] = ch.key; });
+
+  const ops = [];
+  for(const tr of rows){
+    const hora = tr.querySelector('.hora').value;
+    if(!hora) continue;
+    const data = {
+      hora,
+      zona1: tr.querySelector('.zona1').value === '' ? null : parseFloat(tr.querySelector('.zona1').value),
+      zona2: tr.querySelector('.zona2').value === '' ? null : parseFloat(tr.querySelector('.zona2').value),
+      zona3: tr.querySelector('.zona3').value === '' ? null : parseFloat(tr.querySelector('.zona3').value),
+      zona4: tr.querySelector('.zona4').value === '' ? null : parseFloat(tr.querySelector('.zona4').value),
+      setPoint: tr.querySelector('.setPoint').value === '' ? null : parseFloat(tr.querySelector('.setPoint').value)
+    };
+    if(existentes[hora]) ops.push(refLecturas.child(existentes[hora]).set(data));
+    else ops.push(refLecturas.push(data));
+  }
+  if(ops.length === 0){ alert('No hay lecturas válidas.'); return; }
+  await Promise.all(ops);
+  alert('✅ Lecturas guardadas o actualizadas correctamente.');
+});
+
+$('btnFinalizar').addEventListener('click', async ()=> {
+  if(!currentCicloId){ alert('Selecciona o inicia primero un ciclo activo.'); return; }
+  const horaFinPrompt = prompt('Hora fin del ciclo (HH:MM):', $('horaFin').value || horaAhoraHHMM());
+  if(horaFinPrompt === null) return;
+  const operarioFin = prompt('Operario que finaliza:', '');
+  if(operarioFin === null) return;
+  const observaciones = prompt('Observaciones (opcional):', '') || '';
+
+  const snap = await db.ref(`ciclosActivos/${currentCicloId}`).once('value');
+  const node = snap.val();
+  if(!node){ alert('No se encontró el ciclo activo.'); return; }
+
+  node.meta = node.meta || {};
+  node.meta.horaFin = horaFinPrompt;
+  node.meta.operarioFin = operarioFin;
+  node.meta.observaciones = observaciones;
+
+  await db.ref('historicos').push(node);
+  await db.ref(`ciclosActivos/${currentCicloId}`).remove();
+
+  detachLive();
+  $('tbody').innerHTML = `<tr>
+    <td><input type="time" class="hora" value="${horaAhoraHHMM()}"></td>
+    <td><input type="number" class="zona1" step="0.1"></td>
+    <td><input type="number" class="zona2" step="0.1"></td>
+    <td><input type="number" class="zona3" step="0.1"></td>
+    <td><input type="number" class="zona4" step="0.1"></td>
+    <td><input type="number" class="setPoint" step="0.1"></td>
+    <td><button class="del" type="button" style="background:var(--accent);color:#000">✕</button></td>
+  </tr>`;
+  bindDeletes();
+
+  $('horaInicio').value = horaAhoraHHMM();
+  $('horaFin').value = addHoursToHHMM($('horaInicio').value,10);
+  $('operarioInicio').value = '';
+  await cargarActivosSelect();
+  alert('✅ Ciclo finalizado y movido a históricos.');
+});
+
+/* ==================== Inventario por templar ==================== */
+const API_URL="https://optima.tecnoglass.net/api/alutions_production/reports-producion/Detalle-produccion";
+
+function turnoDetallado(){
+  const ahora = new Date();
+  const h = ahora.getHours();
+  let turno = (h >= 7 && h < 19) ? "T1" : "T2";
+  let fechaBase = new Date(ahora);
+  if (turno === "T2" && h < 7) { fechaBase.setDate(fechaBase.getDate()-1); }
+  return { turno, fechaISO: fechaBase.toISOString().slice(0,10) };
+}
+function obtenerTurnoActual(){ return turnoDetallado().turno; }
+function fechaISO(){ return new Date().toISOString().slice(0,10); }
+$('lblTurno').textContent = `${turnoDetallado().turno} (${turnoDetallado().fechaISO})`;
+
+const toNum = v => isNaN(+v)?0:+v;
+function fFecha(iso){ if(!iso) return ""; const d=new Date(iso); if(isNaN(d)) return ""; return d.toLocaleString("es-CO",{hour12:true}); }
+function getPlanta(machine){
+  const m=(machine||"").trim().toUpperCase();
+  if(["PRENSA 7-1","PRENSA 7-2","PRENSA 7-3","PRENSA 7-6","PRENSA 7-7","PRENSA 7-8"].includes(m)) return "A1";
+  if(["PRENSA 7-4"].includes(m)) return "A2";
+  if(["PRENSA 7-5","PRENSA 7-9","PRENSA 7-10"].includes(m)) return "A3";
+  return "OTRA";
+}
+
+let basePendientes = [];
+let maquinasSet = new Set();
+let vista = "pendientes";
+let cacheRevisadosTurno = {};
+
+function escucharRevisadosTurno(){
+  const {turno, fechaISO: fBase} = turnoDetallado();
+  const k = `${fBase}_${turno}`;
+  dbInv.child("revisados").child(fBase).child(turno).on("value", snap=>{
+    cacheRevisadosTurno[k] = snap.val() || {};
+    actualizarVistaPendientes(); // refresca SOLO la vista activa
+  });
+}
+escucharRevisadosTurno();
+
+async function fetchDep(fi,ff,dep){
+  const resp=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({Fecha_inicial:fi,Fecha_final:ff,Departamento:dep})});
+  const json=await resp.json(); let det=[]; if(json?.data) json.data.forEach(d=>{ if(Array.isArray(d.DetalleProduccion)) det=det.concat(d.DetalleProduccion); });
+  return det;
+}
+async function cargarPendientes(){
+  const fi="2025-01-01", ff=fechaISO();
+  const [extrude,tmpin] = await Promise.all([fetchDep(fi,ff,"EXTRUDE"), fetchDep(fi,ff,"TMP-IN")]);
+
+  const exMap={}, tmMap={};
+  extrude.forEach(e=>{
+    const k=`${e.sonum}-${e.soitemnum}`;
+    if(!exMap[k]) exMap[k]={pzs:0,kg:0,ultima:null,mac:"-",Part:e.Part||"-",desc:e.descrip||"-",long:e.long||"-",prio:e.prio||"-",cli:e.cliente||"-"};
+    exMap[k].pzs += toNum(e.PcProd);
+    exMap[k].kg  += toNum(e.KgProd);
+    if(!exMap[k].ultima || new Date(e.dt)>new Date(exMap[k].ultima)){
+      exMap[k].ultima = e.dt;
+      exMap[k].mac    = (e.MachineName||"-").trim();
+    }
+  });
+  tmpin.forEach(t=>{
+    const k=`${t.sonum}-${t.soitemnum}`;
+    if(!tmMap[k]) tmMap[k]={pzs:0,kg:0};
+    tmMap[k].pzs += toNum(t.PcProd);
+    tmMap[k].kg  += toNum(t.KgProd);
+  });
+
+  basePendientes = [];
+  maquinasSet.clear();
+
+  Object.entries(exMap).forEach(([k,v])=>{
+    const tm = tmMap[k] || {pzs:0,kg:0};
+    const pzPend = (v.pzs||0) - (tm.pzs||0);
+    const kgPend = (v.kg||0)  - (tm.kg||0);
+    if(pzPend>0){
+      const planta = getPlanta(v.mac);
+      basePendientes.push({
+        clave:k, piezasPend:pzPend, kgPend, ultimaMachine:v.mac, planta,
+        ultimaFechaRaw:v.ultima, Part:v.Part, descrip:v.desc, long:v.long, prio:v.prio, cliente:v.cli
+      });
+      maquinasSet.add(v.mac);
+    }
+  });
+
+  popularSelectMaquinas();
+  $('ultimaInfoInv').textContent = "Última actualización: "+ new Date().toLocaleString("es-CO",{hour12:true});
+  actualizarVistaPendientes();
+}
+function popularSelectMaquinas(){
+  const sel = $('fMaquina'), cur = sel.value;
+  sel.innerHTML = '<option value="">Todas</option>';
+  Array.from(maquinasSet).sort((a,b)=>a.localeCompare(b,'es',{numeric:true})).forEach(m=>{
+    const o=document.createElement("option"); o.value=m; o.textContent=m; sel.appendChild(o);
+  });
+  if([...sel.options].some(o=>o.value===cur)) sel.value=cur;
+}
+
+function filtrarOrdenar(arr){
+  const planta = $('fPlanta').value||"";
+  const maq = $('fMaquina').value||"";
+  const q = ($('fBuscar').value||"").toLowerCase();
+  const ord = $('fOrden').value;
+
+  let res = arr.filter(r=>{
+    if(planta && r.planta!==planta) return false;
+    if(maq && r.ultimaMachine!==maq) return false;
+    if(q){
+      const blob = `${r.clave} ${r.Part} ${r.descrip}`.toLowerCase();
+      if(!blob.includes(q)) return false;
+    }
+    return true;
+  });
+
+  res.sort((a,b)=>{
+    if(ord==="fecha_desc") return new Date(b.ultimaFechaRaw) - new Date(a.ultimaFechaRaw);
+    if(ord==="fecha_asc")  return new Date(a.ultimaFechaRaw) - new Date(b.ultimaFechaRaw);
+    if(ord==="kg_desc")    return toNum(b.kgPend) - toNum(a.kgPend);
+    if(ord==="kg_asc")     return toNum(a.kgPend) - toNum(b.kgPend);
+    if(ord==="machine")    return (a.ultimaMachine||"").localeCompare((b.ultimaMachine||""),"es",{numeric:true});
+    if(ord==="part")       return (a.Part||"").localeCompare((b.Part||""),"es",{numeric:true});
+    if(ord==="desc")       return (a.descrip||"").localeCompare((b.descrip||""),"es",{numeric:true});
+    if(ord==="desc_rev")   return (b.descrip||"").localeCompare((a.descrip||""),"es",{numeric:true});
+    return 0;
+  });
+
+  return res;
+}
+
+function actualizarTotales(){
+  const {turno, fechaISO: fBase} = turnoDetallado();
+  const revisadosTurno = cacheRevisadosTurno[`${fBase}_${turno}`] || {};
+  const totalGeneral = basePendientes.reduce((s,r)=> s + toNum(r.kgPend), 0);
+  const pendientesNoRevisados = basePendientes.filter(r => !revisadosTurno[r.clave]);
+  const pendVisibles = filtrarOrdenar(pendientesNoRevisados);
+  const totalPendVis = pendVisibles.reduce((s,r)=> s + toNum(r.kgPend), 0);
+  const arrRev = Object.values(revisadosTurno).map(x=>x.record);
+  const revVisibles = filtrarOrdenar(arrRev);
+  const totalRevVis = revVisibles.reduce((s,r)=> s + toNum(r.kgPend), 0);
+  const avance = totalGeneral>0 ? ((totalRevVis/totalGeneral)*100).toFixed(1) : "0.0";
+  $('tTotalGeneral').textContent = Math.round(totalGeneral).toLocaleString();
+  $('tPendientes').textContent   = Math.round(totalPendVis).toLocaleString();
+  $('tRevisados').textContent    = Math.round(totalRevVis).toLocaleString();
+  $('tAvance').textContent       = `${avance}%`;
+
+  const porMac = {};
+  pendVisibles.forEach(r=>{
+    const m=r.ultimaMachine||"-";
+    porMac[m] = porMac[m] || {pend:0, rev:0};
+    porMac[m].pend += toNum(r.kgPend);
+  });
+  revVisibles.forEach(r=>{
+    const m=r.ultimaMachine||"-";
+    porMac[m] = porMac[m] || {pend:0, rev:0};
+    porMac[m].rev += toNum(r.kgPend);
+  });
+  const kpi = Object.entries(porMac)
+    .sort((a,b)=>a[0].localeCompare(b[0],'es',{numeric:true}))
+    .map(([m, v])=>{
+      const tot = v.pend + v.rev;
+      const p = tot>0 ? ((v.rev/tot)*100).toFixed(1) : "0.0";
+      return `<span><b>${m}</b>: ${p}%</span>`;
+    }).join(" · ");
+  $('kpiPorMac').innerHTML = kpi ? (`<b>Avance por máquina:</b> ${kpi}`) : "";
+}
+
+function renderPendientes(){
+  const cont = $('listPend'); cont.innerHTML="";
+  const {turno, fechaISO: fBase} = turnoDetallado();
+  const revisadosTurno = cacheRevisadosTurno[`${fBase}_${turno}`] || {};
+  const baseNoRevisados = basePendientes.filter(r => !revisadosTurno[r.clave]);
+  const arr = filtrarOrdenar(baseNoRevisados);
+
+  const frag=document.createDocumentFragment();
+  arr.forEach(r=>{
+    const el=document.createElement("div");
+    el.className="inv-card";
+    el.innerHTML = `
+      <div class="inv-head">
+        <div class="m">Máquina: ${r.ultimaMachine}</div>
+        <span class="badge">${r.planta}</span>
+      </div>
+      <div class="inv-meta">
+        <div><b>SOITEM:</b> ${r.clave}</div>
+        <div><b>Fecha:</b> ${fFecha(r.ultimaFechaRaw)}</div>
+        <div><b>Part:</b> ${r.Part}</div>
+        <div><b>Prioridad:</b> ${r.prio}</div>
+        <div><b>Descripción:</b> ${r.descrip}</div>
+        <div><b>Long:</b> ${r.long}</div>
+        <div><b>Pzs Pend:</b> ${r.piezasPend}</div>
+        <div><b>Kg Pend:</b> ${Math.round(r.kgPend||0)}</div>
+      </div>
+      <div class="inv-actions">
+        <button class="btn-mini" data-act="comentario">💬 Comentario</button>
+        <button class="btn-mini ok" data-act="ok">✅ OK</button>
+        <button class="btn-mini warn" data-act="detalle">🔎 Detalle</button>
+      </div>
+    `;
+    el.addEventListener("click",(ev)=>{
+      const act=ev.target?.dataset?.act;
+      if(act==="comentario"){
+        const texto = prompt("Comentario:");
+        if(texto === null || !texto.trim()) return;
+        guardarRevisado(r,{comentario:texto.trim(), ok:false});
+      }
+      if (act === "ok") {
+        const confirmacion = confirm("¿Confirmar revisión OK?");
+        if (!confirmacion) return;
+        ev.target.classList.add('confirmed');
+        guardarRevisado(r, { ok: true });
+      }
+      if(act==="detalle") abrirModal(r, "pendiente");
+    });
+    frag.appendChild(el);
+  });
+  cont.appendChild(frag);
+}
+
+function renderRevisados(){
+  const cont=$('listRevis'); cont.innerHTML="";
+  const {turno, fechaISO: fBase} = turnoDetallado();
+  const revMap = cacheRevisadosTurno[`${fBase}_${turno}`] || {};
+  let arr = Object.values(revMap).map(x=>x);
+
+  arr = arr.filter(it=>{
+    const r=it.record;
+    return filtrarOrdenar([r]).length>0;
+  }).sort((a,b)=> new Date(b.fechaOK) - new Date(a.fechaOK));
+
+  const frag=document.createDocumentFragment();
+  arr.forEach(it=>{
+    const r=it.record;
+    const estado = it.comentario ? `💬 ${it.comentario}` : `✅ OK`;
+    const el=document.createElement("div");
+    el.className="inv-card";
+    el.innerHTML=`
+      <div class="inv-head">
+        <div class="m">Máquina: ${r.ultimaMachine}</div>
+        <span class="badge">${r.planta}</span>
+      </div>
+      <div class="inv-meta">
+        <div><b>SOITEM:</b> ${r.clave}</div>
+        <div><b>Marcado:</b> ${fFecha(it.fechaOK)}</div>
+        <div><b>Part:</b> ${r.Part}</div>
+        <div><b>Prioridad:</b> ${r.prio}</div>
+        <div><b>Descripción:</b> ${r.descrip}</div>
+        <div><b>Long:</b> ${r.long}</div>
+        <div><b>Pzs Pend:</b> ${r.piezasPend}</div>
+        <div><b>Kg Pend:</b> ${Math.round(r.kgPend||0)}</div>
+        <div><b>Estado:</b> ${estado}</div>
+      </div>
+      <div class="inv-actions">
+        <button class="btn-mini warn" data-act="editar">✏️ Editar</button>
+        <button class="btn-mini rev" data-act="volver">↩️ Regresar</button>
+        <button class="btn-mini" data-act="detalle">🔎 Detalle</button>
+      </div>
+    `;
+    el.addEventListener("click",(ev)=>{
+      const act=ev.target?.dataset?.act;
+      if(act==="editar") editarComentario(r.clave);
+      if(act==="volver") regresarAPendientes(r.clave);
+      if(act==="detalle") abrirModal(r, "revisado");
+    });
+    frag.appendChild(el);
+  });
+  cont.appendChild(frag);
+}
+
 async function renderHistorial(){
   const cont = $('listHist'); 
   cont.innerHTML = "";
   const root = await dbInv.child("revisados").once("value");
   const registros = [];
-
   root.forEach(diaSnap=>{
     const fecha = diaSnap.key;
     diaSnap.forEach(turnoSnap=>{
@@ -1174,8 +1007,8 @@ async function renderHistorial(){
         const v = itemSnap.val()||{};
         const r = v.record||{};
         registros.push({
-          fechaPend: r.ultimaFechaRaw,    // fecha del pendiente original
-          fechaMarcado: v.fechaOK,        // fecha real de revisión
+          fechaPend: r.ultimaFechaRaw,
+          fechaMarcado: v.fechaOK,
           turno,
           clave: r.clave,
           ultimaMachine: r.ultimaMachine,
@@ -1183,7 +1016,7 @@ async function renderHistorial(){
           part: r.Part,
           descrip: r.descrip,
           long: r.long,
-          prio: r.prio,                   // prioridad visible
+          prio: r.prio,
           piezasPend: r.piezasPend,
           kgPend: r.kgPend,
           comentario: v.comentario,
@@ -1193,17 +1026,8 @@ async function renderHistorial(){
     });
   });
 
-  // Filtros, búsqueda y orden
   let arr = registros.filter(x=>{
-    const obj = {
-      planta:x.planta, 
-      ultimaMachine:x.ultimaMachine, 
-      clave:x.clave, 
-      Part:x.part, 
-      descrip:x.descrip, 
-      kgPend:x.kgPend, 
-      ultimaFechaRaw:x.fechaPend
-    };
+    const obj = { planta:x.planta, ultimaMachine:x.ultimaMachine, clave:x.clave, Part:x.part, descrip:x.descrip, kgPend:x.kgPend, ultimaFechaRaw:x.fechaPend };
     return filtrarOrdenar([obj]).length>0;
   }).sort((a,b)=> new Date(b.fechaMarcado||b.fechaPend) - new Date(a.fechaMarcado||a.fechaPend));
 
@@ -1217,7 +1041,6 @@ async function renderHistorial(){
     const el=document.createElement("div");
     el.className="inv-card";
     const estado = x.comentario ? `💬 ${x.comentario}` : (x.ok ? "✅ OK" : "—");
-
     el.innerHTML = `
       <div class="inv-head">
         <div class="m">${x.clave}</div>
@@ -1236,7 +1059,6 @@ async function renderHistorial(){
         <div><b>Estado:</b> ${estado}</div>
       </div>
     `;
-
     el.addEventListener("click", ()=>{
       abrirModal({
         clave:x.clave, Part:x.part, descrip:x.descrip, prio:x.prio,
@@ -1245,75 +1067,68 @@ async function renderHistorial(){
         ultimaFechaRaw:x.fechaPend
       }, "historial");
     });
-
     frag.appendChild(el);
   });
   cont.appendChild(frag);
 } 
-  
-  function render(){
-    if(vista==="pendientes"){ 
-      $('listPend').classList.remove('hidden');
-      $('listRevis').classList.add('hidden');
-      $('listHist').classList.add('hidden');
-      renderPendientes(); 
-    } else if(vista==="revisados"){ 
-      $('listPend').classList.add('hidden');
-      $('listRevis').classList.remove('hidden');
-      $('listHist').classList.add('hidden');
-      renderRevisados(); 
-    } else { // historial
-      $('listPend').classList.add('hidden');
-      $('listRevis').classList.add('hidden');
-      $('listHist').classList.remove('hidden');
-      renderHistorial();
-    }
-    actualizarTotales();
-  }
 
-  function guardarRevisado(record,{comentario=null, ok=false}){
-    const {turno, fechaISO: fBase} = turnoDetallado();
-    const path = dbInv.child("revisados").child(fBase).child(turno).child(record.clave);
-    const payload = {
-      clave:record.clave,
-      record,
-      comentario: comentario && comentario.trim() ? comentario.trim() : null,
-      ok,
-      fechaOK: new Date().toISOString(),
-      turno
-    };
-    path.set(payload);
-  }
-  function editarComentario(clave){
-    const {turno, fechaISO: fBase} = turnoDetallado();
-    const node = (cacheRevisadosTurno[`${fBase}_${turno}`]||{})[clave];
-    if(!node) return;
-    const nuevo = prompt("Editar comentario:", node.comentario || "");
-    if(nuevo===null) return;
-    dbInv.child("revisados").child(fBase).child(turno).child(clave)
-      .update({ comentario: (nuevo.trim()? nuevo.trim(): null) });
-  }
-  function regresarAPendientes(clave){
-    const {turno, fechaISO: fBase} = turnoDetallado();
-    dbInv.child("revisados").child(fBase).child(turno).child(clave).remove();
-  }
+/* ===== Vista controlada SOLO para Pendientes ===== */
+let vistaTablaPendientes = false;
 
-/* ==================== Vista Tabla AGRUPADA (por Part o Descripción) ==================== */
-let vistaTabla = false;
-
-$('btnVistaToggle').onclick = () => {
-  vistaTabla = !vistaTabla;
-  $('btnVistaToggle').textContent = vistaTabla ? '🗂️ Vista Cards' : '📋 Vista Tabla';
-  $('viewTabla').classList.toggle('hidden', !vistaTabla);
-  $('listPend').classList.toggle('hidden', vistaTabla);
-  $('listRevis').classList.toggle('hidden', vistaTabla);
-  $('listHist').classList.toggle('hidden', vistaTabla);
-  if (vistaTabla) renderTablaAgrupada();
+$("btnVistaToggle").onclick = () => {
+  if (vista !== "pendientes") { alert("🔹 Solo puedes usar la vista de tabla en Pendientes."); return; }
+  vistaTablaPendientes = !vistaTablaPendientes;
+  $("btnVistaToggle").textContent = vistaTablaPendientes ? "🃏 Vista Cards" : "📋 Vista Tabla";
+  actualizarVistaPendientes();
 };
 
-$('agrupacionTabla').onchange = renderTablaAgrupada;
-$('btnRecargarTabla').onclick = renderTablaAgrupada;
+function actualizarVistaPendientes() {
+  // Ocultar todo
+  $("listPend").classList.add("hidden");
+  $("viewTabla").classList.add("hidden");
+  $("listRevis").classList.add("hidden");
+  $("listHist").classList.add("hidden");
 
+  if (vista === "pendientes") {
+    if (vistaTablaPendientes) {
+      $("viewTabla").classList.remove("hidden");
+      renderTablaAgrupada();
+    } else {
+      $("listPend").classList.remove("hidden");
+      renderPendientes();
+    }
+  } else if (vista === "revisados") {
+    $("listRevis").classList.remove("hidden");
+    renderRevisados();
+  } else {
+    $("listHist").classList.remove("hidden");
+    renderHistorial();
+  }
+  actualizarTotales();
+}
+
+$("tabPend").onclick = () => {
+  vista = "pendientes";
+  ["tabPend","tabRevis","tabHist"].forEach(id => $(id).classList.remove("active"));
+  $("tabPend").classList.add("active");
+  actualizarVistaPendientes();
+};
+$("tabRevis").onclick = () => {
+  vista = "revisados";
+  ["tabPend","tabRevis","tabHist"].forEach(id => $(id).classList.remove("active"));
+  $("tabRevis").classList.add("active");
+  actualizarVistaPendientes();
+};
+$("tabHist").onclick = () => {
+  vista = "historial";
+  ["tabPend","tabRevis","tabHist"].forEach(id => $(id).classList.remove("active"));
+  $("tabHist").classList.add("active");
+  actualizarVistaPendientes();
+};
+["fPlanta","fMaquina","fOrden"].forEach(id => $(id).addEventListener("change", actualizarVistaPendientes));
+$("fBuscar").addEventListener("input", actualizarVistaPendientes);
+
+/* ===== Tabla Agrupada ===== */
 function renderTablaAgrupada() {
   const { turno, fechaISO: fBase } = turnoDetallado();
   const revisadosTurno = cacheRevisadosTurno[`${fBase}_${turno}`] || {};
@@ -1322,7 +1137,6 @@ function renderTablaAgrupada() {
 
   const agr = $('agrupacionTabla').value; // 'part' o 'desc'
   const grupos = {};
-
   arr.forEach(r => {
     const key = agr === 'part' ? r.Part : r.descrip;
     if (!grupos[key]) grupos[key] = [];
@@ -1331,21 +1145,16 @@ function renderTablaAgrupada() {
 
   const cont = $('tablaAgrupada');
   cont.innerHTML = '';
-
   Object.entries(grupos).forEach(([key, items]) => {
     const groupDiv = document.createElement('div');
     groupDiv.className = 'grupoTabla';
 
-    // 🔹 Título del grupo (sin prefijo)
     const titulo = document.createElement('h3');
     titulo.textContent = key;
     titulo.className = 'titulo-grupo';
     groupDiv.appendChild(titulo);
 
-    // 🔹 Determinar columna complementaria
     const colExtra = agr === 'part' ? 'Descripción' : 'Part';
-
-    // 🔹 Tabla
     const table = document.createElement('div');
     table.className = 'tabla-scroll';
     table.innerHTML = `
@@ -1370,7 +1179,6 @@ function renderTablaAgrupada() {
     items.forEach(r => {
       const tr = document.createElement('tr');
       const extraValue = agr === 'part' ? r.descrip : r.Part;
-
       tr.innerHTML = `
         <td>${r.clave}</td>
         <td>${r.ultimaMachine}</td>
@@ -1384,8 +1192,6 @@ function renderTablaAgrupada() {
           <button class="btn-mini warn" data-act="coment">💬</button>
         </td>
       `;
-
-      // === comportamiento ===
       const btnOk = tr.querySelector('[data-act="ok"]');
       const btnCom = tr.querySelector('[data-act="coment"]');
 
@@ -1394,13 +1200,8 @@ function renderTablaAgrupada() {
         if (!confirmar) return;
         ev.target.classList.add('confirmed');
         guardarRevisado(r, { ok: true });
-        tr.style.opacity = '0.5';
       };
-
-      btnCom.onclick = () => {
-        abrirModal(r, 'pendiente');
-      };
-
+      btnCom.onclick = () => { abrirModal(r, 'pendiente'); };
       tbody.appendChild(tr);
     });
 
@@ -1409,237 +1210,152 @@ function renderTablaAgrupada() {
   });
 }
 
+/* ===== Modal Detalle / Trazabilidad ===== */
+let modalData = null;
+function abrirModal(record, origen){
+  modalData = {record, origen};
+  $('mdTitulo').textContent = `SOITEM ${record.clave}`;
+  $('mdSoitem').textContent = record.clave;
+  $('mdPart').textContent   = record.Part || "-";
+  $('mdDesc').textContent   = record.descrip || "-";
+  $('mdPrio').textContent   = record.prio || "-";
+  $('mdLong').textContent   = record.long || "-";
+  $('mdPzs').textContent    = record.piezasPend ?? "-";
+  $('mdKg').textContent     = Math.round(record.kgPend||0);
+  $('mdMac').textContent    = record.ultimaMachine || "-";
+  $('mdPlanta').textContent = record.planta || "-";
+  $('mdFec').textContent    = fFecha(record.ultimaFechaRaw);
+  $('mdCmt').value          = "";
+  cargarTrazabilidad(record.clave).then(html=>{ $('mdTrace').innerHTML = html; });
 
-  /* ===== Modal Detalle / Trazabilidad ===== */
-  let modalData = null;
-  function abrirModal(record, origen){
-    modalData = {record, origen};
-    $('mdTitulo').textContent = `SOITEM ${record.clave}`;
-    $('mdSoitem').textContent = record.clave;
-    $('mdPart').textContent   = record.Part || "-";
-    $('mdDesc').textContent   = record.descrip || "-";
-    $('mdPrio').textContent   = record.prio || "-";
-    $('mdLong').textContent   = record.long || "-";
-    $('mdPzs').textContent    = record.piezasPend ?? "-";
-    $('mdKg').textContent     = Math.round(record.kgPend||0);
-    $('mdMac').textContent    = record.ultimaMachine || "-";
-    $('mdPlanta').textContent = record.planta || "-";
-    $('mdFec').textContent    = fFecha(record.ultimaFechaRaw);
-    $('mdCmt').value          = "";
+  $('btnOk').style.display        = (origen==="pendiente") ? "inline-block" : "none";
+  $('btnRegresar').style.display  = (origen==="revisado")  ? "inline-block" : "none";
+  $('modalInv').style.display = "flex";
+}
+function cerrarModal(){ $('modalInv').style.display = "none"; modalData=null; }
+$('btnCloseInv').onclick = cerrarModal;
 
-    cargarTrazabilidad(record.clave).then(html=>{
-      $('mdTrace').innerHTML = html;
-    });
-
-    // Mostrar/ocultar acciones según origen
-    $('btnOk').style.display        = (origen==="pendiente") ? "inline-block" : "none";
-    $('btnRegresar').style.display  = (origen==="revisado")  ? "inline-block" : "none";
-
-    $('modalInv').style.display = "flex";
+$('btnGuardarCmt').onclick = ()=>{
+  if(!modalData) return;
+  const cmt = ($('mdCmt').value||"").trim();
+  if(modalData.origen==="pendiente"){
+    if(!cmt) return;
+    guardarRevisado(modalData.record, {comentario:cmt, ok:false});
+  }else if(modalData.origen==="revisado"){
+    const {turno, fechaISO: fBase} = turnoDetallado();
+    const clave = modalData.record.clave;
+    dbInv.child("revisados").child(fBase).child(turno).child(clave)
+      .update({comentario: cmt? cmt : null});
   }
-  function cerrarModal(){ $('modalInv').style.display = "none"; modalData=null; }
-  $('btnCloseInv').onclick = cerrarModal;
-
-  // Guardar comentario desde modal (solo mueve si hay texto o si está en revisado es edición)
-  $('btnGuardarCmt').onclick = ()=>{
-    if(!modalData) return;
-    const cmt = $('mdCmt').value || "";
-    if(modalData.origen==="pendiente"){
-      if(cmt.trim().length===0) return; // no mover si vacío
-      guardarRevisado(modalData.record, {comentario:cmt.trim(), ok:false});
-    }else if(modalData.origen==="revisado"){
-      const {turno, fechaISO: fBase} = turnoDetallado();
-      const clave = modalData.record.clave;
-      dbInv.child("revisados").child(fBase).child(turno).child(clave)
-        .update({comentario: cmt.trim()? cmt.trim() : null});
-    }
-    $('mdCmt').value="";
-  };
-  $('btnOk').onclick = ()=>{
-    if(!modalData) return;
-    guardarRevisado(modalData.record, {comentario: ($('mdCmt').value||"").trim()||null, ok:true});
-    cerrarModal();
-  };
-  $('btnRegresar').onclick = ()=>{
-    if(!modalData) return;
-    regresarAPendientes(modalData.record.clave);
-    cerrarModal();
-  };
-
-  async function cargarTrazabilidad(clave){
-    const root = await dbInv.child("revisados").once("value");
-    const html = [];
-    root.forEach(diaSnap=>{
-      const fecha = diaSnap.key;
-      diaSnap.forEach(turnoSnap=>{
-        const turno = turnoSnap.key;
-        const node = turnoSnap.child(clave);
-        if(node.exists()){
-          const v = node.val();
-          html.push(`<div>📌 <b>${fecha}</b> · <b>${turno}</b> · ${fFecha(v.fechaOK)} · ${v.comentario?('💬 '+v.comentario):'✅ OK'}</div>`);
-        }
-      });
-    });
-    return html.length ? html.join("") : "(sin registros)";
-  }
-
-  /* ===== Eventos Inventario ===== */
-  $('btnActualizarInv').onclick = async ()=>{
-    const b=$('btnActualizarInv'); b.disabled=true; const old=b.textContent; b.textContent="Cargando...";
-    try{ await cargarPendientes(); } catch(e){ alert("Error: "+(e.message||e)); }
-    b.disabled=false; b.textContent=old;
-  };
-  ['fPlanta','fMaquina','fOrden'].forEach(id=> $(id).addEventListener('change', render));
-  $('fBuscar').addEventListener('input', render);
-
- //* ===== Alternar vista de Pendientes: Cards ↔ Tabla ===== */
-let vistaTablaPendientes = false;
-
-$("btnVistaToggle").onclick = () => {
-  const btn = $("btnVistaToggle");
-
-  // Solo afecta la vista Pendientes
-  if (vista !== "pendientes") {
-    alert("🔹 Solo puedes usar la vista de tabla en Pendientes.");
-    return;
-  }
-
-  vistaTablaPendientes = !vistaTablaPendientes;
-  actualizarVistaPendientes();
-  btn.textContent = vistaTablaPendientes ? "🃏 Vista Cards" : "📋 Vista Tabla";
+  $('mdCmt').value="";
+};
+$('btnOk').onclick = ()=>{
+  if(!modalData) return;
+  const cmt = ($('mdCmt').value||"").trim() || null;
+  guardarRevisado(modalData.record, {comentario:cmt, ok:true});
+  cerrarModal();
+};
+$('btnRegresar').onclick = ()=>{
+  if(!modalData) return;
+  regresarAPendientes(modalData.record.clave);
+  cerrarModal();
 };
 
-/* ===== Función para controlar qué se ve en Pendientes ===== */
-function actualizarVistaPendientes() {
-  // Ocultar todo primero
-  $("listPend").classList.add("hidden");
-  $("viewTabla").classList.add("hidden");
-  $("listRevis").classList.add("hidden");
-  $("listHist").classList.add("hidden");
-
-  if (vista === "pendientes") {
-    if (vistaTablaPendientes) {
-      $("viewTabla").classList.remove("hidden");
-      renderTablaAgrupada();
-    } else {
-      $("listPend").classList.remove("hidden");
-      renderPendientes();
-    }
-  } else if (vista === "revisados") {
-    $("listRevis").classList.remove("hidden");
-    renderRevisados();
-  } else if (vista === "historial") {
-    $("listHist").classList.remove("hidden");
-    renderHistorial();
-  }
-
-  actualizarTotales();
+async function cargarTrazabilidad(clave){
+  const root = await dbInv.child("revisados").once("value");
+  const html = [];
+  root.forEach(diaSnap=>{
+    const fecha = diaSnap.key;
+    diaSnap.forEach(turnoSnap=>{
+      const node = turnoSnap.child(clave);
+      if(node.exists()){
+        const v = node.val();
+        html.push(`<div>📌 <b>${fecha}</b> · <b>${v.turno||"-"}</b> · ${fFecha(v.fechaOK)} · ${v.comentario?('💬 '+v.comentario):'✅ OK'}</div>`);
+      }
+    });
+  });
+  return html.length ? html.join("") : "(sin registros)";
 }
 
-/* ===== Tabs principales (Pendientes, Revisados, Historial) ===== */
-$("tabPend").onclick = () => {
-  vista = "pendientes";
-  ["tabPend", "tabRevis", "tabHist"].forEach(id => $(id).classList.remove("active"));
-  $("tabPend").classList.add("active");
-  actualizarVistaPendientes();
-};
-
-$("tabRevis").onclick = () => {
-  vista = "revisados";
-  ["tabPend", "tabRevis", "tabHist"].forEach(id => $(id).classList.remove("active"));
-  $("tabRevis").classList.add("active");
-  actualizarVistaPendientes();
-};
-
-$("tabHist").onclick = () => {
-  vista = "historial";
-  ["tabPend", "tabRevis", "tabHist"].forEach(id => $(id).classList.remove("active"));
-  $("tabHist").classList.add("active");
-  actualizarVistaPendientes();
-};
-
-/* ===== Mantener sincronizado al aplicar filtros o actualizar ===== */
-["fPlanta","fMaquina","fOrden"].forEach(id => $(id).addEventListener("change", actualizarVistaPendientes));
-$("fBuscar").addEventListener("input", actualizarVistaPendientes);
-
-
-
-  /* ===== Init Inventario ===== */
-  cargarPendientes();
-
-  /* ==================== Drawer / navegación ==================== */
-  const drawer = document.getElementById("drawer");
-  const mask   = document.getElementById("drawerMask");
-  document.getElementById("btnMenu").addEventListener("click",()=>{
-    drawer.classList.add("open"); mask.style.display="block";
+/* ===== Guardar/editar ===== */
+function guardarRevisado(record,{comentario=null, ok=false}){
+  const {turno, fechaISO: fBase} = turnoDetallado();
+  const path = dbInv.child("revisados").child(fBase).child(turno).child(record.clave);
+  const payload = {
+    clave:record.clave, record, comentario: comentario || null, ok,
+    fechaOK: new Date().toISOString(), turno
+  };
+  path.set(payload).then(()=> actualizarVistaPendientes());
+}
+function editarComentario(clave){
+  const {turno, fechaISO: fBase} = turnoDetallado();
+  dbInv.child("revisados").child(fBase).child(turno).child(clave).once("value").then(snap=>{
+    const node = snap.val(); if(!node) return;
+    const nuevo = prompt("Editar comentario:", node.comentario || "");
+    if(nuevo===null) return;
+    dbInv.child("revisados").child(fBase).child(turno).child(clave)
+      .update({ comentario: (nuevo.trim()? nuevo.trim(): null) })
+      .then(()=> actualizarVistaPendientes());
   });
-  document.getElementById("btnCloseDrawer").addEventListener("click",closeDrawer);
-  document.getElementById("drawerMask").addEventListener("click",closeDrawer);
-  function closeDrawer(){ drawer.classList.remove("open"); mask.style.display="none"; }
+}
+function regresarAPendientes(clave){
+  const {turno, fechaISO: fBase} = turnoDetallado();
+  dbInv.child("revisados").child(fBase).child(turno).child(clave).remove()
+    .then(()=> actualizarVistaPendientes());
+}
 
-  document.querySelectorAll(".drawer .opt").forEach(opt=>{
+/* ===== Init Inventario ===== */
+$('btnActualizarInv').onclick = async ()=>{
+  const b=$('btnActualizarInv'); b.disabled=true; const old=b.textContent; b.textContent="Cargando...";
+  try{ await cargarPendientes(); } catch(e){ alert("Error: "+(e.message||e)); }
+  b.disabled=false; b.textContent=old;
+};
+cargarPendientes();
+
+/* ==================== Drawer / navegación ==================== */
+const drawer = document.getElementById("drawer");
+const mask   = document.getElementById("drawerMask");
+document.getElementById("btnMenu").addEventListener("click",()=>{
+  drawer.classList.add("open"); mask.style.display="block";
+});
+document.getElementById("btnCloseDrawer").addEventListener("click",closeDrawer);
+document.getElementById("drawerMask").addEventListener("click",closeDrawer);
+function closeDrawer(){ drawer.classList.remove("open"); mask.style.display="none"; }
+
+document.querySelectorAll(".drawer .opt").forEach(opt=>{
   opt.addEventListener("click",()=>{
     const target = opt.dataset.target;
-
     if(target==="temperaturas"){
       $("view-temperaturas").classList.remove("hidden");
       $("view-inventario").classList.add("hidden");
       $("view-planos").classList.add("hidden");
       $("topTitle").textContent = "Registro de Temperaturas";
       closeDrawer();
-
     } else if(target==="inventario"){
       $("view-inventario").classList.remove("hidden");
       $("view-temperaturas").classList.add("hidden");
       $("view-planos").classList.add("hidden");
       $("topTitle").textContent = "Inventario Por Templar";
       closeDrawer();
-
     } else if(target==="planos"){
       $("view-temperaturas").classList.add("hidden");
       $("view-inventario").classList.add("hidden");
       $("view-planos").classList.remove("hidden");
       $("topTitle").textContent = "Consulta de Planos";
       closeDrawer();
-
-      verificarAccesoPlanos(); // 👈 valida permisos antes de mostrar
+      prepararVistaPlanos(); // Gmail auth + permisos
     }
   });
 });
 
-/* ==================== Consulta de Planos (versión tabla, ligera y optimizada) ==================== */
+/* ==================== Consulta de Planos ==================== */
 let planosData = [];
 let filtrados = [];
 let indexRender = 0;
-const PAGE_SIZE = 200; // cantidad de filas por carga
+const PAGE_SIZE = 200;
 const PLANOS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTlsUCkIwRggf4CcUkfq239hl5UKRE86B3FycdB14sgIs5OIeFuqKQjlhzezzNNWJa6WEPy_URJtDB_/pub?gid=1893719309&single=true&output=csv";
 const CACHE_KEY = "planosCacheCSV";
 
-/* --- Cargar planos (usa caché local + actualización silenciosa) --- */
-async function cargarPlanos() {
-  const cuerpo = $("tbodyPlanos");
-  cuerpo.innerHTML = "<tr><td colspan='2' style='padding:10px;'>Cargando planos...</td></tr>";
-
-  // 1️⃣ Leer desde cache local
-  const cache = localStorage.getItem(CACHE_KEY);
-  if (cache) planosData = parseCSV(cache);
-
-  // 2️⃣ Intentar actualizar online
-  try {
-    const resp = await fetch(PLANOS_URL);
-    const csv = await resp.text();
-    if (csv.length > 100) {
-      localStorage.setItem(CACHE_KEY, csv);
-      planosData = parseCSV(csv);
-    }
-  } catch (err) {
-    console.warn("Sin conexión, usando cache local.");
-  }
-
-  renderPlanos(); // Mostrar
-}
-
-/* --- Parsear CSV --- */
 function parseCSV(csv) {
   const rows = csv.trim().split("\n").map(r => r.split(","));
   const headers = rows[0].map(h => h.trim());
@@ -1650,14 +1366,32 @@ function parseCSV(csv) {
   });
 }
 
-/* --- Render incremental (solo NOMBRE y LINK) --- */
+async function cargarPlanos() {
+  const cuerpo = $("tbodyPlanos");
+  cuerpo.innerHTML = "<tr><td colspan='2' style='padding:10px;'>Cargando planos...</td></tr>";
+
+  const cache = localStorage.getItem(CACHE_KEY);
+  if (cache) planosData = parseCSV(cache);
+
+  try {
+    const resp = await fetch(PLANOS_URL);
+    const csv = await resp.text();
+    if (csv.length > 100) {
+      localStorage.setItem(CACHE_KEY, csv);
+      planosData = parseCSV(csv);
+    }
+  } catch (err) {
+    console.warn("Sin conexión, usando cache local.");
+  }
+  renderPlanos(); 
+}
+
 function renderPlanos(reset = true) {
   const cuerpo = $("tbodyPlanos");
-
   if (reset) {
     const q = ($("buscarPlano").value || "").toLowerCase();
     filtrados = planosData.filter(p =>
-      !q || (p.Nombre && p.Nombre.toLowerCase().includes(q))
+      !q || ((p.NOMBRE||p.Nombre||"").toLowerCase().includes(q))
     );
     indexRender = 0;
     cuerpo.innerHTML = "";
@@ -1666,73 +1400,176 @@ function renderPlanos(reset = true) {
   const next = filtrados.slice(indexRender, indexRender + PAGE_SIZE);
   const frag = document.createDocumentFragment();
 
- next.forEach(p => {
-  const nombre = p.NOMBRE || p.Nombre || "Sin nombre";
-  const link = p.LINK || p.Link || p.ARCHIVO || "#";
-
-  const fila = document.createElement("tr");
-  fila.style.cursor = "pointer";
-  fila.innerHTML = `
-    <td style="padding:6px 10px;border-bottom:1px solid #333;">${nombre}</td>
-    <td style="padding:6px 10px;border-bottom:1px solid #333;">
-      <a href="${link}" target="_blank" style="color:#00e5ff;text-decoration:none;">Abrir</a>
-    </td>
-  `;
-
-  fila.onclick = () => {
-    if (link && link !== "#") window.open(link, "_blank");
-  };
-
-  frag.appendChild(fila);
-});
-
+  next.forEach(p => {
+    const nombre = p.NOMBRE || p.Nombre || "Sin nombre";
+    const link = p.LINK || p.Link || p.ARCHIVO || "#";
+    const fila = document.createElement("tr");
+    fila.innerHTML = `
+      <td style="padding:6px 10px;border-bottom:1px solid #333;">${nombre}</td>
+      <td style="padding:6px 10px;border-bottom:1px solid #333;">
+        <button class="inv-btn primary" data-link="${encodeURIComponent(link)}" data-nombre="${encodeURIComponent(nombre)}">Ver</button>
+      </td>
+    `;
+    fila.querySelector("button").onclick = (ev)=>{
+      const url = decodeURIComponent(ev.currentTarget.dataset.link);
+      const nom = decodeURIComponent(ev.currentTarget.dataset.nombre);
+      abrirVisorPlanos(nom, url);
+    };
+    frag.appendChild(fila);
+  });
 
   cuerpo.appendChild(frag);
   indexRender += PAGE_SIZE;
 }
 
-/* --- Cargar más filas al hacer scroll --- */
 $("tablaPlanos").parentElement.onscroll = e => {
   const el = e.target;
   if (el.scrollTop + el.clientHeight >= el.scrollHeight - 30 && indexRender < filtrados.length) {
     renderPlanos(false);
   }
 };
-
-/* --- Buscar --- */
 $("buscarPlano").oninput = () => renderPlanos(true);
-
-/* --- Recargar --- */
 $("btnRecargarPlanos").onclick = cargarPlanos;
 
-
-/* ==================== Verificación de acceso a Planos ==================== */
-let usuarioAutenticado = null;
+/* ===== Gmail Auth + Permisos Planos ===== */
+let usuarioPlanos = null;
 let accesoPlanos = false;
 
-// ✅ Detectar correo del usuario (por ejemplo con prompt simple)
-async function verificarAccesoPlanos() {
-  // Pedimos el correo (en tu versión final puedes reemplazar por login)
-  const correo = prompt("Ingresa tu correo corporativo para continuar:");
-  if (!correo) return false;
-  usuarioAutenticado = correo.toLowerCase().replace(/\./g, "_").replace(/@/g, "_");
+$("btnLoginGoogle").onclick = async ()=>{
+  try{
+    const provider = new firebase.auth.GoogleAuthProvider();
+    const res = await auth.signInWithPopup(provider);
+    usuarioPlanos = res.user;
+    $("lblPlanosUsuario").textContent = usuarioPlanos.email;
+    $("btnLoginGoogle").style.display="none";
+    $("btnLogoutGoogle").style.display="inline-block";
+    await verificarPermisosPlanos();
+  }catch(e){ alert("No se pudo iniciar sesión: "+ (e.message||e)); }
+};
+$("btnLogoutGoogle").onclick = async ()=>{
+  await auth.signOut();
+  usuarioPlanos = null; accesoPlanos=false;
+  $("lblPlanosUsuario").textContent = "No autenticado";
+  $("btnLoginGoogle").style.display="inline-block";
+  $("btnLogoutGoogle").style.display="none";
+  $("tbodyPlanos").innerHTML="";
+  $("msgPlanos").textContent="Inicia sesión con Google para ver los planos.";
+};
 
-  const permisosSnap = await firebase.database().ref("planosAcceso").once("value");
-  const permisos = permisosSnap.val() || {};
+auth.onAuthStateChanged(async (user)=>{
+  if(user){
+    usuarioPlanos = user;
+    $("lblPlanosUsuario").textContent = user.email;
+    $("btnLoginGoogle").style.display="none";
+    $("btnLogoutGoogle").style.display="inline-block";
+    await verificarPermisosPlanos();
+  }else{
+    usuarioPlanos = null; accesoPlanos=false;
+    $("lblPlanosUsuario").textContent = "No autenticado";
+    $("btnLoginGoogle").style.display="inline-block";
+    $("btnLogoutGoogle").style.display="none";
+    $("tbodyPlanos").innerHTML="";
+    $("msgPlanos").textContent="Inicia sesión con Google para ver los planos.";
+  }
+});
 
-  // Normalizar claves para comparación (Firebase no acepta . ni @ en claves)
-  const clavesPermitidas = Object.keys(permisos).map(k => k.toLowerCase().replace(/\./g, "_").replace(/@/g, "_"));
+async function verificarPermisosPlanos(){
+  if(!usuarioPlanos){
+    $("msgPlanos").textContent = "Inicia sesión con Google para ver los planos.";
+    return;
+  }
 
-  if (clavesPermitidas.includes(usuarioAutenticado)) {
-    accesoPlanos = true;
-    cargarPlanos();
-  } else {
-    accesoPlanos = false;
-    $("listaPlanos").innerHTML = "<div class='inv-info'>🚫 No tienes permiso para ver estos planos.</div>";
+  // 🔹 Convertimos el correo en formato válido para Firebase (puntos -> comas)
+  const correo = usuarioPlanos.email.trim().toLowerCase();
+  const claveCorreo = correo.replace(/\./g, ',');
+
+  try {
+    // 🔹 Consultamos el nodo 'permisos'
+    const snap = await firebase.database().ref('permisos/' + claveCorreo).once('value');
+    const tieneAcceso = snap.exists() && snap.val() === true;
+
+    if (tieneAcceso) {
+      console.log("✅ Acceso permitido para:", correo);
+      accesoPlanos = true;
+      $("msgPlanos").textContent = "";
+      cargarPlanos();
+    } else {
+      console.warn("🚫 Sin permiso:", correo);
+      accesoPlanos = false;
+      $("tbodyPlanos").innerHTML = "";
+      $("msgPlanos").textContent = "🚫 No tienes permiso para ver estos planos.";
+    }
+  } catch (err) {
+    console.error("Error al verificar permisos:", err);
+    $("msgPlanos").textContent = "⚠️ Error al verificar permisos.";
   }
 }
 
+function prepararVistaPlanos(){
+  // Si ya está logueado, se verifica; si no, se le muestra botón para iniciar
+  if(auth.currentUser){
+    verificarPermisosPlanos();
+  }else{
+    $("msgPlanos").textContent="Inicia sesión con Google para ver los planos.";
+  }
+}
 
-  </script>
+/* ===== Visor modal (PDF directo sin descarga ni impresión) ===== */
+const visorModal = $("visorPlanosModal");
+const visorIframe = $("visorIframe");
+const visorTitulo = $("visorTitulo");
+$("btnCerrarVisor").onclick = ()=> cerrarVisor();
+
+function abrirVisorPlanos(nombre, url){
+  if(!accesoPlanos){ 
+    alert("🚫 Sin permiso para ver planos."); 
+    return; 
+  }
+
+  visorTitulo.textContent = nombre;
+
+  // 🔹 Si el enlace proviene de Google Drive, lo convertimos a formato de visualización directa
+  if (url.includes("drive.google.com/file/d/")) {
+    // Elimina cualquier parámetro o sufijo y lo cambia a /preview
+    url = url.replace(/\/view(\?.*)?$/, "/preview");
+  }
+
+  // 🔹 Mostramos el PDF directamente (sin PDF.js)
+  visorIframe.src = url;
+  visorIframe.setAttribute("sandbox", "allow-same-origin allow-scripts");
+  visorIframe.setAttribute("allow", "fullscreen");
+  visorIframe.setAttribute("style", "width:100%;height:100vh;border:none;");
+
+  // 🔹 Bloquear atajos de teclado (Ctrl+S / Ctrl+P / Ctrl+C / Ctrl+U)
+  window.addEventListener("keydown", keyBlocker, {capture:true});
+
+  // 🔹 Bloquear menú contextual (clic derecho)
+  visorIframe.addEventListener("contextmenu", e => e.preventDefault());
+  visorModal.addEventListener("contextmenu", e => e.preventDefault());
+
+  visorModal.style.display = "flex";
+}
+
+function keyBlocker(e){
+  const ctrl = e.ctrlKey || e.metaKey;
+  if(ctrl && ["s","p","c","x","u"].includes(e.key.toLowerCase())){ 
+    e.preventDefault(); 
+    e.stopPropagation(); 
+  }
+}
+
+function cerrarVisor(){
+  visorIframe.src = "about:blank";
+  visorModal.style.display = "none";
+  window.removeEventListener("keydown", keyBlocker, {capture:true});
+}
+
+// Evitar cierre por click interior
+$("visorCont").addEventListener("click", e=> e.stopPropagation());
+visorModal.addEventListener("click", cerrarVisor);
+
+
+</script>
 </body>
 </html>
+
