@@ -29,13 +29,15 @@
     .hamb{position:absolute;left:0;top:50%;transform:translateY(-50%);background:transparent;border:1px solid var(--soft);color:#fff;border-radius:8px;padding:8px 10px;cursor:pointer}
     .hamb:active{filter:brightness(.9)}
 
-    /* Cards */
+    /* Cards (resaltadas) */
     .card{background:#1b1b1b;border:1px solid #2e2e2e;border-radius:12px;padding:14px;margin-bottom:14px;box-shadow:0 2px 6px rgba(0,0,0,.35);transition:transform .15s ease, box-shadow .2s ease}
     .card:hover{transform:translateY(-2px);box-shadow:0 4px 10px rgba(0,0,0,.5)}
 
     label{display:block;margin:6px 0 4px;font-weight:700;color:#ddd}
     input, select, textarea, button{box-sizing:border-box;border-radius:6px;border:1px solid var(--border);padding:8px}
-    input,select,textarea{width:100%;background:#fff;color:#000;border:1px solid #ccc}
+    input,select,textarea{width:100%;background:var(--input-bg);color:var(--input-color)}
+    /* Unificado para todos los inputs (incluye inventario y modal) */
+    input, select, textarea { background:#fff; color:#000; border:1px solid #ccc }
 
     button{cursor:pointer;border:none;font-weight:700}
     .btn-primary{background:var(--accent);color:#000}
@@ -65,7 +67,7 @@
     .drawer .opt:hover{filter:brightness(1.05)}
     .drawer small{color:#9aa9b1}
 
-    /* Inventario */
+    /* Inventario toolbar + tabs */
     .inv-toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
     .inv-pill{background:#161616;border:1px solid var(--soft);border-radius:10px;padding:6px 8px;display:flex;gap:8px;align-items:center}
     .inv-pill label{margin:0;color:#cfeaf0;font-weight:700}
@@ -76,6 +78,8 @@
     .inv-tabs{display:flex;gap:8px;margin:10px 0 14px}
     .inv-tab{border:1px solid var(--soft);background:#0f0f0f;border-radius:999px;padding:6px 12px;cursor:pointer}
     .inv-tab.active{background:var(--accent);color:#000;border-color:var(--accent);font-weight:800}
+
+    /* Inventario listas (tarjetas mejoradas) */
     .inv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px}
     .inv-card{background:#1b1b1b;border:1px solid #2e2e2e;border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px;box-shadow:0 2px 6px rgba(0,0,0,.35);transition:transform .15s ease, box-shadow .2s ease}
     .inv-card:hover{transform:translateY(-2px);box-shadow:0 4px 10px rgba(0,0,0,.5)}
@@ -130,38 +134,160 @@
       .inv-toolbar select,.inv-toolbar input[type="text"]{width:100%}
     }
 
-    /* Vista Tabla agrupada */
-    #viewTabla table th, #viewTabla table td { border-bottom: 1px solid var(--border); text-align: center; padding: 8px; color: #eee; font-size: 14px; }
-    #viewTabla table th { background: #171717; color: var(--accent); font-weight: 700; }
-    #viewTabla .btn-mini { padding: 4px 8px; font-size: 13px; }
-    #viewTabla select { background: #fff; color: #000; border-radius: 6px; padding: 6px; }
-    #viewTabla { padding-bottom: 20px; }
-    .grupoTabla { margin-bottom: 22px; background: var(--panel); border-radius: 12px; padding: 10px; box-shadow: 0 0 6px rgba(0,0,0,0.3); }
-    .titulo-grupo { margin: 0 0 8px 4px; font-size: 15px; color: var(--accent); text-transform: uppercase; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .tabla-grupo { width: 100%; border-collapse: collapse; border-radius: 10px; overflow: hidden; display: block; }
-    .tabla-grupo thead { background: #171717; display: block; border-bottom: 2px solid var(--accent); }
-    .tabla-grupo tbody { display: block; }
-    .tabla-grupo tr { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); border-bottom: 1px solid var(--border); padding: 4px 0; }
-    .tabla-grupo th,.tabla-grupo td { text-align: center; font-size: 14px; padding: 6px; color: #e0e0e0; word-break: break-word; white-space: normal; }
-    .tabla-grupo th { color: var(--accent); font-weight: 600; padding: 8px 6px; text-transform: uppercase; font-size: 13px; }
-    .tabla-grupo tr:nth-child(even) { background: rgba(255,255,255,0.03); }
-    .acciones-cell { display: flex; justify-content: center; align-items: center; gap: 8px; }
-    .btn-mini { padding: 10px 16px; border-radius: 10px; font-size: 15px; border: none; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
-    .btn-mini.ok { background: #00c853; color: #fff; }
-    .btn-mini.warn { background: #ffab00; color: #000; }
-    .btn-mini:active { transform: scale(0.95); }
-    .btn-mini.confirmed { animation: confirmPulse 0.4s ease; background: #1de9b6 !important; }
-    @keyframes confirmPulse { 0%{transform:scale(1); box-shadow:0 0 0 rgba(0,255,0,.6);} 50%{transform:scale(1.1); box-shadow:0 0 12px rgba(0,255,0,.8);} 100%{transform:scale(1); box-shadow:0 0 0 rgba(0,255,0,0);} }
+#viewTabla table th, #viewTabla table td {
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+  padding: 8px;
+  color: #eee;
+  font-size: 14px;
+}
+#viewTabla table th {
+  background: #171717;
+  color: var(--accent);
+  font-weight: 700;
+}
+#viewTabla .btn-mini {
+  padding: 4px 8px;
+  font-size: 13px;
+}
+#viewTabla select {
+  background: #fff;
+  color: #000;
+  border-radius: 6px;
+  padding: 6px;
+}
 
-    /* Tabla Planos */
-    #tablaPlanos { width:100%; border-collapse:collapse; font-size:14px; background:#1a1a1a; border-radius:10px; overflow:hidden; }
-    #tablaPlanos thead th { position:sticky; top:0; background:#111; color:#00e5ff; font-weight:bold; text-align:left; padding:10px; border-bottom:1px solid #333; z-index:2;}
-    #tablaPlanos tbody tr.fila-plano{ transition:background .2s; }
-    #tablaPlanos tbody tr.fila-plano:hover{ background:#222; }
-    .celda-nombre{ padding:8px 10px; border-bottom:1px solid #333; color:#e0e0e0; font-weight:500; }
-    .celda-link{ padding:8px 10px; border-bottom:1px solid #333; }
-    .celda-link a{ color:#00e5ff; text-decoration:none; font-weight:bold; }
-    .celda-link a:hover{ text-decoration:underline; }
+#viewTabla {
+  padding-bottom: 20px;
+}
+/* ==== Tabla agrupada SIN scroll (adaptativa móvil) ==== */
+.grupoTabla {
+  margin-bottom: 22px;
+  background: var(--panel);
+  border-radius: 12px;
+  padding: 10px;
+  box-shadow: 0 0 6px rgba(0,0,0,0.3);
+}
+
+/* título del grupo */
+.titulo-grupo {
+  margin: 0 0 8px 4px;
+  font-size: 15px;
+  color: var(--accent);
+  text-transform: uppercase;
+  font-weight: bold;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* tabla responsive nativa */
+.tabla-grupo {
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 10px;
+  overflow: hidden;
+  display: block;
+}
+
+.tabla-grupo thead {
+  background: #171717;
+  display: block;
+  border-bottom: 2px solid var(--accent);
+}
+
+.tabla-grupo tbody {
+  display: block;
+}
+
+.tabla-grupo tr {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  border-bottom: 1px solid var(--border);
+  padding: 4px 0;
+}
+
+.tabla-grupo th,
+.tabla-grupo td {
+  text-align: center;
+  font-size: 14px;
+  padding: 6px;
+  color: #e0e0e0;
+  word-break: break-word;
+  white-space: normal;
+}
+
+/* encabezados */
+.tabla-grupo th {
+  color: var(--accent);
+  font-weight: 600;
+  padding: 8px 6px;
+  text-transform: uppercase;
+  font-size: 13px;
+}
+
+/* celdas alternas para legibilidad */
+.tabla-grupo tr:nth-child(even) {
+  background: rgba(255,255,255,0.03);
+}
+
+/* acciones centradas y grandes */
+.acciones-cell {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+/* botones táctiles grandes */
+.btn-mini {
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-size: 15px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+.btn-mini.ok {
+  background: #00c853;
+  color: #fff;
+}
+.btn-mini.warn {
+  background: #ffab00;
+  color: #000;
+}
+.btn-mini:active {
+  transform: scale(0.95);
+}
+
+/* animación confirmación */
+.btn-mini.confirmed {
+  animation: confirmPulse 0.4s ease;
+  background: #1de9b6 !important;
+}
+@keyframes confirmPulse {
+  0% { transform: scale(1); box-shadow: 0 0 0 rgba(0,255,0,0.6); }
+  50% { transform: scale(1.1); box-shadow: 0 0 12px rgba(0,255,0,0.8); }
+  100% { transform: scale(1); box-shadow: 0 0 0 rgba(0,255,0,0); }
+}
+
+/* ✅ Adaptación móvil */
+@media (max-width: 600px) {
+  .tabla-grupo tr {
+    grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  }
+  .tabla-grupo th, .tabla-grupo td {
+    font-size: 13px;
+    padding: 4px;
+  }
+  .btn-mini {
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+}
+
   </style>
 </head>
 <body>
@@ -172,7 +298,7 @@
       <div class="header-title" id="topTitle">Registro de Temperaturas</div>
     </div>
 
-    <!-- ======== Vista: Registro de Temperaturas ======== -->
+    <!-- ======== Vista: Registro de Temperaturas (por defecto) ======== -->
     <div id="view-temperaturas">
       <div class="card">
         <div class="grid4">
@@ -291,6 +417,7 @@
               <option value="kg_asc">Kg ↑</option>
               <option value="desc">Descripción (A-Z)</option>
               <option value="desc_rev">Descripción (Z-A)</option>
+
             </select>
           </div>
           <button class="inv-btn" id="btnActualizarInv">Actualizar</button>
@@ -320,48 +447,22 @@
       <div id="listHist" class="inv-grid hidden"></div>
     </div>
   </div>
-
-  <!-- ===== Vista Tabla agrupada Pendientes ===== -->
-  <div id="viewTabla" class="hidden">
-    <div class="card" style="background:var(--panel-2)">
-      <div class="inv-toolbar" style="justify-content:space-between;align-items:center">
-        <div class="inv-pill">
-          <label>Agrupar por</label>
-          <select id="agrupacionTabla">
-            <option value="part">Part</option>
-            <option value="desc">Descripción</option>
-          </select>
-        </div>
-        <button class="inv-btn primary" id="btnRecargarTabla">🔄 Recargar</button>
+<div id="viewTabla" class="hidden">
+  <div class="card" style="background:var(--panel-2)">
+    <div class="inv-toolbar" style="justify-content:space-between;align-items:center">
+      <div class="inv-pill">
+        <label>Agrupar por</label>
+        <select id="agrupacionTabla">
+          <option value="part">Part</option>
+          <option value="desc">Descripción</option>
+        </select>
       </div>
-      <div class="table-wrap" id="tablaAgrupada"></div>
+      <button class="inv-btn primary" id="btnRecargarTabla">🔄 Recargar</button>
     </div>
-  </div>
 
-  <!-- ======== Vista: Planos ======== -->
-  <div id="view-planos" class="hidden">
-    <div class="card" style="background:var(--panel-2)">
-      <div class="inv-toolbar">
-        <div class="inv-pill">
-          <label>Buscar plano</label>
-          <input id="buscarPlano" type="text" placeholder="Nombre del plano...">
-        </div>
-        <button class="inv-btn primary" id="btnRecargarPlanos">🔄 Recargar</button>
-      </div>
-
-      <div class="tabla-container" style="max-height:70vh;overflow-y:auto;border-radius:10px;">
-        <table id="tablaPlanos" style="width:100%;border-collapse:collapse;">
-          <thead>
-            <tr style="background:#222;color:#00e5ff;">
-              <th style="padding:8px;border-bottom:1px solid #333;text-align:left;">Nombre</th>
-              <th style="padding:8px;border-bottom:1px solid #333;text-align:left;">Enlace</th>
-            </tr>
-          </thead>
-          <tbody id="tbodyPlanos" style="color:#e0e0e0;"></tbody>
-        </table>
-      </div>
-    </div>
+    <div class="table-wrap" id="tablaAgrupada"></div>
   </div>
+</div>
 
   <!-- ===== Modal Inventario ===== -->
   <div class="modal" id="modalInv">
@@ -389,6 +490,7 @@
         <div class="kv">
           <b>Comentario</b>
           <div><input id="mdCmt" type="text" placeholder="Agregar/editar comentario..."></div>
+
           <b>Trazabilidad</b>
           <div id="mdTrace" style="font-size:12.5px;color:#ddd">(sin registros)</div>
         </div>
@@ -402,6 +504,7 @@
   </div>
 
   <!-- ===== Drawer ===== -->
+  <div class="drawer-mask" id="drawerMask"></div>
   <div class="drawer" id="drawer">
     <div class="head">
       <span>Menú principal</span>
@@ -412,43 +515,12 @@
         <b>Registro de Temperaturas</b><br>
         <small>Lecturas por zona y ciclo</small>
       </div>
-      <div class="opt gate" data-target="inventario">
+      <div class="opt" data-target="inventario">
         <b>Inventario Por Templar</b><br>
         <small>Gestión y trazabilidad</small>
       </div>
-      <div class="opt gate" data-target="planos">
-        <b>Consulta de Planos</b><br>
-        <small>Acceso directo a los planos en Excel</small>
-      </div>
-
-      <div class="opt" onclick="actualizarZonaTecnoglass()" style="border-top:1px solid #333;margin-top:8px;">
-        <b>🛠️ Actualizar zona Tecnoglass</b><br>
-        <small>Solo administrador</small>
-      </div>
-      <div class="opt" onclick="cambiarCorreo()">
-        <b>👤 Cambiar usuario</b><br>
-        <small>Permite volver a iniciar con otro correo</small>
-      </div>
     </div>
   </div>
-  <div class="drawer-mask" id="drawerMask"></div>
-
-  <!-- Panel GPS y botón -->
-  <div id="panelGPS"
-       style="position:fixed;bottom:60px;right:10px;background:#111;padding:10px 14px;
-       border:1px solid #00e5ff;border-radius:10px;color:#0ff;font-size:12px;
-       font-family:monospace;z-index:9999;box-shadow:0 0 10px rgba(0,229,255,0.5);display:none;">
-    <div>📍 <b>Lat:</b> — | <b>Lng:</b> —</div>
-    <div>🏭 <b>Centro:</b> 10.9846, -74.8181</div>
-    <div>📏 <b>Distancia:</b> — km</div>
-    <div>✅ <b>Estado:</b> —</div>
-  </div>
-  <button id="btnGPS"
-          style="position:fixed;bottom:10px;right:10px;background:#00e5ff;color:#000;
-          border:none;padding:6px 10px;border-radius:8px;font-weight:bold;cursor:pointer;
-          z-index:10000;box-shadow:0 0 10px rgba(0,229,255,0.5);">
-    🛰️ GPS
-  </button>
 
   <script>
   "use strict";
@@ -464,56 +536,10 @@
   const db = firebase.database();
   const dbInv = db.ref("inventarioPorTemplar");
 
-  /* ============ Seguridad inicial (si faltan nodos, crearlos) ============ */
-  async function inicializarSeguridad() {
-    const ref = firebase.database().ref("seguridad");
-    const snap = await ref.once("value");
-    if (snap.exists()) return;
-    const dataInicial = {
-      zonas: {
-        TecnoglassBarranquilla: {
-          nombre: "Tecnoglass S.A.S - Barranquilla",
-          lat: 11.0000,
-          lng: -74.8300,
-          radio_km: 8
-        }
-      },
-      usuarios: {
-        "gary_maldonado_tecnoglass_com": { autorizado: true, zona: "TecnoglassBarranquilla" },
-        "operario1_tecnoglass_com":     { autorizado: true, zona: "TecnoglassBarranquilla" },
-        "externo_gmail_com":            { autorizado: true, zona: "Libre" }
-      }
-    };
-    await ref.set(dataInicial);
-  }
-  inicializarSeguridad();
-
-  // Nodo de permisos Planos si no existe
-  const permisosRef = firebase.database().ref("planosAcceso");
-  permisosRef.once("value", s => {
-    if (!s.exists()) {
-      permisosRef.set({
-        "gary_maldonado_tecnoglass_com": true,
-        "supervisor_tecnoglass_net": true,
-        "operario_tecnoglass_net": true
-      });
-    }
-  });
-
-  /* ==================== Variables globales ==================== */
+  /* ==================== Helpers globales ==================== */
   const $ = id => document.getElementById(id);
   const pad2 = n => String(n).padStart(2,'0');
   const hoyISO = () => new Date().toISOString().slice(0,10);
-  const toNum = v => isNaN(+v)?0:+v;
-
-  let usuarioCorreoActual = "";
-  let accesoPermitido = false; // solo controla Inventario/Planos
-  let currentCicloId = "";
-  let liveRef = null;
-
-  const API_URL = "https://optima.tecnoglass.net/api/alutions_production/reports-producion/Detalle-produccion";
-
-  /* ==================== Utilidades ==================== */
   function addHoursToHHMM(hhmm, plus=10){
     if(!hhmm) return "";
     const [h,m] = hhmm.split(':').map(Number);
@@ -527,241 +553,29 @@
     let hour = h % 12 || 12; const ampm = h >= 12 ? 'PM' : 'AM';
     return `${hour}:${pad2(m)} ${ampm}`;
   }
-  function turnoDetallado(){
-    const ahora = new Date();
-    const h = ahora.getHours();
-    let turno = (h >= 7 && h < 19) ? "T1" : "T2";
-    let fechaBase = new Date(ahora);
-    if (turno === "T2" && h < 7) { fechaBase.setDate(fechaBase.getDate()-1); }
-    return { turno, fechaISO: fechaBase.toISOString().slice(0,10) };
-  }
-  function fFecha(iso){ if(!iso) return ""; const d=new Date(iso); if(isNaN(d)) return ""; return d.toLocaleString("es-CO",{hour12:true}); }
-  function getPlanta(machine){
-    const m=(machine||"").trim().toUpperCase();
-    if(["PRENSA 7-1","PRENSA 7-2","PRENSA 7-3","PRENSA 7-6","PRENSA 7-7","PRENSA 7-8"].includes(m)) return "A1";
-    if(["PRENSA 7-4"].includes(m)) return "A2";
-    if(["PRENSA 7-5","PRENSA 7-9","PRENSA 7-10"].includes(m)) return "A3";
-    return "OTRA";
-  }
-  function isAdmin(c){ return (c||"").toLowerCase().includes("gary.maldonado"); }
 
-  /* ==================== Geolocalización / Zona ==================== */
-  function obtenerUbicacionActual() {
-    return new Promise((resolve, reject) => {
-      if (!navigator.geolocation) return reject("Geolocalización no soportada");
-      navigator.geolocation.getCurrentPosition(
-        pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-        err => reject(err.message || "Error al obtener ubicación"),
-        { enableHighAccuracy: true, timeout: 7000 }
-      );
-    });
-  }
-  function distanciaKm(lat1, lon1, lat2, lon2) {
-    const R = 6371;
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = Math.sin(dLat / 2) ** 2 +
-              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-              Math.sin(dLon / 2) ** 2;
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  }
+  /* ==================== Estado Temperaturas ==================== */
+  let currentCicloId = "";
+  let liveRef = null;
 
-  async function verificarZonaPermitida(correoUsuario) {
-    try {
-      const snap = await firebase.database().ref("seguridad").once("value");
-      const seguridad = snap.val() || {};
-      const usuarioKey = correoUsuario.toLowerCase().replace(/\./g, "_").replace(/@/g, "_");
-      const usuario = seguridad.usuarios?.[usuarioKey];
+  /* Defaults Temperaturas */
+  $('fecha').value = hoyISO();
+  $('horaInicio').value = horaAhoraHHMM();
+  $('horaFin').value = addHoursToHHMM($('horaInicio').value,10);
+  $('horno').value = '';
+  $('turno').value = '';
+  $('operarioInicio').value = '';
+  $('selActivos').innerHTML = '<option value="">-- Ninguno --</option>';
 
-      if (!usuario) {
-        alert("🚫 Este usuario no está registrado en la base de seguridad.");
-        return false;
-      }
-      if (usuario.zona === "Libre") return true;
-
-      const zona = seguridad.zonas?.[usuario.zona];
-      if (!zona) {
-        alert("⚠️ La zona asignada no existe en Firebase.");
-        return false;
-      }
-      const pos = await obtenerUbicacionActual();
-      const distancia = distanciaKm(pos.lat, pos.lng, zona.lat, zona.lng);
-      const dentro = distancia <= zona.radio_km + 2; // tolerancia
-
-      // Actualiza panel GPS si está abierto
-      actualizarPanel(pos.lat, pos.lng);
-
-      return dentro;
-    } catch (err) {
-      console.error("Error verificando zona:", err);
-      alert("⚠️ No se pudo verificar la zona: " + err);
-      return false;
-    }
-  }
-
-  function habilitarAccesoTotal() {
-    accesoPermitido = true;
-    localStorage.setItem("accesoPermitido", "true");
-    document.querySelectorAll(".drawer .opt.gate").forEach(o => {
-      o.style.opacity = "1";
-      o.style.pointerEvents = "auto";
-    });
-  }
-  function deshabilitarAcceso() {
-    accesoPermitido = false;
-    localStorage.removeItem("accesoPermitido");
-    document.querySelectorAll(".drawer .opt.gate").forEach(o => {
-      o.style.opacity = "0.5";
-      o.style.pointerEvents = "none";
-    });
-  }
-
-  /* ==================== Login: pedir correo solo 1ra vez ==================== */
-  window.addEventListener("DOMContentLoaded", async () => {
-    let correo = localStorage.getItem("correo_autorizado");
-    if (!correo) {
-      correo = prompt("Introduce tu correo corporativo (ej: gary.maldonado@tecnoglass.com):");
-      if (!correo) {
-        alert("⚠️ No se puede continuar sin correo autorizado.");
-        correo = "externo@gmail.com"; // fallback para no romper UI
-      }
-      localStorage.setItem("correo_autorizado", correo);
-    }
-    usuarioCorreoActual = correo;
-
-    // Verificar zona (no bloquea menús generales)
-    const dentro = isAdmin(correo) ? true : await verificarZonaPermitida(correo);
-    if (dentro) habilitarAccesoTotal(); else deshabilitarAcceso();
-
-    $('lblTurno').textContent = `${turnoDetallado().turno} (${turnoDetallado().fechaISO})`;
-
-    // Defaults Temperaturas
-    $('fecha').value = hoyISO();
-    $('horaInicio').value = horaAhoraHHMM();
-    $('horaFin').value = addHoursToHHMM($('horaInicio').value,10);
-    $('selActivos').innerHTML = '<option value="">-- Ninguno --</option>';
-
-    // Iniciar inventario solo si hay acceso permitido
-    if (accesoPermitido) { try { await cargarInventario(); } catch(e){} }
-  });
-
-  /* ==================== Botón Admin: actualizar zona ==================== */
-  async function actualizarZonaTecnoglass() {
-    let correo = localStorage.getItem("correo_autorizado") || "";
-    if (!isAdmin(correo)) {
-      alert("🚫 Solo administradores pueden actualizar la zona.");
-      return;
-    }
-    const confirmar = confirm("¿Actualizar zona TecnoglassBarranquilla en Firebase?");
-    if (!confirmar) return;
-    await firebase.database().ref("seguridad/zonas/TecnoglassBarranquilla").update({
-      lat: 11.0000, lng: -74.8300, radio_km: 8
-    });
-    alert("✅ Zona TecnoglassBarranquilla actualizada correctamente.");
-  }
-  window.actualizarZonaTecnoglass = actualizarZonaTecnoglass;
-
-  /* ==================== Drawer ==================== */
-  const drawer = document.getElementById("drawer");
-  const mask   = document.getElementById("drawerMask");
-  function openDrawer(){ drawer.classList.add("open"); mask.style.display="block"; }
-  function closeDrawer(){ drawer.classList.remove("open"); mask.style.display="none"; }
-
-  $('btnMenu').addEventListener('click', async ()=>{
-    openDrawer();
-    // Revalidar acceso sin bloquear acciones
-    const correo = localStorage.getItem("correo_autorizado");
-    if (correo) {
-      const dentro = isAdmin(correo) ? true : await verificarZonaPermitida(correo);
-      if (dentro) habilitarAccesoTotal(); else deshabilitarAcceso();
-    }
-  });
-  $('btnCloseDrawer').addEventListener('click', closeDrawer);
-  $('drawerMask').addEventListener('click', closeDrawer);
-
-  document.querySelectorAll(".drawer .opt").forEach(opt=>{
-    opt.addEventListener("click", ()=>{
-      const target = opt.dataset.target;
-      if (target === "temperaturas") {
-        mostrarVista("temperaturas");
-      } else if (target === "inventario") {
-        if (!accesoPermitido) { alert("🚫 Fuera de zona o no autorizado."); return; }
-        mostrarVista("inventario");
-      } else if (target === "planos") {
-        if (!accesoPermitido) { alert("🚫 Fuera de zona o no autorizado."); return; }
-        mostrarVista("planos");
-        verificarAccesoPlanos();
-      }
-    });
-  });
-
-  function mostrarVista(vista) {
-    ["view-temperaturas","view-inventario","view-planos","viewTabla"].forEach(id=>$(id).classList.add("hidden"));
-    $("view-" + vista).classList.remove("hidden");
-    $("topTitle").textContent =
-      vista === "temperaturas" ? "Registro de Temperaturas" :
-      vista === "inventario"   ? "Inventario Por Templar" :
-      "Consulta de Planos";
-    setTimeout(closeDrawer, 120);
-  }
-
-  /* ==================== GPS ==================== */
-  let centro = { lat: 11.0000, lng: -74.8300, radio_km: 8 };
-  firebase.database().ref("seguridad/zonas/TecnoglassBarranquilla").on("value", snap => {
-    if (snap.exists()) centro = snap.val();
-  });
-
-  function actualizarPanel(lat, lng) {
-    const panel = $('panelGPS');
-    const dist = distanciaKm(lat, lng, centro.lat, centro.lng);
-    const dentro = dist <= (centro.radio_km + 2);
-    panel.innerHTML = `
-      <div>📍 <b>Lat:</b> ${lat.toFixed(5)} | <b>Lng:</b> ${lng.toFixed(5)}</div>
-      <div>🏭 <b>Centro:</b> ${centro.lat.toFixed(4)}, ${centro.lng.toFixed(4)}</div>
-      <div>📏 <b>Distancia:</b> ${dist.toFixed(2)} km</div>
-      <div>${dentro ? "✅ <b>Dentro del área</b>" : "🚫 <b>Fuera del área</b>"}</div>
-    `;
-  }
-  function iniciarGPS() {
-    if (!navigator.geolocation) {
-      $('panelGPS').innerHTML = "⚠️ Geolocalización no soportada";
-      return;
-    }
-    navigator.geolocation.watchPosition(
-      pos => {
-        const { latitude: lat, longitude: lng } = pos.coords;
-        actualizarPanel(lat, lng);
-        const dist = distanciaKm(lat, lng, centro.lat, centro.lng);
-        const dentro = dist <= (centro.radio_km + 2);
-        if (!dentro && accesoPermitido) deshabilitarAcceso();
-      },
-      err => { $('panelGPS').innerHTML = "❌ Error GPS: " + err.message; },
-      { enableHighAccuracy: true, timeout: 10000 }
-    );
-  }
-  $('btnGPS').addEventListener('click', ()=>{
-    const panel = $('panelGPS');
-    if (panel.style.display === "none") { panel.style.display="block"; iniciarGPS(); }
-    else { panel.style.display="none"; }
-  });
-
-  /* ==================== Cambiar correo ==================== */
-  function cambiarCorreo() {
-    localStorage.removeItem("correo_autorizado");
-    localStorage.removeItem("accesoPermitido");
-    alert("🔄 Correo eliminado. Recarga la página para ingresar uno nuevo.");
-    location.reload();
-  }
-  window.cambiarCorreo = cambiarCorreo;
-
-  /* ==================== Temperaturas ==================== */
+  /* Tabla lecturas: quitar fila */
   function bindDeletes(){
     document.querySelectorAll('#tbody .del').forEach(btn=>{
       btn.onclick = ()=> btn.closest('tr').remove();
     });
   }
   bindDeletes();
+
+  /* Agregar fila lectura */
   $('btnAgregarFila').onclick = ()=>{
     const now = horaAhoraHHMM();
     const tr = document.createElement('tr');
@@ -778,6 +592,7 @@
     bindDeletes();
   };
 
+  /* Chart temperaturas */
   const chart = new Chart($('chart').getContext('2d'), {
     type:'line',
     data:{ labels: [], datasets:[
@@ -790,6 +605,7 @@
     options:{responsive:true,maintainAspectRatio:false,animation:false}
   });
 
+  /* Cargar ciclos activos en select */
   async function cargarActivosSelect(){
     const horno = $('horno').value, fecha = $('fecha').value, turno = $('turno').value;
     const snap = await db.ref('ciclosActivos').once('value');
@@ -841,7 +657,7 @@
           setPoint: v.setPoint ?? ''
         });
       });
-      arr.sort((a,b)=>a.hora.localeCompare(b.hora));
+      
 
       chart.data.labels = arr.map(r => toAMPM(r.hora));
       chart.data.datasets[0].data = arr.map(r => (r.zona1!=='' && r.zona1!=null && !isNaN(r.zona1)) ? Number(r.zona1) : null);
@@ -887,6 +703,7 @@
     attachLive(id);
   });
 
+  /* Iniciar ciclo */
   $('btnNuevo').addEventListener('click', async ()=> {
     const horno = $('horno').value.trim();
     const fecha = $('fecha').value.trim();
@@ -920,6 +737,7 @@
     alert('✅ Ciclo iniciado correctamente.');
   });
 
+  /* Guardar lecturas */
   $('btnGuardar').addEventListener('click', async ()=> {
     if(!currentCicloId){
       alert('⚠️ Primero inicia o selecciona un ciclo activo.');
@@ -961,6 +779,7 @@
     alert('✅ Lecturas guardadas o actualizadas correctamente.');
   });
 
+  /* Finalizar ciclo */
   $('btnFinalizar').addEventListener('click', async ()=> {
     if(!currentCicloId){
       alert('Selecciona o inicia primero un ciclo activo.');
@@ -1004,17 +823,46 @@
   });
 
   /* ==================== Inventario por templar ==================== */
+
+  const API_URL="https://optima.tecnoglass.net/api/alutions_production/reports-producion/Detalle-produccion";
+
+  /* Turnos: T1 07:00–18:59, T2 19:00–06:59 con fecha base del T2 en el día anterior */
+  function turnoDetallado(){
+    const ahora = new Date();
+    const h = ahora.getHours();
+    let turno = (h >= 7 && h < 19) ? "T1" : "T2";
+    let fechaBase = new Date(ahora);
+    if (turno === "T2" && h < 7) { // madrugada: T2 del día anterior
+      fechaBase.setDate(fechaBase.getDate()-1);
+    }
+    return { turno, fechaISO: fechaBase.toISOString().slice(0,10) };
+  }
+
+  function obtenerTurnoActual(){ return turnoDetallado().turno; }
+  function fechaISO(){ return new Date().toISOString().slice(0,10); }
+  $('lblTurno').textContent = `${turnoDetallado().turno} (${turnoDetallado().fechaISO})`;
+
+  const toNum = v => isNaN(+v)?0:+v;
+  function fFecha(iso){ if(!iso) return ""; const d=new Date(iso); if(isNaN(d)) return ""; return d.toLocaleString("es-CO",{hour12:true}); }
+  function getPlanta(machine){
+    const m=(machine||"").trim().toUpperCase();
+    if(["PRENSA 7-1","PRENSA 7-2","PRENSA 7-3","PRENSA 7-6","PRENSA 7-7","PRENSA 7-8"].includes(m)) return "A1";
+    if(["PRENSA 7-4"].includes(m)) return "A2";
+    if(["PRENSA 7-5","PRENSA 7-9","PRENSA 7-10"].includes(m)) return "A3";
+    return "OTRA";
+  }
+
   let basePendientes = [];
   let maquinasSet = new Set();
-  let vista = "pendientes";
-  let cacheRevisadosTurno = {};
+  let vista = "pendientes"; // "revisados" | "historial"
+  let cacheRevisadosTurno = {};  // {fecha_turno: {clave:payload,...}}
 
   function escucharRevisadosTurno(){
     const {turno, fechaISO: fBase} = turnoDetallado();
     const k = `${fBase}_${turno}`;
     dbInv.child("revisados").child(fBase).child(turno).on("value", snap=>{
       cacheRevisadosTurno[k] = snap.val() || {};
-      render();
+      render(); // refresca vistas y totales
     });
   }
   escucharRevisadosTurno();
@@ -1024,8 +872,6 @@
     const json=await resp.json(); let det=[]; if(json?.data) json.data.forEach(d=>{ if(Array.isArray(d.DetalleProduccion)) det=det.concat(d.DetalleProduccion); });
     return det;
   }
-  function fechaISO(){ return new Date().toISOString().slice(0,10); }
-
   async function cargarPendientes(){
     const fi="2025-01-01", ff=fechaISO();
     const [extrude,tmpin] = await Promise.all([fetchDep(fi,ff,"EXTRUDE"), fetchDep(fi,ff,"TMP-IN")]);
@@ -1069,17 +915,6 @@
     $('ultimaInfoInv').textContent = "Última actualización: "+ new Date().toLocaleString("es-CO",{hour12:true});
     render();
   }
-
-  async function cargarInventario() {
-    if (!usuarioCorreoActual) {
-      alert("⚠️ Ingresa tu correo primero (opción Cambiar usuario).");
-      return;
-    }
-    const dentroZona = isAdmin(usuarioCorreoActual) ? true : await verificarZonaPermitida(usuarioCorreoActual);
-    if (!dentroZona) { alert("🚫 Fuera de zona permitida."); return; }
-    await cargarPendientes();
-  }
-
   function popularSelectMaquinas(){
     const sel = $('fMaquina'), cur = sel.value;
     sel.innerHTML = '<option value="">Todas</option>';
@@ -1141,7 +976,7 @@
     $('tRevisados').textContent    = Math.round(totalRevVis).toLocaleString();
     $('tAvance').textContent       = `${avance}%`;
 
-    // KPI por máquina
+    // KPI por máquina (en lo que se está viendo)
     const porMac = {};
     pendVisibles.forEach(r=>{
       const m=r.ultimaMachine||"-";
@@ -1169,6 +1004,7 @@
     const cont = $('listPend'); cont.innerHTML="";
     const {turno, fechaISO: fBase} = turnoDetallado();
     const revisadosTurno = cacheRevisadosTurno[`${fBase}_${turno}`] || {};
+
     const baseNoRevisados = basePendientes.filter(r => !revisadosTurno[r.clave]);
     const arr = filtrarOrdenar(baseNoRevisados);
 
@@ -1201,14 +1037,17 @@
         const act=ev.target?.dataset?.act;
         if(act==="comentario"){
           const texto = prompt("Comentario:");
-          if(texto === null || !texto.trim()) return;
+          if(texto === null) return;                // 🔒 cancelar: no mueve
+          if(texto.trim().length === 0) return;     // 🔒 vacío: no mueve
           guardarRevisado(r,{comentario:texto.trim(), ok:false});
         }
         if (act === "ok") {
-          if (!confirm("¿Confirmar revisión OK?")) return;
-          ev.target.classList.add('confirmed');
-          guardarRevisado(r, { comentario: null, ok: true });
-        }
+  const confirmacion = confirm("¿Confirmar revisión OK?");
+  if (!confirmacion) return;
+  ev.target.classList.add('confirmed');
+  guardarRevisado(r, { comentario: null, ok: true });
+}
+
         if(act==="detalle") abrirModal(r, "pendiente");
       });
       frag.appendChild(el);
@@ -1257,17 +1096,8 @@
       `;
       el.addEventListener("click",(ev)=>{
         const act=ev.target?.dataset?.act;
-        if(act==="editar"){
-          const nuevo = prompt("Editar comentario:", it.comentario || "");
-          if(nuevo===null) return;
-          const {turno, fechaISO: fBase} = turnoDetallado();
-          dbInv.child("revisados").child(fBase).child(turno).child(r.clave)
-            .update({ comentario: (nuevo.trim()? nuevo.trim(): null) });
-        }
-        if(act==="volver"){
-          const {turno, fechaISO: fBase} = turnoDetallado();
-          dbInv.child("revisados").child(fBase).child(turno).child(r.clave).remove();
-        }
+        if(act==="editar") editarComentario(r.clave);
+        if(act==="volver") regresarAPendientes(r.clave);
         if(act==="detalle") abrirModal(r, "revisado");
       });
       frag.appendChild(el);
@@ -1275,106 +1105,113 @@
     cont.appendChild(frag);
   }
 
-  async function renderHistorial(){
-    const cont = $('listHist'); 
-    cont.innerHTML = "";
-    const root = await dbInv.child("revisados").once("value");
-    const registros = [];
+ /* ===== Render Historial ===== */
+async function renderHistorial(){
+  const cont = $('listHist'); 
+  cont.innerHTML = "";
+  const root = await dbInv.child("revisados").once("value");
+  const registros = [];
 
-    root.forEach(diaSnap=>{
-      const fecha = diaSnap.key;
-      diaSnap.forEach(turnoSnap=>{
-        const turno = turnoSnap.key;
-        turnoSnap.forEach(itemSnap=>{
-          const v = itemSnap.val()||{};
-          const r = v.record||{};
-          registros.push({
-            fechaPend: r.ultimaFechaRaw,
-            fechaMarcado: v.fechaOK,
-            turno,
-            clave: r.clave,
-            ultimaMachine: r.ultimaMachine,
-            planta: r.planta,
-            part: r.Part,
-            descrip: r.descrip,
-            long: r.long,
-            prio: r.prio,
-            piezasPend: r.piezasPend,
-            kgPend: r.kgPend,
-            comentario: v.comentario,
-            ok: !!v.ok
-          });
+  root.forEach(diaSnap=>{
+    const fecha = diaSnap.key;
+    diaSnap.forEach(turnoSnap=>{
+      const turno = turnoSnap.key;
+      turnoSnap.forEach(itemSnap=>{
+        const v = itemSnap.val()||{};
+        const r = v.record||{};
+        registros.push({
+          fechaPend: r.ultimaFechaRaw,    // fecha del pendiente original
+          fechaMarcado: v.fechaOK,        // fecha real de revisión
+          turno,
+          clave: r.clave,
+          ultimaMachine: r.ultimaMachine,
+          planta: r.planta,
+          part: r.Part,
+          descrip: r.descrip,
+          long: r.long,
+          prio: r.prio,                   // prioridad visible
+          piezasPend: r.piezasPend,
+          kgPend: r.kgPend,
+          comentario: v.comentario,
+          ok: !!v.ok
         });
       });
     });
+  });
 
-    let arr = registros.filter(x=>{
-      const obj = {
-        planta:x.planta, ultimaMachine:x.ultimaMachine, clave:x.clave,
-        Part:x.part, descrip:x.descrip, kgPend:x.kgPend, ultimaFechaRaw:x.fechaPend
-      };
-      return filtrarOrdenar([obj]).length>0;
-    }).sort((a,b)=> new Date(b.fechaMarcado||b.fechaPend) - new Date(a.fechaMarcado||a.fechaPend));
+  // Filtros, búsqueda y orden
+  let arr = registros.filter(x=>{
+    const obj = {
+      planta:x.planta, 
+      ultimaMachine:x.ultimaMachine, 
+      clave:x.clave, 
+      Part:x.part, 
+      descrip:x.descrip, 
+      kgPend:x.kgPend, 
+      ultimaFechaRaw:x.fechaPend
+    };
+    return filtrarOrdenar([obj]).length>0;
+  }).sort((a,b)=> new Date(b.fechaMarcado||b.fechaPend) - new Date(a.fechaMarcado||a.fechaPend));
 
-    if(arr.length===0){
-      cont.innerHTML = "<div class='inv-info'>Sin registros en el historial.</div>";
-      return;
-    }
-
-    const frag = document.createDocumentFragment();
-    arr.forEach(x=>{
-      const el=document.createElement("div");
-      el.className="inv-card";
-      const estado = x.comentario ? `💬 ${x.comentario}` : (x.ok ? "✅ OK" : "—");
-      el.innerHTML = `
-        <div class="inv-head">
-          <div class="m">${x.clave}</div>
-          <span class="badge">${x.planta||"-"}</span>
-        </div>
-        <div class="inv-meta">
-          <div><b>Fecha pendiente:</b> ${fFecha(x.fechaPend)}</div>
-          <div><b>Fecha revisado:</b> ${fFecha(x.fechaMarcado)}</div>
-          <div><b>Turno:</b> ${x.turno}</div>
-          <div><b>Máquina:</b> ${x.ultimaMachine||"-"}</div>
-          <div><b>Part:</b> ${x.part||"-"}</div>
-          <div><b>Prioridad:</b> ${x.prio||"-"}</div>
-          <div><b>Descripción:</b> ${x.descrip||"-"}</div>
-          <div><b>Long:</b> ${x.long||"-"}</div>
-          <div><b>Kg Pend (momento):</b> ${Math.round(x.kgPend||0)}</div>
-          <div><b>Estado:</b> ${estado}</div>
-        </div>
-      `;
-      el.addEventListener("click", ()=>{
-        abrirModal({
-          clave:x.clave, Part:x.part, descrip:x.descrip, prio:x.prio,
-          long:x.long, piezasPend:x.piezasPend, kgPend:x.kgPend,
-          ultimaMachine:x.ultimaMachine, planta:x.planta,
-          ultimaFechaRaw:x.fechaPend
-        }, "historial");
-      });
-      frag.appendChild(el);
-    });
-    cont.appendChild(frag);
+  if(arr.length===0){
+    cont.innerHTML = "<div class='inv-info'>Sin registros en el historial.</div>";
+    return;
   }
 
+  const frag = document.createDocumentFragment();
+  arr.forEach(x=>{
+    const el=document.createElement("div");
+    el.className="inv-card";
+    const estado = x.comentario ? `💬 ${x.comentario}` : (x.ok ? "✅ OK" : "—");
+
+    el.innerHTML = `
+      <div class="inv-head">
+        <div class="m">${x.clave}</div>
+        <span class="badge">${x.planta||"-"}</span>
+      </div>
+      <div class="inv-meta">
+        <div><b>Fecha pendiente:</b> ${fFecha(x.fechaPend)}</div>
+        <div><b>Fecha revisado:</b> ${fFecha(x.fechaMarcado)}</div>
+        <div><b>Turno:</b> ${x.turno}</div>
+        <div><b>Máquina:</b> ${x.ultimaMachine||"-"}</div>
+        <div><b>Part:</b> ${x.part||"-"}</div>
+        <div><b>Prioridad:</b> ${x.prio||"-"}</div>
+        <div><b>Descripción:</b> ${x.descrip||"-"}</div>
+        <div><b>Long:</b> ${x.long||"-"}</div>
+        <div><b>Kg Pend (momento):</b> ${Math.round(x.kgPend||0)}</div>
+        <div><b>Estado:</b> ${estado}</div>
+      </div>
+    `;
+
+    el.addEventListener("click", ()=>{
+      abrirModal({
+        clave:x.clave, Part:x.part, descrip:x.descrip, prio:x.prio,
+        long:x.long, piezasPend:x.piezasPend, kgPend:x.kgPend,
+        ultimaMachine:x.ultimaMachine, planta:x.planta,
+        ultimaFechaRaw:x.fechaPend
+      }, "historial");
+    });
+
+    frag.appendChild(el);
+  });
+  cont.appendChild(frag);
+} 
+  
   function render(){
     if(vista==="pendientes"){ 
       $('listPend').classList.remove('hidden');
       $('listRevis').classList.add('hidden');
       $('listHist').classList.add('hidden');
-      $('viewTabla').classList.add('hidden');
       renderPendientes(); 
     } else if(vista==="revisados"){ 
       $('listPend').classList.add('hidden');
       $('listRevis').classList.remove('hidden');
       $('listHist').classList.add('hidden');
-      $('viewTabla').classList.add('hidden');
       renderRevisados(); 
-    } else {
+    } else { // historial
       $('listPend').classList.add('hidden');
       $('listRevis').classList.add('hidden');
       $('listHist').classList.remove('hidden');
-      $('viewTabla').classList.add('hidden');
       renderHistorial();
     }
     actualizarTotales();
@@ -1393,119 +1230,133 @@
     };
     path.set(payload);
   }
-
-  // Toggle Vista Tabla Pendientes
-  let vistaTabla = false;
-  $('btnVistaToggle').onclick = () => {
-    if (vista !== "pendientes") {
-      alert("🔹 La tabla agrupada está disponible en Pendientes.");
-      return;
-    }
-    vistaTabla = !vistaTabla;
-    $('btnVistaToggle').textContent = vistaTabla ? '🃏 Vista Cards' : '📋 Vista Tabla';
-    if (vistaTabla) { $('viewTabla').classList.remove('hidden'); renderTablaAgrupada(); $('listPend').classList.add('hidden'); }
-    else { $('viewTabla').classList.add('hidden'); $('listPend').classList.remove('hidden'); }
-  };
-  $('agrupacionTabla').onchange = renderTablaAgrupada;
-  $('btnRecargarTabla').onclick = renderTablaAgrupada;
-
-  function renderTablaAgrupada() {
-    const { turno, fechaISO: fBase } = turnoDetallado();
-    const revisadosTurno = cacheRevisadosTurno[`${fBase}_${turno}`] || {};
-    const baseNoRevisados = basePendientes.filter(r => !revisadosTurno[r.clave]);
-    const arr = filtrarOrdenar(baseNoRevisados);
-
-    const agr = $('agrupacionTabla').value; // 'part' o 'desc'
-    const grupos = {};
-    arr.forEach(r => {
-      const key = agr === 'part' ? r.Part : r.descrip;
-      if (!grupos[key]) grupos[key] = [];
-      grupos[key].push(r);
-    });
-
-    const cont = $('tablaAgrupada');
-    cont.innerHTML = '';
-
-    Object.entries(grupos).forEach(([key, items]) => {
-      const groupDiv = document.createElement('div');
-      groupDiv.className = 'grupoTabla';
-
-      const titulo = document.createElement('h3');
-      titulo.textContent = key;
-      titulo.className = 'titulo-grupo';
-      groupDiv.appendChild(titulo);
-
-      const colExtra = agr === 'part' ? 'Descripción' : 'Part';
-
-      const table = document.createElement('div');
-      table.className = 'tabla-scroll';
-      table.innerHTML = `
-        <table class="tabla-grupo">
-          <thead>
-            <tr>
-              <th>SOITEM</th>
-              <th>Máquina</th>
-              <th>Pzs Pend</th>
-              <th>Kg Pend</th>
-              <th>Long</th>
-              <th>${colExtra}</th>
-              <th>Prioridad</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      `;
-      const tbody = table.querySelector('tbody');
-
-      items.forEach(r => {
-        const tr = document.createElement('tr');
-        const extraValue = agr === 'part' ? r.descrip : r.Part;
-        tr.innerHTML = `
-          <td>${r.clave}</td>
-          <td>${r.ultimaMachine}</td>
-          <td>${r.piezasPend}</td>
-          <td>${Math.round(r.kgPend)}</td>
-          <td>${r.long}</td>
-          <td>${extraValue}</td>
-          <td>${r.prio}</td>
-          <td class="acciones-cell">
-            <button class="btn-mini ok" data-act="ok">✅</button>
-            <button class="btn-mini warn" data-act="coment">💬</button>
-          </td>
-        `;
-        tr.querySelector('[data-act="ok"]').onclick = (ev) => {
-          if (!confirm("¿Confirmar revisión OK?")) return;
-          ev.target.classList.add('confirmed');
-          guardarRevisado(r, { ok: true });
-          tr.style.opacity = '0.5';
-        };
-        tr.querySelector('[data-act="coment"]').onclick = () => {
-          abrirModal(r, 'pendiente');
-        };
-        tbody.appendChild(tr);
-      });
-
-      groupDiv.appendChild(table);
-      cont.appendChild(groupDiv);
-    });
+  function editarComentario(clave){
+    const {turno, fechaISO: fBase} = turnoDetallado();
+    const node = (cacheRevisadosTurno[`${fBase}_${turno}`]||{})[clave];
+    if(!node) return;
+    const nuevo = prompt("Editar comentario:", node.comentario || "");
+    if(nuevo===null) return;
+    dbInv.child("revisados").child(fBase).child(turno).child(clave)
+      .update({ comentario: (nuevo.trim()? nuevo.trim(): null) });
+  }
+  function regresarAPendientes(clave){
+    const {turno, fechaISO: fBase} = turnoDetallado();
+    dbInv.child("revisados").child(fBase).child(turno).child(clave).remove();
   }
 
-  // Filtros y controles Inventario
-  $('btnActualizarInv').onclick = async ()=>{
-    const b=$('btnActualizarInv'); b.disabled=true; const old=b.textContent; b.textContent="Cargando...";
-    try { await cargarInventario(); } catch(e){ alert("Error: "+(e.message||e)); }
-    b.disabled=false; b.textContent=old;
-  };
-  ['fPlanta','fMaquina','fOrden'].forEach(id=> $(id).addEventListener('change', render));
-  $('fBuscar').addEventListener('input', render);
+/* ==================== Vista Tabla AGRUPADA (por Part o Descripción) ==================== */
+let vistaTabla = false;
 
-  // Tabs
-  $('tabPend').onclick = ()=>{ vista="pendientes"; ['tabPend','tabRevis','tabHist'].forEach(i=>$(i).classList.remove('active')); $('tabPend').classList.add('active'); render(); };
-  $('tabRevis').onclick = ()=>{ vista="revisados"; ['tabPend','tabRevis','tabHist'].forEach(i=>$(i).classList.remove('active')); $('tabRevis').classList.add('active'); render(); };
-  $('tabHist').onclick = ()=>{ vista="historial"; ['tabPend','tabRevis','tabHist'].forEach(i=>$(i).classList.remove('active')); $('tabHist').classList.add('active'); render(); };
+$('btnVistaToggle').onclick = () => {
+  vistaTabla = !vistaTabla;
+  $('btnVistaToggle').textContent = vistaTabla ? '🗂️ Vista Cards' : '📋 Vista Tabla';
+  $('viewTabla').classList.toggle('hidden', !vistaTabla);
+  $('listPend').classList.toggle('hidden', vistaTabla);
+  $('listRevis').classList.toggle('hidden', vistaTabla);
+  $('listHist').classList.toggle('hidden', vistaTabla);
+  if (vistaTabla) renderTablaAgrupada();
+};
 
-  /* ==================== Modal Inventario ==================== */
+$('agrupacionTabla').onchange = renderTablaAgrupada;
+$('btnRecargarTabla').onclick = renderTablaAgrupada;
+
+function renderTablaAgrupada() {
+  const { turno, fechaISO: fBase } = turnoDetallado();
+  const revisadosTurno = cacheRevisadosTurno[`${fBase}_${turno}`] || {};
+  const baseNoRevisados = basePendientes.filter(r => !revisadosTurno[r.clave]);
+  const arr = filtrarOrdenar(baseNoRevisados);
+
+  const agr = $('agrupacionTabla').value; // 'part' o 'desc'
+  const grupos = {};
+
+  arr.forEach(r => {
+    const key = agr === 'part' ? r.Part : r.descrip;
+    if (!grupos[key]) grupos[key] = [];
+    grupos[key].push(r);
+  });
+
+  const cont = $('tablaAgrupada');
+  cont.innerHTML = '';
+
+  Object.entries(grupos).forEach(([key, items]) => {
+    const groupDiv = document.createElement('div');
+    groupDiv.className = 'grupoTabla';
+
+    // 🔹 Título del grupo (sin prefijo)
+    const titulo = document.createElement('h3');
+    titulo.textContent = key;
+    titulo.className = 'titulo-grupo';
+    groupDiv.appendChild(titulo);
+
+    // 🔹 Determinar columna complementaria
+    const colExtra = agr === 'part' ? 'Descripción' : 'Part';
+
+    // 🔹 Tabla
+    const table = document.createElement('div');
+    table.className = 'tabla-scroll';
+    table.innerHTML = `
+      <table class="tabla-grupo">
+        <thead>
+          <tr>
+            <th>SOITEM</th>
+            <th>Máquina</th>
+            <th>Pzs Pend</th>
+            <th>Kg Pend</th>
+            <th>Long</th>
+            <th>${colExtra}</th>
+            <th>Prioridad</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    `;
+    const tbody = table.querySelector('tbody');
+
+    items.forEach(r => {
+      const tr = document.createElement('tr');
+      const extraValue = agr === 'part' ? r.descrip : r.Part;
+
+      tr.innerHTML = `
+        <td>${r.clave}</td>
+        <td>${r.ultimaMachine}</td>
+        <td>${r.piezasPend}</td>
+        <td>${Math.round(r.kgPend)}</td>
+        <td>${r.long}</td>
+        <td>${extraValue}</td>
+        <td>${r.prio}</td>
+        <td class="acciones-cell">
+          <button class="btn-mini ok" data-act="ok">✅</button>
+          <button class="btn-mini warn" data-act="coment">💬</button>
+        </td>
+      `;
+
+      // === comportamiento ===
+      const btnOk = tr.querySelector('[data-act="ok"]');
+      const btnCom = tr.querySelector('[data-act="coment"]');
+
+      btnOk.onclick = (ev) => {
+        const confirmar = confirm("¿Confirmar revisión OK?");
+        if (!confirmar) return;
+        ev.target.classList.add('confirmed');
+        guardarRevisado(r, { ok: true });
+        tr.style.opacity = '0.5';
+      };
+
+      btnCom.onclick = () => {
+        abrirModal(r, 'pendiente');
+      };
+
+      tbody.appendChild(tr);
+    });
+
+    groupDiv.appendChild(table);
+    cont.appendChild(groupDiv);
+  });
+}
+
+
+  /* ===== Modal Detalle / Trazabilidad ===== */
   let modalData = null;
   function abrirModal(record, origen){
     modalData = {record, origen};
@@ -1522,8 +1373,11 @@
     $('mdFec').textContent    = fFecha(record.ultimaFechaRaw);
     $('mdCmt').value          = "";
 
-    cargarTrazabilidad(record.clave).then(html=>{ $('mdTrace').innerHTML = html; });
+    cargarTrazabilidad(record.clave).then(html=>{
+      $('mdTrace').innerHTML = html;
+    });
 
+    // Mostrar/ocultar acciones según origen
     $('btnOk').style.display        = (origen==="pendiente") ? "inline-block" : "none";
     $('btnRegresar').style.display  = (origen==="revisado")  ? "inline-block" : "none";
 
@@ -1532,11 +1386,12 @@
   function cerrarModal(){ $('modalInv').style.display = "none"; modalData=null; }
   $('btnCloseInv').onclick = cerrarModal;
 
+  // Guardar comentario desde modal (solo mueve si hay texto o si está en revisado es edición)
   $('btnGuardarCmt').onclick = ()=>{
     if(!modalData) return;
     const cmt = $('mdCmt').value || "";
     if(modalData.origen==="pendiente"){
-      if(!cmt.trim()) return;
+      if(cmt.trim().length===0) return; // no mover si vacío
       guardarRevisado(modalData.record, {comentario:cmt.trim(), ok:false});
     }else if(modalData.origen==="revisado"){
       const {turno, fechaISO: fBase} = turnoDetallado();
@@ -1553,8 +1408,7 @@
   };
   $('btnRegresar').onclick = ()=>{
     if(!modalData) return;
-    const {turno, fechaISO: fBase} = turnoDetallado();
-    dbInv.child("revisados").child(fBase).child(turno).child(modalData.record.clave).remove();
+    regresarAPendientes(modalData.record.clave);
     cerrarModal();
   };
 
@@ -1575,117 +1429,115 @@
     return html.length ? html.join("") : "(sin registros)";
   }
 
-  /* ==================== Planos ==================== */
-  let planosData = [];
-  let filtrados = [];
-  let indexRender = 0;
-  const PAGE_SIZE = 200;
-  const PLANOS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTlsUCkIwRggf4CcUkfq239hl5UKRE86B3FycdB14sgIs5OIeFuqKQjlhzezzNNWJa6WEPy_URJtDB_/pub?gid=1893719309&single=true&output=csv";
-  const CACHE_KEY = "planosCacheCSV";
-
-  async function verificarAccesoPlanos() {
-    try {
-      let correo = localStorage.getItem("correo_autorizado");
-      if (!correo) {
-        correo = prompt("Introduce tu correo corporativo:");
-        if (!correo) { alert("🚫 Acceso cancelado."); ocultarVistaPlanos(); return; }
-        localStorage.setItem("correo_autorizado", correo);
-      }
-      usuarioCorreoActual = correo;
-      const dentro = isAdmin(correo) ? true : await verificarZonaPermitida(correo);
-      if (!dentro) { ocultarVistaPlanos(); accesoPermitido=false; return; }
-
-      const usuarioKey = correo.toLowerCase().replace(/\./g, "_").replace(/@/g, "_");
-      const snap = await firebase.database().ref("seguridad/usuarios/" + usuarioKey).once("value");
-      const usuario = snap.val();
-
-      if (!usuario || usuario.autorizado !== true) {
-        alert("🚫 No estás autorizado para acceder a los módulos.");
-        ocultarVistaPlanos(); accesoPermitido=false; return;
-      }
-      accesoPermitido = true; localStorage.setItem("accesoPermitido","true");
-      document.querySelectorAll(".drawer .opt.gate").forEach(o=>o.style.opacity="1");
-
-      $("view-planos").classList.remove("hidden");
-      $("topTitle").textContent = "Consulta de Planos";
-      cargarPlanos();
-    } catch (err) {
-      console.error("Error verificando acceso:", err);
-      alert("⚠️ Error verificando acceso a planos.");
-      accesoPermitido = false;
-      ocultarVistaPlanos();
-    }
-  }
-  function ocultarVistaPlanos() {
-    $("view-planos").classList.add("hidden");
-    $("topTitle").textContent = "Acceso restringido";
-  }
-
-  async function cargarPlanos() {
-    const cuerpo = $("tbodyPlanos");
-    cuerpo.innerHTML = "<tr><td colspan='2' style='padding:10px;'>Cargando planos...</td></tr>";
-
-    const cache = localStorage.getItem(CACHE_KEY);
-    if (cache) planosData = parseCSV(cache);
-
-    try {
-      const resp = await fetch(PLANOS_URL);
-      const csv = await resp.text();
-      if (csv.length > 100) {
-        localStorage.setItem(CACHE_KEY, csv);
-        planosData = parseCSV(csv);
-      }
-    } catch (err) {
-      console.warn("Sin conexión, usando cache local.");
-    }
-    renderPlanos();
-  }
-  function parseCSV(csv) {
-    const rows = csv.trim().split("\n").map(r => r.split(","));
-    const headers = rows[0].map(h => h.trim());
-    return rows.slice(1).map(r => {
-      const o = {}; headers.forEach((h, i) => o[h] = (r[i] || "").trim()); return o;
-    });
-  }
-  function renderPlanos(reset = true) {
-    const cuerpo = $("tbodyPlanos");
-    if (reset) {
-      const q = ($("buscarPlano").value || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      filtrados = planosData.filter(p => {
-        const nombre = (p.NOMBRE || p.Nombre || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        return nombre.includes(q);
-      });
-      indexRender = 0;
-      cuerpo.innerHTML = "";
-    }
-    const next = filtrados.slice(indexRender, indexRender + PAGE_SIZE);
-    const frag = document.createDocumentFragment();
-
-    next.forEach(p => {
-      const nombre = (p.NOMBRE || p.Nombre || "").replace(".pdf", "").trim();
-      const link = p.LINK || p.Link || p.ARCHIVO || "#";
-      const fila = document.createElement("tr");
-      fila.className = "fila-plano";
-      fila.innerHTML = `
-        <td class="celda-nombre">${nombre || "Sin nombre"}</td>
-        <td class="celda-link"><a href="${link}" target="_blank">Abrir</a></td>
-      `;
-      fila.onclick = () => { if (link && link !== "#") window.open(link, "_blank"); };
-      frag.appendChild(fila);
-    });
-
-    cuerpo.appendChild(frag);
-    indexRender += PAGE_SIZE;
-  }
-  $("tablaPlanos").parentElement.onscroll = e => {
-    const el = e.target;
-    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 30 && indexRender < filtrados.length) {
-      renderPlanos(false);
-    }
+  /* ===== Eventos Inventario ===== */
+  $('btnActualizarInv').onclick = async ()=>{
+    const b=$('btnActualizarInv'); b.disabled=true; const old=b.textContent; b.textContent="Cargando...";
+    try{ await cargarPendientes(); } catch(e){ alert("Error: "+(e.message||e)); }
+    b.disabled=false; b.textContent=old;
   };
-  $("buscarPlano").oninput = () => renderPlanos(true);
-  $("btnRecargarPlanos").onclick = cargarPlanos;
+  ['fPlanta','fMaquina','fOrden'].forEach(id=> $(id).addEventListener('change', render));
+  $('fBuscar').addEventListener('input', render);
 
+ //* ===== Alternar vista de Pendientes: Cards ↔ Tabla ===== */
+let vistaTablaPendientes = false;
+
+$("btnVistaToggle").onclick = () => {
+  const btn = $("btnVistaToggle");
+
+  // Solo afecta la vista Pendientes
+  if (vista !== "pendientes") {
+    alert("🔹 Solo puedes usar la vista de tabla en Pendientes.");
+    return;
+  }
+
+  vistaTablaPendientes = !vistaTablaPendientes;
+  actualizarVistaPendientes();
+  btn.textContent = vistaTablaPendientes ? "🃏 Vista Cards" : "📋 Vista Tabla";
+};
+
+/* ===== Función para controlar qué se ve en Pendientes ===== */
+function actualizarVistaPendientes() {
+  // Ocultar todo primero
+  $("listPend").classList.add("hidden");
+  $("viewTabla").classList.add("hidden");
+  $("listRevis").classList.add("hidden");
+  $("listHist").classList.add("hidden");
+
+  if (vista === "pendientes") {
+    if (vistaTablaPendientes) {
+      $("viewTabla").classList.remove("hidden");
+      renderTablaAgrupada();
+    } else {
+      $("listPend").classList.remove("hidden");
+      renderPendientes();
+    }
+  } else if (vista === "revisados") {
+    $("listRevis").classList.remove("hidden");
+    renderRevisados();
+  } else if (vista === "historial") {
+    $("listHist").classList.remove("hidden");
+    renderHistorial();
+  }
+
+  actualizarTotales();
+}
+
+/* ===== Tabs principales (Pendientes, Revisados, Historial) ===== */
+$("tabPend").onclick = () => {
+  vista = "pendientes";
+  ["tabPend", "tabRevis", "tabHist"].forEach(id => $(id).classList.remove("active"));
+  $("tabPend").classList.add("active");
+  actualizarVistaPendientes();
+};
+
+$("tabRevis").onclick = () => {
+  vista = "revisados";
+  ["tabPend", "tabRevis", "tabHist"].forEach(id => $(id).classList.remove("active"));
+  $("tabRevis").classList.add("active");
+  actualizarVistaPendientes();
+};
+
+$("tabHist").onclick = () => {
+  vista = "historial";
+  ["tabPend", "tabRevis", "tabHist"].forEach(id => $(id).classList.remove("active"));
+  $("tabHist").classList.add("active");
+  actualizarVistaPendientes();
+};
+
+/* ===== Mantener sincronizado al aplicar filtros o actualizar ===== */
+["fPlanta","fMaquina","fOrden"].forEach(id => $(id).addEventListener("change", actualizarVistaPendientes));
+$("fBuscar").addEventListener("input", actualizarVistaPendientes);
+
+
+
+  /* ===== Init Inventario ===== */
+  cargarPendientes();
+
+  /* ==================== Drawer / navegación ==================== */
+  const drawer = document.getElementById("drawer");
+  const mask   = document.getElementById("drawerMask");
+  document.getElementById("btnMenu").addEventListener("click",()=>{
+    drawer.classList.add("open"); mask.style.display="block";
+  });
+  document.getElementById("btnCloseDrawer").addEventListener("click",closeDrawer);
+  document.getElementById("drawerMask").addEventListener("click",closeDrawer);
+  function closeDrawer(){ drawer.classList.remove("open"); mask.style.display="none"; }
+
+  document.querySelectorAll(".drawer .opt").forEach(opt=>{
+    opt.addEventListener("click",()=>{
+      const target = opt.dataset.target;
+      if(target==="temperaturas"){
+        document.getElementById("view-temperaturas").classList.remove("hidden");
+        document.getElementById("view-inventario").classList.add("hidden");
+        document.getElementById("topTitle").textContent = "Registro de Temperaturas";
+      }else{
+        document.getElementById("view-inventario").classList.remove("hidden");
+        document.getElementById("view-temperaturas").classList.add("hidden");
+        document.getElementById("topTitle").textContent = "Inventario Por Templar";
+      }
+      closeDrawer();
+    });
+  });
   </script>
 </body>
 </html>
