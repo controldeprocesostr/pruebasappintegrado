@@ -287,6 +287,65 @@
     font-size: 14px;
   }
 }
+ 
+.inv-plano {
+  width: 110px;
+  text-align: center;
+}
+
+.plano-thumb {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid #333;
+  background: #000;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+.plano-thumb:hover {
+  transform: scale(1.08);
+}
+
+/* Modal de plano ampliado */
+.modal-plano {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+.modal-content {
+  background: #000;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 800px;
+  height: 80%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 15px;
+  background: #111;
+  color: #00e5ff;
+  font-weight: bold;
+}
+.modal-content iframe {
+  flex: 1;
+  width: 100%;
+  border: none;
+}
+.cerrar-modal {
+  background: transparent;
+  color: #fff;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+}
 
   </style>
 </head>
@@ -536,6 +595,34 @@
   const db = firebase.database();
   const dbInv = db.ref("inventarioPorTemplar");
 
+// ====== CONFIGURACIÓN DE PLANOS DESDE GOOGLE SHEETS ======
+const SHEET_ID = "1iG2iB1s5fRimBK7USYKwjQGl8Di7S3bfVcfbk7A47Oc";  // ID de tu hoja
+const SHEET_NAME = "ENLACES";                                     // Nombre de la pestaña
+let planosMap = {};                                                // mapa Part → ID Google Drive
+
+async function cargarPlanosDesdeSheets() {
+  try {
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${SHEET_NAME}`;
+    const resp = await fetch(url);
+    const text = await resp.text();
+    const json = JSON.parse(text.substr(47).slice(0, -2));
+
+    planosMap = {};
+    json.table.rows.forEach(row => {
+      const nombre = row.c[0]?.v?.trim(); // Columna NOMBRE (Part)
+      const link = row.c[2]?.v;           // Columna LINK
+      if (nombre && link) {
+        const match = link.match(/\/d\/([a-zA-Z0-9_-]+)\//);
+        if (match) planosMap[normalizarClave(nombre)] = match[1];
+      }
+    });
+
+    console.log("✅ Planos cargados:", Object.keys(planosMap).length);
+  } catch (err) {
+    console.error("❌ Error cargando planos:", err);
+  }
+}
+
   /* ==================== Helpers globales ==================== */
   const $ = id => document.getElementById(id);
   const pad2 = n => String(n).padStart(2,'0');
@@ -553,6 +640,14 @@
     let hour = h % 12 || 12; const ampm = h >= 12 ? 'PM' : 'AM';
     return `${hour}:${pad2(m)} ${ampm}`;
   }
+
+// 🔹 Normalizar texto para comparar Part y nombre del plano
+function normalizarClave(texto) {
+  return (texto || "")
+    .toString()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, ""); // elimina todo excepto letras y números
+}
 
   /* ==================== Estado Temperaturas ==================== */
   let currentCicloId = "";
@@ -657,8 +752,7 @@
           setPoint: v.setPoint ?? ''
         });
       });
-      
-
+     
       chart.data.labels = arr.map(r => toAMPM(r.hora));
       chart.data.datasets[0].data = arr.map(r => (r.zona1!=='' && r.zona1!=null && !isNaN(r.zona1)) ? Number(r.zona1) : null);
       chart.data.datasets[1].data = arr.map(r => (r.zona2!=='' && r.zona2!=null && !isNaN(r.zona2)) ? Number(r.zona2) : null);
@@ -1013,26 +1107,43 @@
       const el=document.createElement("div");
       el.className="inv-card";
       el.innerHTML = `
-        <div class="inv-head">
-          <div class="m">Máquina: ${r.ultimaMachine}</div>
-          <span class="badge">${r.planta}</span>
-        </div>
-        <div class="inv-meta">
-          <div><b>SOITEM:</b> ${r.clave}</div>
-          <div><b>Fecha:</b> ${fFecha(r.ultimaFechaRaw)}</div>
-          <div><b>Part:</b> ${r.Part}</div>
-          <div><b>Prioridad:</b> ${r.prio}</div>
-          <div><b>Descripción:</b> ${r.descrip}</div>
-          <div><b>Long:</b> ${r.long}</div>
-          <div><b>Pzs Pend:</b> ${r.piezasPend}</div>
-          <div><b>Kg Pend:</b> ${Math.round(r.kgPend||0)}</div>
-        </div>
-        <div class="inv-actions">
-          <button class="btn-mini" data-act="comentario">💬 Comentario</button>
-          <button class="btn-mini ok" data-act="ok">✅ OK</button>
-          <button class="btn-mini warn" data-act="detalle">🔎 Detalle</button>
-        </div>
-      `;
+  <div class="inv-head">
+    <div class="m">Máquina: ${r.ultimaMachine}</div>
+    <span class="badge">${r.planta}</span>
+  </div>
+  <div class="inv-meta">
+    <div><b>SOITEM:</b> ${r.clave}</div>
+    <div><b>Fecha:</b> ${fFecha(r.ultimaFechaRaw)}</div>
+    <div><b>Part:</b> ${r.Part}</div>
+    <div><b>Prioridad:</b> ${r.prio}</div>
+    <div><b>Descripción:</b> ${r.descrip}</div>
+    <div><b>Long:</b> ${r.long}</div>
+    <div><b>Pzs Pend:</b> ${r.piezasPend}</div>
+    <div><b>Kg Pend:</b> ${Math.round(r.kgPend || 0)}</div>
+  </div>
+  <div class="inv-actions">
+    <button class="btn-mini" data-act="comentario">💬 Comentario</button>
+    <button class="btn-mini ok" data-act="ok">✅ OK</button>
+    <button class="btn-mini warn" data-act="detalle">🔎 Detalle</button>
+  </div>
+`;
+
+const planoId = planosMap[normalizarClave(r.Part)];
+el.innerHTML += `
+  <div class="inv-plano">
+    ${
+      planoId
+        ? `<img src="https://drive.google.com/thumbnail?id=${planoId}"
+                 alt="Plano ${r.Part}"
+                 class="plano-thumb"
+                 onclick="abrirPlanoModal('${planoId}', '${r.Part}')">`
+        : `<img src="https://cdn-icons-png.flaticon.com/512/565/565547.png"
+                 alt="Sin plano"
+                 class="plano-thumb">`
+    }
+  </div>
+`;
+
       el.addEventListener("click",(ev)=>{
         const act=ev.target?.dataset?.act;
         if(act==="comentario"){
@@ -1511,7 +1622,10 @@ $("fBuscar").addEventListener("input", actualizarVistaPendientes);
 
 
   /* ===== Init Inventario ===== */
-  cargarPendientes();
+  (async () => {
+  await cargarPlanosDesdeSheets();
+  await cargarPendientes();
+})();
 
   /* ==================== Drawer / navegación ==================== */
   const drawer = document.getElementById("drawer");
@@ -1538,6 +1652,22 @@ $("fBuscar").addEventListener("input", actualizarVistaPendientes);
       closeDrawer();
     });
   });
+
+function abrirPlanoModal(idPlano, part) {
+  const modal = document.createElement("div");
+  modal.className = "modal-plano";
+  modal.innerHTML = `
+    <div class="modal-content">
+      <div class="modal-header">
+        <span class="titulo-plano">${part}</span>
+        <button class="cerrar-modal" onclick="this.closest('.modal-plano').remove()">✖</button>
+      </div>
+      <iframe src="https://drive.google.com/file/d/${idPlano}/preview" frameborder="0"></iframe>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
   </script>
 </body>
 </html>
