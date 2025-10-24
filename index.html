@@ -1325,28 +1325,42 @@ function closeDrawer(){ drawer.classList.remove("open"); mask.style.display="non
 document.querySelectorAll(".drawer .opt").forEach(opt=>{
   opt.addEventListener("click",()=>{
     const target = opt.dataset.target;
+
+    // Oculta todas las vistas principales
+    ["view-temperaturas","view-inventario","view-planos"].forEach(id=>{
+      $(id).classList.add("hidden");
+    });
+    $("viewTabla").classList.add("hidden"); // la tabla es una subvista del inventario
+
     if(target==="temperaturas"){
       $("view-temperaturas").classList.remove("hidden");
-      $("view-inventario").classList.add("hidden");
-      $("view-planos").classList.add("hidden");
       $("topTitle").textContent = "Registro de Temperaturas";
-      closeDrawer();
-    } else if(target==="inventario"){
+    } 
+    else if(target==="inventario"){
       $("view-inventario").classList.remove("hidden");
-      $("view-temperaturas").classList.add("hidden");
-      $("view-planos").classList.add("hidden");
       $("topTitle").textContent = "Inventario Por Templar";
-      closeDrawer();
-    } else if(target==="planos"){
-      $("view-temperaturas").classList.add("hidden");
-      $("view-inventario").classList.add("hidden");
+      
+      // 🔹 Si estaba en modo tabla pendientes, la reactivamos
+      if(vista === "pendientes" && vistaTablaPendientes){
+        $("viewTabla").classList.remove("hidden");
+        renderTablaAgrupada();
+      } else {
+        // aseguramos que muestre la vista correcta actualizada
+        actualizarVistaPendientes();
+      }
+
+      actualizarTotales();
+    } 
+    else if(target==="planos"){
       $("view-planos").classList.remove("hidden");
       $("topTitle").textContent = "Consulta de Planos";
-      closeDrawer();
-      prepararVistaPlanos(); // Gmail auth + permisos
+      prepararVistaPlanos();
     }
+
+    closeDrawer();
   });
 });
+
 
 /* ==================== Consulta de Planos ==================== */
 let planosData = [];
@@ -1520,12 +1534,29 @@ const visorIframe = $("visorIframe");
 const visorTitulo = $("visorTitulo");
 $("btnCerrarVisor").onclick = ()=> cerrarVisor();
 
+/* ===== Ocultar otras vistas al abrir visor de planos ===== */
+function ocultarVistasActivas(){
+  // Oculta la tabla de pendientes si está visible
+  const vistaPendientes = document.getElementById("tablaPendientesTemper");
+  if(vistaPendientes) vistaPendientes.style.display = "none";
+
+  // Oculta cualquier overlay o sección de reportes activa
+  const modales = document.querySelectorAll(".modal, .overlay, .panel-activo");
+  modales.forEach(m => m.style.display = "none");
+
+  // Si tienes secciones con clase .seccion o .vista (como tabs)
+  const vistas = document.querySelectorAll(".vista, .seccion-activa");
+  vistas.forEach(v => v.style.display = "none");
+}
+
+
 function abrirVisorPlanos(nombre, url){
   if(!accesoPlanos){ 
     alert("🚫 Sin permiso para ver planos."); 
     return; 
   }
-
+  
+   ocultarVistasActivas(); // 🔹 Cierra cualquier vista previa o tabla abierta
   visorTitulo.textContent = nombre;
 
   // 🔹 Si el enlace proviene de Google Drive, lo convertimos a formato de visualización directa
@@ -1572,4 +1603,5 @@ visorModal.addEventListener("click", cerrarVisor);
 </script>
 </body>
 </html>
+
 
