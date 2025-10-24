@@ -1128,6 +1128,14 @@ $("tabHist").onclick = () => {
 ["fPlanta","fMaquina","fOrden"].forEach(id => $(id).addEventListener("change", actualizarVistaPendientes));
 $("fBuscar").addEventListener("input", actualizarVistaPendientes);
 
+// 🔹 Cambiar agrupación en tiempo real (sin salir de la vista)
+$("agrupacionTabla").addEventListener("change", () => {
+  if (vista === "pendientes" && vistaTablaPendientes) {
+    renderTablaAgrupada();
+  }
+});
+
+
 /* ===== Tabla Agrupada ===== */
 function renderTablaAgrupada() {
   const { turno, fechaISO: fBase } = turnoDetallado();
@@ -1603,5 +1611,6 @@ visorModal.addEventListener("click", cerrarVisor);
 </script>
 </body>
 </html>
+
 
 
