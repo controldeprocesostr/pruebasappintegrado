@@ -1379,12 +1379,14 @@ document.querySelectorAll(".drawer .opt").forEach(opt=>{
       actualizarTotales();
     } 
     else if(target==="planos"){
-      $("view-planos").classList.remove("hidden");
-      $("topTitle").textContent = "Consulta de Planos";
-      prepararVistaPlanos();
-    }
+  closeDrawer(); // 🔹 cerrar el drawer primero
+  $("view-planos").classList.remove("hidden");
+  $("topTitle").textContent = "Consulta de Planos";
+  prepararVistaPlanos();
+  return; // evita que cierre el drawer otra vez abajo
+}
 
-    closeDrawer();
+
   });
 });
 
@@ -1516,9 +1518,9 @@ auth.onAuthStateChanged(async (user)=>{
 
 /* ======== Restricción por ubicación geográfica ======== */
 const ZONA_AUTORIZADA = {
-  lat: 10.9639,   // 📍 Coordenadas del punto autorizado (Tecnoglass Barranquilla)
-  lon: -74.7964,
-  radio_metros: 400 // Radio permitido en metros
+  lat: 10.9925,      // Coordenada central del complejo
+  lon: -74.8338,     // Coordenada central del complejo
+  radio_metros: 700  // Radio de cobertura en metros
 };
 
 // 🔹 Calcula distancia entre dos coordenadas (Haversine)
@@ -1683,6 +1685,7 @@ visorModal.addEventListener("click", cerrarVisor);
 </script>
 </body>
 </html>
+
 
 
 
