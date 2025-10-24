@@ -1532,7 +1532,7 @@ async function verificarAccesoCompleto() {
   const clave = correo.replace(/\./g, ',');
 
   try {
-    const snap = await firebase.database().ref('permisos/' + clave).once('value');
+    const snap = await firebase.database().ref("permisos/" + clave).once("value");
     const info = snap.val();
 
     if (!info || info.activo !== true) {
@@ -1541,18 +1541,22 @@ async function verificarAccesoCompleto() {
       return false;
     }
 
+    // 🔹 Sin restricción de distancia
     if (info.sinDistancia === true) {
-      accesoPlanos = true;
       $("msgPlanos").textContent = "";
+      accesoPlanos = true;
       return true;
     }
 
-    // 🔹 Permite cualquiera de los dos campos
-    const rangoUsuario = info.radio_metros || info.rango || ZONA_AUTORIZADA.radio_metros;
+    // 🔹 Determinar rango permitido (personalizado o global)
+    const rangoUsuario = Number(info.radio_metros || info.rango || ZONA_AUTORIZADA.radio_metros);
 
-    const { dentro, distancia } = await verificarUbicacion();
+    // 🔹 Obtener distancia actual
+    const { distancia } = await verificarUbicacion();
+
     if (distancia > rangoUsuario) {
-      $("msgPlanos").textContent = `📍 Estás fuera del área permitida (${Math.round(distancia)}m de distancia, límite ${rangoUsuario}m).`;
+      $("msgPlanos").textContent =
+        `📍 Estás fuera del área permitida (${Math.round(distancia)}m de distancia, límite ${rangoUsuario}m).`;
       accesoPlanos = false;
       return false;
     }
@@ -1568,7 +1572,6 @@ async function verificarAccesoCompleto() {
     return false;
   }
 }
-
 /* ===== Visor modal (PDF directo sin descarga ni impresión) ===== */
 const visorModal = $("visorPlanosModal");
 const visorIframe = $("visorIframe");
@@ -1644,6 +1647,7 @@ visorModal.addEventListener("click", cerrarVisor);
 </script>
 </body>
 </html>
+
 
 
 
