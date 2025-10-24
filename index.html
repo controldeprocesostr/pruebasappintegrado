@@ -1353,6 +1353,9 @@ document.querySelectorAll(".drawer .opt").forEach(opt=>{
   opt.addEventListener("click",()=>{
     const target = opt.dataset.target;
 
+    // 🔹 Cierra el menú lateral siempre al hacer clic
+    closeDrawer();
+
     // Oculta todas las vistas principales
     ["view-temperaturas","view-inventario","view-planos"].forEach(id=>{
       $(id).classList.add("hidden");
@@ -1366,27 +1369,22 @@ document.querySelectorAll(".drawer .opt").forEach(opt=>{
     else if(target==="inventario"){
       $("view-inventario").classList.remove("hidden");
       $("topTitle").textContent = "Inventario Por Templar";
-      
+
       // 🔹 Si estaba en modo tabla pendientes, la reactivamos
       if(vista === "pendientes" && vistaTablaPendientes){
         $("viewTabla").classList.remove("hidden");
         renderTablaAgrupada();
       } else {
-        // aseguramos que muestre la vista correcta actualizada
         actualizarVistaPendientes();
       }
 
       actualizarTotales();
     } 
     else if(target==="planos"){
-  closeDrawer(); // 🔹 cerrar el drawer primero
-  $("view-planos").classList.remove("hidden");
-  $("topTitle").textContent = "Consulta de Planos";
-  prepararVistaPlanos();
-  return; // evita que cierre el drawer otra vez abajo
-}
-
-
+      $("view-planos").classList.remove("hidden");
+      $("topTitle").textContent = "Consulta de Planos";
+      prepararVistaPlanos();
+    }
   });
 });
 
@@ -1516,99 +1514,93 @@ auth.onAuthStateChanged(async (user)=>{
   }
 });
 
-/* ======== Restricción por ubicación geográfica ======== */
+// 📍 Zona base Tecnoglass (fallback si no tiene rango personalizado)
 const ZONA_AUTORIZADA = {
-  lat: 11.036216,      // Coordenada central del complejo
-  lon: -74.826970,     // Coordenada central del complejo
-  radio_metros: 1000  // Radio de cobertura en metros
+  lat: 10.9925,
+  lon: -74.8338,
+  radio_metros: 1500
 };
 
-// 🔹 Calcula distancia entre dos coordenadas (Haversine)
-function calcularDistancia(lat1, lon1, lat2, lon2) {
-  const R = 6371e3; // radio Tierra en metros
-  const toRad = d => d * Math.PI/180;
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-  const a = Math.sin(dLat/2)**2 +
-            Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
-  return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-
-// 🔹 Obtiene ubicación del usuario y compara con zona autorizada
-async function verificarUbicacion(){
-  return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) {
-      alert("Tu navegador no soporta geolocalización.");
-      return reject("sin soporte");
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      pos => {
-        const { latitude, longitude } = pos.coords;
-        const distancia = calcularDistancia(latitude, longitude, ZONA_AUTORIZADA.lat, ZONA_AUTORIZADA.lon);
-        const dentro = distancia <= ZONA_AUTORIZADA.radio_metros;
-        console.log(`📍 Distancia: ${Math.round(distancia)} m — ${dentro ? "Dentro" : "Fuera"} del rango`);
-        resolve({ dentro, distancia });
-      },
-      err => {
-        alert("⚠️ No se pudo obtener tu ubicación: " + err.message);
-        reject(err);
-      },
-      { enableHighAccuracy:true, timeout:8000, maximumAge:0 }
-    );
-  });
-}
-
-/* ===== Verificación combinada: correo + distancia ===== */
-async function verificarAccesoCompleto(){
-  if(!usuarioPlanos){
+async function verificarAccesoCompleto() {
+  if (!usuarioPlanos) {
     $("msgPlanos").textContent = "Inicia sesión con Google para ver los planos.";
     accesoPlanos = false;
     return false;
   }
 
   const correo = usuarioPlanos.email.trim().toLowerCase();
-  const claveCorreo = correo.replace(/\./g, ',');
+  const clave = correo.replace(/\./g, ',');
 
   try {
-    const snap = await firebase.database().ref('permisos/' + claveCorreo).once('value');
-    const val = snap.val();
-    const autorizado = snap.exists() && (val === true || val?.activo === true);
+    const snap = await firebase.database().ref('permisos/' + clave).once('value');
+    const info = snap.val();
 
-    if(!autorizado){
-      $("msgPlanos").textContent = "🚫 Este correo no tiene permiso de acceso.";
+    // Verificar si está activo
+    if (!info || info.activo !== true) {
+      $("msgPlanos").textContent = "🚫 No tienes permisos para acceder.";
       accesoPlanos = false;
       return false;
     }
 
-    // 🔸 Si el usuario tiene “sinDistancia” en Firebase, se salta el control geográfico
-    if(val?.sinDistancia === true){
-      console.log("✅ Usuario sin restricción de distancia.");
+    // Si tiene sinDistancia = true, omite ubicación
+    if (info.sinDistancia === true) {
       accesoPlanos = true;
       $("msgPlanos").textContent = "";
       return true;
     }
 
-    // 🔸 Verificamos ubicación física
+    // Calcular distancia
     const { dentro, distancia } = await verificarUbicacion();
-    if(!dentro){
-      $("msgPlanos").innerHTML = `📍 Estás fuera del área permitida (${Math.round(distancia)} m).`;
+    const rangoUsuario = info.rango || ZONA_AUTORIZADA.radio_metros;
+
+    if (!dentro || distancia > rangoUsuario) {
+      $("msgPlanos").textContent = `📍 Estás fuera del área permitida (${Math.round(distancia)}m de distancia, límite ${rangoUsuario}m).`;
       accesoPlanos = false;
       return false;
     }
 
-    // ✅ Acceso concedido
-    accesoPlanos = true;
+    // ✅ Si pasa todo
     $("msgPlanos").textContent = "";
+    accesoPlanos = true;
     return true;
 
   } catch (err) {
-    console.error("Error al verificar acceso:", err);
+    console.error("Error verificando permisos:", err);
     $("msgPlanos").textContent = "⚠️ Error al verificar permisos o ubicación.";
     accesoPlanos = false;
     return false;
   }
 }
+
+// 📍 Obtiene ubicación y calcula distancia al centro permitido
+function verificarUbicacion() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject("Geolocalización no disponible");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+
+        // Distancia Haversine en metros
+        const R = 6371e3;
+        const dLat = (lat - ZONA_AUTORIZADA.lat) * Math.PI / 180;
+        const dLon = (lon - ZONA_AUTORIZADA.lon) * Math.PI / 180;
+        const a = Math.sin(dLat/2)**2 + Math.cos(ZONA_AUTORIZADA.lat*Math.PI/180) * Math.cos(lat*Math.PI/180) * Math.sin(dLon/2)**2;
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        const distancia = R * c;
+
+        resolve({ dentro: distancia <= ZONA_AUTORIZADA.radio_metros, distancia });
+      },
+      err => reject(err),
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  });
+}
+
 
 /* ===== Visor modal (PDF directo sin descarga ni impresión) ===== */
 const visorModal = $("visorPlanosModal");
@@ -1685,6 +1677,7 @@ visorModal.addEventListener("click", cerrarVisor);
 </script>
 </body>
 </html>
+
 
 
 
