@@ -1312,26 +1312,37 @@ function regresarAPendientes(clave){
     .then(()=> actualizarVistaPendientes());
 }
 
-// 🔹 Botón "Actualizar" protegido por acceso y distancia
 $('btnActualizarInv').onclick = async () => {
   const b = $('btnActualizarInv');
+  const inicio = performance.now();
 
-  // ✅ Verificamos permisos antes de llamar la API
+  // ✅ Verificamos permisos
   const acceso = await verificarAccesoCompleto();
+  const finPermiso = performance.now();
+
   if (!acceso) {
+    // 🔹 Log de intento fuera de zona o sin permisos
+    await registrarActividad("Consulta API", "Sin autorización", inicio, finPermiso);
     alert("🚫 No puedes actualizar datos fuera de la zona o sin autorización.");
     return;
   }
 
-  // ✅ Si tiene acceso, ejecuta normalmente
   b.disabled = true;
   const old = b.textContent;
   b.textContent = "Cargando...";
+
   try {
+    const iniFetch = performance.now();
     await cargarPendientes();
+    const finFetch = performance.now();
+
+    // 🔹 Log de éxito con duración
+    await registrarActividad("Consulta API", "Éxito", iniFetch, finFetch);
   } catch (e) {
+    await registrarActividad("Consulta API", "Error", inicio, performance.now());
     alert("Error: " + (e.message || e));
   }
+
   b.disabled = false;
   b.textContent = old;
 };
@@ -1661,6 +1672,18 @@ function abrirVisorPlanos(nombre, url){
   visorIframe.setAttribute("allow", "fullscreen");
   visorIframe.setAttribute("style", "width:100%;height:100vh;border:none;");
 
+(async ()=>{
+  const inicio = performance.now();
+  try {
+    const { lat, lon, distancia } = await verificarUbicacion().catch(()=>({}));
+    const fin = performance.now();
+    await registrarActividad("Consulta Planos", "Éxito", inicio, fin, lat, lon, distancia);
+  } catch (e) {
+    console.warn("Error registrando actividad de plano:", e);
+  }
+})();
+
+
   // 🔹 Bloquear atajos de teclado (Ctrl+S / Ctrl+P / Ctrl+C / Ctrl+U)
   window.addEventListener("keydown", keyBlocker, {capture:true});
 
@@ -1689,10 +1712,34 @@ function cerrarVisor(){
 $("visorCont").addEventListener("click", e=> e.stopPropagation());
 visorModal.addEventListener("click", cerrarVisor);
 
+/* ==================== AUDITORÍA DE USUARIOS ==================== */
+async function registrarActividad(accion, resultado, inicio = null, fin = null, lat = null, lon = null, distancia = null) {
+  try {
+    const user = usuarioPlanos || {};
+    const duracion = (inicio && fin) ? ((fin - inicio) / 1000).toFixed(2) : null; // en segundos
+
+    const registro = {
+      correo: user.email || "desconocido",
+      nombre: user.displayName || "Sin nombre",
+      accion,          // Ej: "Consulta API", "Consulta Planos", "Intento fuera de zona"
+      resultado,       // Ej: "Éxito", "Error", "Fuera de zona"
+      lat, lon, distancia,
+      duracion_seg: duracion,
+      fecha: new Date().toISOString()
+    };
+
+    // 🔹 Guardar sin bloquear la app (no se hace await)
+    firebase.database().ref("logs_usuarios").push(registro);
+  } catch (e) {
+    console.warn("⚠️ Error guardando log:", e);
+  }
+}
+
 
 </script>
 </body>
 </html>
+
 
 
 
