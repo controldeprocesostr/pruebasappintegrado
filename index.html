@@ -1316,24 +1316,23 @@ $('btnActualizarInv').onclick = async () => {
   const b = $('btnActualizarInv');
   const inicio = performance.now();
 
-  // 🚀 Disparamos ubicación en paralelo (sin await todavía)
-  const ubicacionPromise = verificarUbicacion();
+  // ✅ Capturamos ubicación actual antes de verificar permisos
+  let lat = null, lon = null, distancia = null;
+  try {
+    const pos = await verificarUbicacion();
+    lat = pos.lat;
+    lon = pos.lon;
+    distancia = pos.distancia;
+  } catch (e) {
+    console.warn("No se pudo obtener ubicación:", e);
+  }
 
-  // ✅ Verificamos permisos (sin depender del GPS)
+  // ✅ Verificamos permisos
   const acceso = await verificarAccesoCompleto();
   const finPermiso = performance.now();
 
-  // Esperamos resultado de ubicación, pero sin bloquear si tarda
-  let lat = null, lon = null, distancia = null;
-  try {
-    const pos = await Promise.race([
-      ubicacionPromise,
-      new Promise(resolve => setTimeout(() => resolve({lat:null,lon:null,distancia:null}), 5000))
-    ]);
-    lat = pos.lat; lon = pos.lon; distancia = pos.distancia;
-  } catch { /* ignora */ }
-
   if (!acceso) {
+    // 🔹 Log de intento fuera de zona o sin permisos (con ubicación)
     await registrarActividad("Consulta API", "Sin autorización", inicio, finPermiso, lat, lon, distancia);
     alert("🚫 No puedes actualizar datos fuera de la zona o sin autorización.");
     return;
@@ -1348,6 +1347,7 @@ $('btnActualizarInv').onclick = async () => {
     await cargarPendientes();
     const finFetch = performance.now();
 
+    // 🔹 Log de éxito con duración y ubicación
     await registrarActividad("Consulta API", "Éxito", iniFetch, finFetch, lat, lon, distancia);
   } catch (e) {
     await registrarActividad("Consulta API", "Error", inicio, performance.now(), lat, lon, distancia);
@@ -1357,6 +1357,7 @@ $('btnActualizarInv').onclick = async () => {
   b.disabled = false;
   b.textContent = old;
 };
+
 // 🔹 Llamada inicial sin restricción (al abrir la vista)
 cargarPendientes();
 
@@ -1556,6 +1557,9 @@ function distanciaMetros(lat1, lon1, lat2, lon2) {
 // 📍 Verifica la ubicación actual del usuario
 async function verificarUbicacion() {
   return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      return reject("Tu navegador no soporta geolocalización.");
+    }
     if (!navigator.geolocation) return reject("Tu navegador no soporta geolocalización.");
 
     let resuelto = false;
@@ -1580,12 +1584,19 @@ async function verificarUbicacion() {
         resolve({ lat, lon, distancia });
       },
       err => {
+        switch (err.code) {
+          case 1: reject("Permiso de ubicación denegado."); break;
+          case 2: reject("Posición no disponible."); break;
+          case 3: reject("Tiempo de espera agotado."); break;
+          default: reject("Error desconocido."); break;
+        }
         if (resuelto) return;
         clearTimeout(timer);
         resuelto = true;
         console.warn("Error ubicación:", err);
         resolve({ lat: null, lon: null, distancia: null }); // devolvemos vacío pero no bloquea
       },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       { enableHighAccuracy: false, timeout: 7000, maximumAge: 60000 }
     );
   });
@@ -1677,7 +1688,7 @@ function abrirVisorPlanos(nombre, url){
     alert("🚫 Sin permiso para ver planos."); 
     return; 
   }
-  
+
    ocultarVistasActivas(); // 🔹 Cierra cualquier vista previa o tabla abierta
   visorTitulo.textContent = nombre;
 
@@ -1733,56 +1744,36 @@ function cerrarVisor(){
 $("visorCont").addEventListener("click", e=> e.stopPropagation());
 visorModal.addEventListener("click", cerrarVisor);
 
-// =======================================
-// 📋 Registrar actividad de usuarios
-// =======================================
-async function registrarActividad(accion, resultado, inicio, fin, lat = null, lon = null, distancia = null) {
+/* ==================== AUDITORÍA DE USUARIOS ==================== */
+async function registrarActividad(accion, resultado, inicio = null, fin = null, lat = null, lon = null, distancia = null) {
   try {
-    const correo = (usuarioPlanos?.email || "desconocido").toLowerCase();
-    const nombre = usuarioPlanos?.displayName || "Sin nombre";
-
+    const user = usuarioPlanos || {};
+    const duracion = (inicio && fin) ? ((fin - inicio) / 1000).toFixed(2) : null; // en segundos
     const duracionMs = (inicio && fin) ? (fin - inicio) : null;
-    const duracionMin = duracionMs ? (duracionMs / 60000).toFixed(2) : null;
-    const duracionSeg = duracionMs ? (duracionMs / 1000).toFixed(2) : null;
+    const duracionMin = duracionMs ? (duracionMs / 60000).toFixed(2) : null; // minutos
 
-    // 🕒 Formato legible "mm:ss"
-    let duracionFmt = "-";
-    if (duracionMs) {
-      const min = Math.floor(duracionMs / 60000);
-      const sec = Math.round((duracionMs % 60000) / 1000);
-      duracionFmt = `${min}m ${sec}s`;
-    }
 
-    const fecha = new Date().toLocaleString("es-CO", { timeZone: "America/Bogota" });
-
-    // ✅ Datos del registro
     const registro = {
-      correo,
-      nombre,
-      accion,
-      resultado,
-      fecha,
+      correo: user.email || "desconocido",
+      nombre: user.displayName || "Sin nombre",
+      accion,          // Ej: "Consulta API", "Consulta Planos", "Intento fuera de zona"
+      resultado,       // Ej: "Éxito", "Error", "Fuera de zona"
+      lat, lon, distancia,
+      duracion_seg: duracion,
       duracion_min: duracionMin,
-      duracion_seg: duracionSeg,
-      duracion_fmt: duracionFmt,
-      distancia: distancia ? distancia.toFixed(0) : "-",
-      lat: lat || null,
-      lon: lon || null
+      fecha: new Date().toISOString()
     };
 
-    // ✅ Guardar en Firebase con timestamp ordenado
-    const id = Date.now();
-    await firebase.database().ref("logs_usuarios/" + id).set(registro);
-
-    console.log("🧾 Log registrado:", registro);
-  } catch (err) {
-    console.error("❌ Error al registrar actividad:", err);
+    // 🔹 Guardar sin bloquear la app (no se hace await)
+    firebase.database().ref("logs_usuarios").push(registro);
+  } catch (e) {
+    console.warn("⚠️ Error guardando log:", e);
   }
 }
-
 
 
 </script>
 </body>
 </html>
+
 
