@@ -1314,50 +1314,48 @@ function regresarAPendientes(clave){
 
 $('btnActualizarInv').onclick = async () => {
   const b = $('btnActualizarInv');
-  const inicioTotal = performance.now();
+  const inicio = performance.now();
+
+  // 🚀 Disparamos ubicación en paralelo (sin await todavía)
+  const ubicacionPromise = verificarUbicacion();
+
+  // ✅ Verificamos permisos (sin depender del GPS)
+  const acceso = await verificarAccesoCompleto();
+  const finPermiso = performance.now();
+
+  // Esperamos resultado de ubicación, pero sin bloquear si tarda
+  let lat = null, lon = null, distancia = null;
+  try {
+    const pos = await Promise.race([
+      ubicacionPromise,
+      new Promise(resolve => setTimeout(() => resolve({lat:null,lon:null,distancia:null}), 5000))
+    ]);
+    lat = pos.lat; lon = pos.lon; distancia = pos.distancia;
+  } catch { /* ignora */ }
+
+  if (!acceso) {
+    await registrarActividad("Consulta API", "Sin autorización", inicio, finPermiso, lat, lon, distancia);
+    alert("🚫 No puedes actualizar datos fuera de la zona o sin autorización.");
+    return;
+  }
+
   b.disabled = true;
-  const oldText = b.textContent;
+  const old = b.textContent;
   b.textContent = "Cargando...";
 
   try {
-    // 🚀 Disparamos geolocalización y API en paralelo
-    const ubicacionPromise = verificarUbicacion();
-    const accesoPromise = verificarAccesoCompleto();
+    const iniFetch = performance.now();
+    await cargarPendientes();
+    const finFetch = performance.now();
 
-    // Mientras tanto, ejecutamos el fetch de API
-    const apiInicio = performance.now();
-    const apiPromise = cargarPendientes(); // no esperes aquí
-
-    // Obtenemos permiso y ubicación (en paralelo)
-    const [acceso, ubicacion] = await Promise.allSettled([accesoPromise, ubicacionPromise]);
-    const pos = ubicacion.value || {};
-    const lat = pos.lat || null, lon = pos.lon || null, distancia = pos.distancia || null;
-
-    // Si no tiene acceso → cancelar antes de esperar el fetch
-    if (acceso.status === "fulfilled" && !acceso.value) {
-      await registrarActividad("Consulta API", "Sin autorización", apiInicio, performance.now(), lat, lon, distancia);
-      alert("🚫 No tienes autorización o estás fuera del rango.");
-      b.textContent = oldText;
-      b.disabled = false;
-      return;
-    }
-
-    // Esperamos la API con límite máximo de 20 s
-    const apiResponse = await Promise.race([
-      apiPromise,
-      new Promise((_, rej) => setTimeout(() => rej(new Error("Timeout API")), 20000))
-    ]);
-    const apiFin = performance.now();
-
-    await registrarActividad("Consulta API", "Éxito", apiInicio, apiFin, lat, lon, distancia);
+    await registrarActividad("Consulta API", "Éxito", iniFetch, finFetch, lat, lon, distancia);
   } catch (e) {
-    await registrarActividad("Consulta API", "Error", inicioTotal, performance.now());
-    console.error("❌ Error:", e);
-    alert("Error en la consulta de API: " + (e.message || e));
+    await registrarActividad("Consulta API", "Error", inicio, performance.now(), lat, lon, distancia);
+    alert("Error: " + (e.message || e));
   }
 
-  b.textContent = oldText;
   b.disabled = false;
+  b.textContent = old;
 };
 // 🔹 Llamada inicial sin restricción (al abrir la vista)
 cargarPendientes();
@@ -1787,3 +1785,4 @@ async function registrarActividad(accion, resultado, inicio, fin, lat = null, lo
 </script>
 </body>
 </html>
+
