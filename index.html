@@ -1316,13 +1316,24 @@ $('btnActualizarInv').onclick = async () => {
   const b = $('btnActualizarInv');
   const inicio = performance.now();
 
+  // ✅ Capturamos ubicación actual antes de verificar permisos
+  let lat = null, lon = null, distancia = null;
+  try {
+    const pos = await verificarUbicacion();
+    lat = pos.lat;
+    lon = pos.lon;
+    distancia = pos.distancia;
+  } catch (e) {
+    console.warn("No se pudo obtener ubicación:", e);
+  }
+
   // ✅ Verificamos permisos
   const acceso = await verificarAccesoCompleto();
   const finPermiso = performance.now();
 
   if (!acceso) {
-    // 🔹 Log de intento fuera de zona o sin permisos
-    await registrarActividad("Consulta API", "Sin autorización", inicio, finPermiso);
+    // 🔹 Log de intento fuera de zona o sin permisos (con ubicación)
+    await registrarActividad("Consulta API", "Sin autorización", inicio, finPermiso, lat, lon, distancia);
     alert("🚫 No puedes actualizar datos fuera de la zona o sin autorización.");
     return;
   }
@@ -1336,10 +1347,10 @@ $('btnActualizarInv').onclick = async () => {
     await cargarPendientes();
     const finFetch = performance.now();
 
-    // 🔹 Log de éxito con duración
-    await registrarActividad("Consulta API", "Éxito", iniFetch, finFetch);
+    // 🔹 Log de éxito con duración y ubicación
+    await registrarActividad("Consulta API", "Éxito", iniFetch, finFetch, lat, lon, distancia);
   } catch (e) {
-    await registrarActividad("Consulta API", "Error", inicio, performance.now());
+    await registrarActividad("Consulta API", "Error", inicio, performance.now(), lat, lon, distancia);
     alert("Error: " + (e.message || e));
   }
 
@@ -1739,6 +1750,7 @@ async function registrarActividad(accion, resultado, inicio = null, fin = null, 
 </script>
 </body>
 </html>
+
 
 
 
