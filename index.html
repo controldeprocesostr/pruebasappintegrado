@@ -1560,24 +1560,9 @@ async function verificarUbicacion() {
     if (!navigator.geolocation) {
       return reject("Tu navegador no soporta geolocalización.");
     }
-    if (!navigator.geolocation) return reject("Tu navegador no soporta geolocalización.");
-
-    let resuelto = false;
-
-    // fallback si tarda más de 8s
-    const timer = setTimeout(() => {
-      if (!resuelto) {
-        resuelto = true;
-        console.warn("⚠️ Tiempo de geolocalización agotado, usando valor nulo.");
-        resolve({ lat: null, lon: null, distancia: null });
-      }
-    }, 8000);
 
     navigator.geolocation.getCurrentPosition(
       pos => {
-        if (resuelto) return;
-        clearTimeout(timer);
-        resuelto = true;
         const lat = pos.coords.latitude;
         const lon = pos.coords.longitude;
         const distancia = distanciaMetros(lat, lon, ZONA_AUTORIZADA.lat, ZONA_AUTORIZADA.lon);
@@ -1590,14 +1575,8 @@ async function verificarUbicacion() {
           case 3: reject("Tiempo de espera agotado."); break;
           default: reject("Error desconocido."); break;
         }
-        if (resuelto) return;
-        clearTimeout(timer);
-        resuelto = true;
-        console.warn("Error ubicación:", err);
-        resolve({ lat: null, lon: null, distancia: null }); // devolvemos vacío pero no bloquea
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-      { enableHighAccuracy: false, timeout: 7000, maximumAge: 60000 }
     );
   });
 }
@@ -1688,7 +1667,7 @@ function abrirVisorPlanos(nombre, url){
     alert("🚫 Sin permiso para ver planos."); 
     return; 
   }
-
+  
    ocultarVistasActivas(); // 🔹 Cierra cualquier vista previa o tabla abierta
   visorTitulo.textContent = nombre;
 
@@ -1749,9 +1728,6 @@ async function registrarActividad(accion, resultado, inicio = null, fin = null, 
   try {
     const user = usuarioPlanos || {};
     const duracion = (inicio && fin) ? ((fin - inicio) / 1000).toFixed(2) : null; // en segundos
-    const duracionMs = (inicio && fin) ? (fin - inicio) : null;
-    const duracionMin = duracionMs ? (duracionMs / 60000).toFixed(2) : null; // minutos
-
 
     const registro = {
       correo: user.email || "desconocido",
@@ -1760,7 +1736,6 @@ async function registrarActividad(accion, resultado, inicio = null, fin = null, 
       resultado,       // Ej: "Éxito", "Error", "Fuera de zona"
       lat, lon, distancia,
       duracion_seg: duracion,
-      duracion_min: duracionMin,
       fecha: new Date().toISOString()
     };
 
@@ -1775,5 +1750,6 @@ async function registrarActividad(accion, resultado, inicio = null, fin = null, 
 </script>
 </body>
 </html>
+
 
 
