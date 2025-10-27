@@ -1557,26 +1557,37 @@ function distanciaMetros(lat1, lon1, lat2, lon2) {
 // 📍 Verifica la ubicación actual del usuario
 async function verificarUbicacion() {
   return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) {
-      return reject("Tu navegador no soporta geolocalización.");
-    }
+    if (!navigator.geolocation) return reject("Tu navegador no soporta geolocalización.");
+
+    let resuelto = false;
+
+    // fallback si tarda más de 8s
+    const timer = setTimeout(() => {
+      if (!resuelto) {
+        resuelto = true;
+        console.warn("⚠️ Tiempo de geolocalización agotado, usando valor nulo.");
+        resolve({ lat: null, lon: null, distancia: null });
+      }
+    }, 8000);
 
     navigator.geolocation.getCurrentPosition(
       pos => {
+        if (resuelto) return;
+        clearTimeout(timer);
+        resuelto = true;
         const lat = pos.coords.latitude;
         const lon = pos.coords.longitude;
         const distancia = distanciaMetros(lat, lon, ZONA_AUTORIZADA.lat, ZONA_AUTORIZADA.lon);
         resolve({ lat, lon, distancia });
       },
       err => {
-        switch (err.code) {
-          case 1: reject("Permiso de ubicación denegado."); break;
-          case 2: reject("Posición no disponible."); break;
-          case 3: reject("Tiempo de espera agotado."); break;
-          default: reject("Error desconocido."); break;
-        }
+        if (resuelto) return;
+        clearTimeout(timer);
+        resuelto = true;
+        console.warn("Error ubicación:", err);
+        resolve({ lat: null, lon: null, distancia: null }); // devolvemos vacío pero no bloquea
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      { enableHighAccuracy: false, timeout: 7000, maximumAge: 60000 }
     );
   });
 }
@@ -1727,7 +1738,9 @@ visorModal.addEventListener("click", cerrarVisor);
 async function registrarActividad(accion, resultado, inicio = null, fin = null, lat = null, lon = null, distancia = null) {
   try {
     const user = usuarioPlanos || {};
-    const duracion = (inicio && fin) ? ((fin - inicio) / 1000).toFixed(2) : null; // en segundos
+    const duracionMs = (inicio && fin) ? (fin - inicio) : null;
+    const duracionMin = duracionMs ? (duracionMs / 60000).toFixed(2) : null; // minutos
+
 
     const registro = {
       correo: user.email || "desconocido",
@@ -1735,7 +1748,7 @@ async function registrarActividad(accion, resultado, inicio = null, fin = null, 
       accion,          // Ej: "Consulta API", "Consulta Planos", "Intento fuera de zona"
       resultado,       // Ej: "Éxito", "Error", "Fuera de zona"
       lat, lon, distancia,
-      duracion_seg: duracion,
+      duracion_min: duracionMin,
       fecha: new Date().toISOString()
     };
 
@@ -1750,6 +1763,7 @@ async function registrarActividad(accion, resultado, inicio = null, fin = null, 
 </script>
 </body>
 </html>
+
 
 
 
