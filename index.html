@@ -13,6 +13,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
   <!-- PDF.js viewer para visor interno de planos -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/web/viewer.css">
@@ -179,6 +180,65 @@
     #visorIframe{width:100%;height:calc(100% - 44px);border:0}
     /* Bloqueos básicos de UI para evitar copiar/descargar */
     #visorCont, #visorCont *{user-select:none;-webkit-user-select:none}
+  
+
+/* ==================== V8 Salida de Hornos / Webster digitado ==================== */
+.salida-toolbar{display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
+.salida-row{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:end}
+.salida-row-2{display:grid;grid-template-columns:1fr;gap:8px;align-items:end}
+.salida-status{font-size:12px;color:#b4c1c8;line-height:1.35}
+.salida-kpis{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.salida-kpi{background:#111;border:1px solid #303030;border-radius:12px;padding:8px 10px;color:#e6f7fb;font-size:13px}
+.salida-kpi b{color:#00e5ff}
+.salida-list{display:flex;flex-direction:column;gap:12px;padding-bottom:16px}
+.canasta-card{background:#171717;border:1px solid #303030;border-radius:16px;overflow:hidden;box-shadow:0 3px 10px rgba(0,0,0,.35)}
+.canasta-head{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:12px 12px;border-bottom:1px solid #272727;background:#111}
+.canasta-title{font-weight:900;color:#00e5ff;font-size:16px}
+.canasta-sub{color:#a8bac2;font-size:12px;margin-top:2px}
+.ref-list{display:flex;flex-direction:column;gap:10px;padding:10px}
+.ref-card{background:#202020;border:1px solid #363636;border-radius:14px;padding:10px}
+.ref-head{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;margin-bottom:8px}
+.ref-title{font-weight:900;color:#fff;font-size:15px;word-break:break-word}
+.ref-meta{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.ref-chip{font-size:11px;border:1px solid #3a3a3a;background:#111;color:#dff7ff;border-radius:999px;padding:4px 7px}
+.ref-chip.important{background:#00333a;border-color:#0c7481;color:#bff7ff;font-weight:800}
+.wt-box{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end;margin-top:8px}
+.wt-box label{font-size:12px;color:#d7edf2;margin:0 0 4px}
+.wt-input{font-size:20px!important;font-weight:900!important;text-align:center!important;border:2px solid #00e5ff!important;border-radius:12px!important;min-height:46px;background:#fff!important;color:#000!important}
+.ref-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.ref-actions .btn-mini{width:100%;padding:10px 8px}
+.sonum-panel{display:none;margin-top:10px;border-top:1px solid #383838;padding-top:8px}
+.sonum-panel.open{display:block}
+.sonum-row{display:grid;grid-template-columns:1.2fr .75fr .75fr;gap:6px;align-items:center;background:#151515;border:1px solid #2e2e2e;border-radius:10px;padding:8px;margin-bottom:6px;font-size:12px}
+.sonum-row b{color:#bff7ff}
+.sonum-row input{font-weight:900;text-align:center;min-height:38px}
+.photo-row{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}
+.foto-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid #383838;background:#111;color:#e9f7ff;border-radius:10px;padding:9px 10px;font-weight:800;cursor:pointer;min-width:125px;font-size:13px}
+.foto-btn.primary{background:#00e5ff;color:#000;border-color:#00e5ff}
+.foto-btn input{display:none}
+.photo-count{font-size:12px;color:#b4c1c8}
+.thumb-list{display:flex;gap:6px;overflow-x:auto;margin-top:6px;padding-bottom:4px}
+.thumb-list img{width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid #444;background:#111;cursor:pointer}
+.salida-empty{padding:18px;text-align:center;color:#b4c1c8;background:#151515;border:1px dashed #3a3a3a;border-radius:14px}
+@media (max-width:900px){
+  .wrap{max-width:100%!important;margin:0!important;padding:10px!important}
+  .salida-row{grid-template-columns:1fr 1fr}
+  .salida-row button{width:100%}
+  .canasta-head{align-items:flex-start;flex-direction:column}
+  .ref-head{flex-direction:column}
+  .wt-box{grid-template-columns:1fr}
+  .ref-actions{grid-template-columns:1fr}
+  .sonum-row{grid-template-columns:1fr 1fr;}
+  .sonum-row .sonum-main{grid-column:1/-1}
+  .drawer{z-index:5000!important}
+  .drawer-mask{z-index:4999!important}
+}
+@media (max-width:420px){
+  .salida-row{grid-template-columns:1fr}
+  .header-title{font-size:18px}
+}
+
+
   </style>
 </head>
 <body>
@@ -386,6 +446,66 @@
     </div>
   </div>
 
+
+
+    <!-- ======== Vista: Salida de Hornos / WT Webster V8 ======== -->
+    <div id="view-salida-hornos" class="hidden">
+      <div class="card" style="background:var(--panel-2)">
+        <h3 style="color:var(--accent);margin:0 0 10px">Salida de Hornos / Marcación Webster</h3>
+        <div class="salida-toolbar">
+          <div class="salida-row">
+            <div>
+              <label for="fechaSalidaWT">Fecha</label>
+              <input type="date" id="fechaSalidaWT">
+            </div>
+            <div>
+              <label for="turnoSalidaWT">Turno</label>
+              <select id="turnoSalidaWT">
+                <option value="1">Turno 1</option>
+                <option value="2">Turno 2</option>
+                <option value="3">Turno 3</option>
+              </select>
+            </div>
+            <div>
+              <label for="hornoSalidaWT">Horno</label>
+              <select id="hornoSalidaWT">
+                <option value="ITALIANO">ITALIANO</option>
+                <option value="HORNO 5">HORNO 5</option>
+                <option value="HORNO 7-3">HORNO 7-3</option>
+                <option value="HORNO 7-4">HORNO 7-4</option>
+                <option value="HORNO 7-5">HORNO 7-5</option>
+                <option value="HORNO 9-1">HORNO 9-1</option>
+                <option value="HORNO 9-2">HORNO 9-2</option>
+                <option value="HORNO 9-3">HORNO 9-3</option>
+                <option value="HORNO 10">HORNO 10</option>
+              </select>
+            </div>
+            <div>
+              <label>&nbsp;</label>
+              <button class="inv-btn primary" id="btnConsultarSalidaWT" type="button">Consultar carga</button>
+            </div>
+          </div>
+          <div class="salida-row-2">
+            <div>
+              <label for="buscarSalidaWT">Buscador general</label>
+              <input type="search" id="buscarSalidaWT" placeholder="Buscar canasta, referencia, SO NUM, aleación, temple, cliente, acabado, prensa, WT...">
+            </div>
+          </div>
+          <div class="salida-status" id="estadoSalidaWT"></div>
+        </div>
+        <div class="salida-kpis">
+          <div class="salida-kpi"><b>Canastas:</b> <span id="kpiCanastasWT">0</span></div>
+          <div class="salida-kpi"><b>Referencias:</b> <span id="kpiRefsWT">0</span></div>
+          <div class="salida-kpi"><b>SO NUM:</b> <span id="kpiSoWT">0</span></div>
+          <div class="salida-kpi"><b>Kg:</b> <span id="kpiKgWT">0</span></div>
+        </div>
+      </div>
+      <div id="listaSalidaWT" class="salida-list">
+        <div class="salida-empty">No hay datos cargados.</div>
+      </div>
+    </div>
+
+
   <!-- ===== Modal Inventario ===== -->
   <div class="modal" id="modalInv">
     <div class="win" role="dialog" aria-modal="true">
@@ -441,10 +561,14 @@
         <b>Consulta de Planos</b><br>
         <small>Acceso directo a los planos</small>
       </div>
+
+      <div class="opt" data-target="salida-hornos">
+        <b>Salida de Hornos / WT</b><br>
+        <small>Marcación Webster y evidencias</small>
+      </div>
     </div>
   </div>
   <div class="drawer-mask" id="drawerMask"></div>
-
   <!-- ===== Visor de Planos (modal con PDF.js) ===== -->
   <div id="visorPlanosModal">
     <div id="visorCont" oncontextmenu="return false;">
@@ -461,10 +585,11 @@
 
 /* ==================== Firebase ==================== */
 const firebaseConfig = {
-  apiKey: "AIzaSyAB4UlwaVJzc4U4VbmddLf4mejKAOvTufw",
+  apiKey:"AIzaSyAB4UlwaVJzc4U4VbmddLf4mejKAOvTufw",
   authDomain: "hornosapp-60887.firebaseapp.com",
   databaseURL: "https://hornosapp-60887-default-rtdb.firebaseio.com",
   projectId: "hornosapp-60887",
+  storageBucket: "hornosapp-60887.appspot.com",
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
@@ -585,7 +710,7 @@ function attachLive(cicloId){
         setPoint: v.setPoint ?? ''
       });
     });
-    arr.sort((a,b)=>a.hora.localeCompare(b.hora));
+    
 
     chart.data.labels = arr.map(r => toAMPM(r.hora));
     chart.data.datasets[0].data = arr.map(r => (r.zona1!=='' && r.zona1!=null && !isNaN(r.zona1)) ? Number(r.zona1) : null);
@@ -773,7 +898,7 @@ async function fetchDep(fi,ff,dep){
   return det;
 }
 async function cargarPendientes(){
-  const fi="2025-01-01", ff=fechaISO();
+  const fi="2026-01-01", ff=fechaISO();
   const [extrude,tmpin] = await Promise.all([fetchDep(fi,ff,"EXTRUDE"), fetchDep(fi,ff,"TMP-IN")]);
 
   const exMap={}, tmMap={};
@@ -1746,6 +1871,467 @@ async function registrarActividad(accion, resultado, inicio = null, fin = null, 
   }
 }
 
+
+
+
+/* ==================== V6 Salida de Hornos / WT digitado, fotos y carga compartida ==================== */
+(function(){
+  const API_REPORTE_WT = "https://optima.tecnoglass.net/api/alutions_production/reporte-extruccion";
+  const DRIVE_WEBAPP_URL = ""; // opcional: pega aquí el Web App URL de Apps Script si quieres que las fotos vayan a Drive.
+  const storage = (firebase.storage ? firebase.storage() : null);
+  let salidaRawWT = [];
+  let salidaGroupedWT = [];
+  let wtSoMap = {};
+  let wtRefMap = {};
+  let cargaListenerRef = null;
+  let wtListenerRef = null;
+
+  const qsid = id => document.getElementById(id);
+  const wtSafeKey = v => (v ?? "").toString().trim().replace(/[.#$\[\]\/]/g,"_") || "SIN_DATO";
+  const wtNorm = v => (v ?? "").toString().trim().toUpperCase();
+  const wtPick = (obj, ...keys) => { for(const k of keys){ const v = obj?.[k]; if(v !== undefined && v !== null && v !== "") return v; } return ""; };
+  function wtNum(v){ const n = Number((v??"").toString().replace(/,/g,".")); return Number.isFinite(n) ? n : 0; }
+  function wtSplitAllot(allot){
+    let aleacion = "", temple = "";
+    const txt = (allot ?? "").toString().trim().replace("-", "");
+    const m = txt.match(/^\s*(\d{4,})\s*(.*)$/);
+    if(m){ aleacion = m[1]; temple = (m[2] || "").trim(); }
+    else { aleacion = txt; }
+    return { aleacion, temple };
+  }
+  function wtSoDisplay(sonum, soitem){ return `${sonum || ""}-${soitem || ""}`.replace(/^-|-$/g,""); }
+  function wtPathBase(fecha, turno, horno){ return `websterTemple/${fecha}/${turno}/${wtSafeKey(horno)}`; }
+  function wtRefPathBase(fecha, turno, horno){ return `websterTempleReferencias/${fecha}/${turno}/${wtSafeKey(horno)}`; }
+  function wtCargaPathBase(fecha, turno, horno){ return `salidaHornosCargas/${fecha}/${turno}/${wtSafeKey(horno)}`; }
+  function setEstadoWT(msg){ const el=qsid("estadoSalidaWT"); if(el) el.textContent = msg; }
+  function salidaParamsWT(){
+    const fecha = qsid("fechaSalidaWT")?.value || hoyISO();
+    const turno = (qsid("turnoSalidaWT")?.value || "1").toString().trim();
+    const horno = wtNorm(qsid("hornoSalidaWT")?.value || "");
+    return {fecha, turno, horno};
+  }
+  function esc(s){ return (s??"").toString().replace(/[&<>'"]/g, ch=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;","\"":"&quot;"}[ch])); }
+  function joinSet(s){ return [...s].filter(Boolean).join(", ") || "-"; }
+
+  window.irVistaMovilWT = function(view){
+    try{ if(typeof closeDrawer === "function") closeDrawer(); }catch(e){}
+    ["view-temperaturas","view-inventario","view-planos","view-salida-hornos","viewTabla"].forEach(id=>{ const el=qsid(id); if(el) el.classList.add("hidden"); });
+    if(view === "temperaturas"){
+      qsid("view-temperaturas")?.classList.remove("hidden");
+      if(qsid("topTitle")) qsid("topTitle").textContent = "Registro de Temperaturas";
+    } else if(view === "inventario"){
+      qsid("view-inventario")?.classList.remove("hidden");
+      if(qsid("topTitle")) qsid("topTitle").textContent = "Inventario Por Templar";
+      try{
+        if(typeof vista !== "undefined" && vista === "pendientes" && typeof vistaTablaPendientes !== "undefined" && vistaTablaPendientes){
+          qsid("viewTabla")?.classList.remove("hidden");
+          if(typeof renderTablaAgrupada === "function") renderTablaAgrupada();
+        } else if(typeof actualizarVistaPendientes === "function") actualizarVistaPendientes();
+        if(typeof actualizarTotales === "function") actualizarTotales();
+      }catch(e){ console.warn(e); }
+    } else if(view === "planos"){
+      qsid("view-planos")?.classList.remove("hidden");
+      if(qsid("topTitle")) qsid("topTitle").textContent = "Consulta de Planos";
+      try{ if(typeof prepararVistaPlanos === "function") prepararVistaPlanos(); }catch(e){ console.warn(e); }
+    } else if(view === "salida-hornos"){
+      qsid("view-salida-hornos")?.classList.remove("hidden");
+      if(qsid("topTitle")) qsid("topTitle").textContent = "Salida de Hornos / WT";
+      iniciarSalidaWT();
+    }
+    try{ window.scrollTo({top:0, behavior:"smooth"}); }catch(e){ window.scrollTo(0,0); }
+  };
+
+  function iniciarSalidaWT(){
+    if(qsid("fechaSalidaWT") && !qsid("fechaSalidaWT").value) qsid("fechaSalidaWT").value = hoyISO();
+    setEstadoWT("");
+  }
+
+  async function cargarFirebaseWT(fecha, turno, horno){
+    const [soSnap, refSnap] = await Promise.all([
+      db.ref(wtPathBase(fecha, turno, horno) + "/soitems").once("value"),
+      db.ref(wtRefPathBase(fecha, turno, horno)).once("value")
+    ]);
+    wtSoMap = soSnap.val() || {};
+    wtRefMap = refSnap.val() || {};
+  }
+
+  function normalizarItemCargaWT(it){
+    const soDisplay = it.soDisplay || wtSoDisplay(it.sonum, it.soitem);
+    const referencia = it.referencia || "SIN REFERENCIA";
+    const canasta = it.canasta || "SIN CANASTA";
+    const refKey = wtSafeKey(`${canasta}__${referencia}`);
+    const legacySoKey = wtSafeKey(soDisplay);
+    const soKey = wtSafeKey(`${canasta}__${referencia}__${soDisplay}`);
+    const saved = wtSoMap[soKey] || wtSoMap[legacySoKey] || {};
+    return {...it, canasta, referencia, refKey, soKey, legacySoKey, soDisplay, wt: saved.wt || it.wt || ""};
+  }
+
+  async function cargarCargaCompartidaWT(fecha, turno, horno){
+    const snap = await db.ref(wtCargaPathBase(fecha, turno, horno) + "/items").once("value");
+    const val = snap.val();
+    if(!val) return [];
+    return (Array.isArray(val) ? val : Object.values(val)).map(normalizarItemCargaWT).sort(ordenSalidaWT);
+  }
+
+  function compactarItemsWT(items){
+    return items.map(it=>({
+      canasta: it.canasta, referencia: it.referencia, refKey: it.refKey, soKey: it.soKey,
+      soDisplay: it.soDisplay, soitem: it.soitem, sonum: it.sonum,
+      pzs: it.pzs, kg: it.kg, long: it.long, prensa: it.prensa,
+      cliente: it.cliente, acabado: it.acabado, prio: it.prio,
+      aleacion: it.aleacion, temple: it.temple
+    }));
+  }
+
+  async function guardarCargaCompartidaWT(fecha, turno, horno, items, fuente){
+    const payload = {
+      fecha, turno, horno, fuente: fuente || "celular_api", updatedAt: new Date().toISOString(),
+      totalSo: items.length,
+      items: compactarItemsWT(items)
+    };
+    await db.ref(wtCargaPathBase(fecha, turno, horno)).set(payload);
+  }
+
+  async function fetchSalidaApiWT(fecha, turno, horno){
+    const controller = new AbortController();
+    const timer = setTimeout(()=>controller.abort(), 30000);
+    try{
+      const payload = { Fecha_inicial: fecha, Fecha_final: fecha, departamento: 3, turno, horno };
+      const resp = await fetch(API_REPORTE_WT, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(payload), signal:controller.signal });
+      if(!resp.ok) throw new Error("HTTP " + resp.status);
+      return await resp.json();
+    } finally { clearTimeout(timer); }
+  }
+
+  function extraerItemsSalidaWT(json, fecha, turno, horno){
+    const data = Array.isArray(json?.data) ? json.data : [];
+    const tmpinData  = (data.find(b => Array.isArray(b?.TMPIN))?.TMPIN)  || [];
+    const sierraData = (data.find(b => Array.isArray(b?.Sierra))?.Sierra) || [];
+    const sierraMap = new Map();
+    for(const s of sierraData){
+      const soitem = wtPick(s,"soitemnum","Soitemnum","Soitem","soitem");
+      const sonum  = wtPick(s,"sonum","Sonum","so","So");
+      const key = `${soitem}-${sonum}`;
+      sierraMap.set(key, { long: wtPick(s,"long","Long","longitud","Longitud"), prensa: wtPick(s,"MachineName","machine","Prensa","prensa") });
+    }
+    return tmpinData.filter(r=>{
+      const hornoRow = wtNorm(wtPick(r,"MachineName","Horno","horno","machine"));
+      const turnoRow = (wtPick(r,"shift","Shift","turno","Turno") || "").toString().trim();
+      let fechaRow = "";
+      try{ fechaRow = new Date(r.dt).toISOString().slice(0,10); }catch(e){ fechaRow = (wtPick(r,"dt","Fecha","fecha")||"").toString().slice(0,10); }
+      return hornoRow === horno && turnoRow === turno && fechaRow === fecha;
+    }).map((r, idx)=>{
+      const soitem = wtPick(r,"soitemnum","Soitemnum","Soitem","soitem");
+      const sonum  = wtPick(r,"sonum","Sonum","so","So");
+      const matchS = sierraMap.get(`${soitem}-${sonum}`) || {};
+      const {aleacion, temple} = wtSplitAllot(wtPick(r,"allot","Allot"));
+      const soDisplay = wtSoDisplay(sonum, soitem);
+      const referencia = wtPick(r,"dienum","Part","Referencia","referencia") || "SIN REFERENCIA";
+      const canasta = wtPick(r,"Rack","rack") || "SIN CANASTA";
+      const refKey = wtSafeKey(`${canasta}__${referencia}`);
+      const legacySoKey = wtSafeKey(soDisplay);
+      const soKey = wtSafeKey(`${canasta}__${referencia}__${soDisplay}`);
+      const saved = wtSoMap[soKey] || wtSoMap[legacySoKey] || {};
+      return {
+        idx, canasta, referencia, refKey, soKey, legacySoKey, soDisplay, soitem, sonum,
+        pzs: wtPick(r,"pc","Pc","PcProd","cantidad"),
+        kg: wtPick(r,"kg","Kg","KgProd"),
+        long: matchS.long || "",
+        prensa: matchS.prensa || "",
+        cliente: wtPick(r,"cliente","Cliente"),
+        acabado: wtPick(r,"descrip","Descripcion","descripcion"),
+        prio: wtPick(r,"prio","Prio"),
+        aleacion, temple,
+        wt: saved.wt || ""
+      };
+    }).sort(ordenSalidaWT);
+  }
+
+  function ordenSalidaWT(a,b){
+    const ca = (a.canasta||"").toString(), cb = (b.canasta||"").toString();
+    const ncA = parseFloat(ca), ncB = parseFloat(cb);
+    if(!Number.isNaN(ncA) && !Number.isNaN(ncB) && ncA !== ncB) return ncA - ncB;
+    const c = ca.localeCompare(cb,"es",{numeric:true,sensitivity:"base"});
+    if(c) return c;
+    return (a.referencia||"").localeCompare((b.referencia||""),"es",{numeric:true,sensitivity:"base"});
+  }
+
+  function agruparSalidaWT(items){
+    const canastas = new Map();
+    for(const it of items){
+      if(!canastas.has(it.canasta)) canastas.set(it.canasta, {canasta:it.canasta, refs:new Map(), kg:0, sos:0});
+      const cg = canastas.get(it.canasta);
+      cg.kg += wtNum(it.kg); cg.sos += 1;
+      if(!cg.refs.has(it.referencia)) cg.refs.set(it.referencia, {canasta:it.canasta, referencia:it.referencia, refKey:it.refKey, items:[], kg:0, pzs:0, aleaciones:new Set(), temples:new Set(), clientes:new Set(), acabados:new Set(), prensas:new Set()});
+      const rg = cg.refs.get(it.referencia);
+      rg.items.push(it); rg.kg += wtNum(it.kg); rg.pzs += wtNum(it.pzs);
+      if(it.aleacion) rg.aleaciones.add(it.aleacion); if(it.temple) rg.temples.add(it.temple);
+      if(it.cliente) rg.clientes.add(it.cliente); if(it.acabado) rg.acabados.add(it.acabado); if(it.prensa) rg.prensas.add(it.prensa);
+    }
+    return [...canastas.values()].map(c=>({...c, refs:[...c.refs.values()]}));
+  }
+
+  function filtrarItemsSalidaWT(){
+    const q = (qsid("buscarSalidaWT")?.value || "").toLowerCase().trim();
+    if(!q) return salidaRawWT.slice();
+    return salidaRawWT.filter(it=>[
+      it.canasta,it.referencia,it.soDisplay,it.sonum,it.soitem,it.pzs,it.kg,it.long,it.prensa,it.cliente,it.acabado,it.prio,it.aleacion,it.temple,it.wt
+    ].join(" ").toLowerCase().includes(q));
+  }
+
+  function refWtValor(ref){
+    const savedRef = wtRefMap[ref.refKey] || {};
+    if(savedRef.wtReferencia) return savedRef.wtReferencia;
+    const vals = [...new Set(ref.items.map(i => (wtSoMap[i.soKey]?.wt || i.wt || "").toString().trim()).filter(Boolean))];
+    return vals.length === 1 ? vals[0] : "";
+  }
+  function fotosRef(ref){ const fotos = (wtRefMap[ref.refKey] || {}).fotos || {}; return Object.values(fotos).slice(-12); }
+  function fotoCountRef(ref){ const fotos = (wtRefMap[ref.refKey] || {}).fotos || {}; return Object.keys(fotos).length; }
+
+  function renderSalidaWT(){
+    const list = qsid("listaSalidaWT"); if(!list) return;
+    salidaRawWT = salidaRawWT.map(normalizarItemCargaWT);
+    const filtered = filtrarItemsSalidaWT();
+    salidaGroupedWT = agruparSalidaWT(filtered);
+    const totalRefs = salidaGroupedWT.reduce((s,c)=>s+c.refs.length,0);
+    const totalSo = filtered.length;
+    const totalKg = filtered.reduce((s,i)=>s+wtNum(i.kg),0);
+    qsid("kpiCanastasWT").textContent = salidaGroupedWT.length;
+    qsid("kpiRefsWT").textContent = totalRefs;
+    qsid("kpiSoWT").textContent = totalSo;
+    qsid("kpiKgWT").textContent = totalKg.toLocaleString("es-CO",{maximumFractionDigits:1});
+    if(!filtered.length){ list.innerHTML = `<div class="salida-empty">No hay resultados para la búsqueda o la consulta.</div>`; return; }
+    list.innerHTML = salidaGroupedWT.map(c=>`
+      <div class="canasta-card">
+        <div class="canasta-head">
+          <div>
+            <div class="canasta-title">Canasta ${esc(c.canasta)}</div>
+            <div class="canasta-sub">${c.refs.length} referencias · ${c.sos} SO NUM · ${c.kg.toLocaleString("es-CO",{maximumFractionDigits:1})} kg</div>
+          </div>
+          <span class="badge">Revisar por referencia</span>
+        </div>
+        <div class="ref-list">${c.refs.map(ref=>renderReferenciaWT(ref)).join("")}</div>
+      </div>`).join("");
+  }
+
+  function renderReferenciaWT(ref){
+    const wt = refWtValor(ref);
+    const fcount = fotoCountRef(ref);
+    const thumbs = fotosRef(ref).map(f=>`<img onclick="window.verFotoWT('${esc((f.url||f.dataUrl||'').replace(/'/g,'\\\''))}')" src="${esc(f.url||f.dataUrl||"")}" alt="foto">`).join("");
+    const refDom = wtSafeKey(ref.refKey);
+    return `
+      <div class="ref-card" data-refkey="${esc(ref.refKey)}">
+        <div class="ref-head">
+          <div>
+            <div class="ref-title">Referencia: ${esc(ref.referencia)}</div>
+            <div class="ref-meta">
+              <span class="ref-chip important">ALEACIÓN: ${esc(joinSet(ref.aleaciones))}</span>
+              <span class="ref-chip important">TEMPLE: ${esc(joinSet(ref.temples))}</span>
+              <span class="ref-chip ref-chip-strong">Revisión: Canasta ${esc(ref.canasta)} + Ref ${esc(ref.referencia)}</span><span class="ref-chip">SO NUM: ${ref.items.length}</span>
+              <span class="ref-chip">Pzs: ${ref.pzs.toLocaleString("es-CO",{maximumFractionDigits:0})}</span>
+              <span class="ref-chip">Kg: ${ref.kg.toLocaleString("es-CO",{maximumFractionDigits:1})}</span>
+              <span class="ref-chip">Prensa: ${esc(joinSet(ref.prensas))}</span>
+            </div>
+            <div class="ref-meta">
+              <span class="ref-chip">Cliente: ${esc(joinSet(ref.clientes))}</span>
+              <span class="ref-chip">Acabado: ${esc(joinSet(ref.acabados))}</span>
+            </div>
+          </div>
+          <span class="photo-count">📷 ${fcount} foto(s)</span>
+        </div>
+        <div class="wt-box">
+          <div>
+            <label>WT general de la referencia</label>
+            <input class="wt-input" id="wtref_${refDom}" inputmode="decimal" type="number" step="0.1" placeholder="Ej: 12" value="${esc(wt)}">
+          </div>
+          <button class="btn-mini ok" type="button" onclick="window.guardarWTReferenciaV6('${esc(ref.refKey)}')">Guardar a todos</button>
+        </div>
+        <div class="photo-row">
+          <button class="foto-btn primary" type="button" onclick="window.abrirCamaraReferenciaV8('${esc(ref.refKey)}')">📷 Tomar foto</button>
+          <button class="foto-btn" type="button" onclick="window.cargarFotosReferenciaV8('${esc(ref.refKey)}')">📁 Cargar fotos</button>
+          
+        </div>
+        ${thumbs ? `<div class="thumb-list">${thumbs}</div>` : ""}
+        <div class="ref-actions">
+          <button class="btn-mini" type="button" onclick="window.toggleSoPanelV6('${esc(ref.refKey)}')">Editar por SO NUM</button>
+          <button class="btn-mini warn" type="button" onclick="window.limpiarWTReferenciaV6('${esc(ref.refKey)}')">Limpiar WT referencia</button>
+        </div>
+        <div class="sonum-panel" id="sopanel_${refDom}">
+          ${ref.items.map(it=>`
+            <div class="sonum-row">
+              <div class="sonum-main"><b>${esc(it.soDisplay)}</b><br><small>${esc(it.cliente)} · ${esc(it.acabado)}</small></div>
+              <div><small>Kg/Pzs</small><br>${esc(it.kg)} / ${esc(it.pzs)}</div>
+              <div><input id="wtso_${esc(it.soKey)}" inputmode="decimal" type="number" step="0.1" placeholder="WT" value="${esc((wtSoMap[it.soKey]||{}).wt || it.wt || wt)}" onchange="window.guardarWTSOitemV6('${esc(ref.refKey)}','${esc(it.soKey)}')"></div>
+            </div>`).join("")}
+        </div>
+      </div>`;
+  }
+
+  function findRef(refKey){ for(const c of agruparSalidaWT(salidaRawWT)){ for(const r of c.refs){ if(r.refKey === refKey) return r; } } return null; }
+  window.toggleSoPanelV6 = refKey => { const el = qsid("sopanel_" + wtSafeKey(refKey)); if(el) el.classList.toggle("open"); };
+  window.verFotoWT = src => { if(src) window.open(src, "_blank"); };
+
+  window.guardarWTReferenciaV6 = async function(refKey){
+    const p = salidaParamsWT(); const ref = findRef(refKey); if(!ref) return alert("No encontré la referencia en pantalla.");
+    const wt = (qsid("wtref_" + wtSafeKey(refKey))?.value || "").trim();
+    if(!wt) return alert("Digita la marcación WT de la referencia.");
+    const now = new Date().toISOString(); const updates = {};
+    updates[wtRefPathBase(p.fecha,p.turno,p.horno) + `/${wtSafeKey(refKey)}/wtReferencia`] = wt;
+    updates[wtRefPathBase(p.fecha,p.turno,p.horno) + `/${wtSafeKey(refKey)}/updatedAt`] = now;
+    updates[wtRefPathBase(p.fecha,p.turno,p.horno) + `/${wtSafeKey(refKey)}/canasta`] = ref.canasta;
+    updates[wtRefPathBase(p.fecha,p.turno,p.horno) + `/${wtSafeKey(refKey)}/referencia`] = ref.referencia;
+    for(const it of ref.items){ updates[wtPathBase(p.fecha,p.turno,p.horno) + `/soitems/${it.soKey}`] = {...(wtSoMap[it.soKey]||{}), wt, refKey, soKey:it.soKey, legacySoKey:it.legacySoKey || '', canasta:it.canasta, referencia:it.referencia, soDisplay:it.soDisplay, aleacion:it.aleacion, temple:it.temple, updatedAt:now}; }
+    await db.ref().update(updates);
+    setEstadoWT(`Guardado WT ${wt} para ${ref.items.length} SO NUM de la referencia ${ref.referencia}.`);
+  };
+
+  window.guardarWTSOitemV6 = async function(refKey, soKey){
+    const p = salidaParamsWT(); const ref = findRef(refKey); if(!ref) return;
+    const it = ref.items.find(x=>x.soKey===soKey); if(!it) return;
+    const val = (qsid("wtso_" + soKey)?.value || "").trim();
+    await db.ref(wtPathBase(p.fecha,p.turno,p.horno) + `/soitems/${soKey}`).update({ wt:val, refKey, soKey, legacySoKey:it.legacySoKey || '', canasta:it.canasta, referencia:it.referencia, soDisplay:it.soDisplay, aleacion:it.aleacion, temple:it.temple, updatedAt:new Date().toISOString() });
+    setEstadoWT(`Guardado WT ${val || "(vacío)"} para ${it.soDisplay}.`);
+  };
+
+  window.limpiarWTReferenciaV6 = async function(refKey){
+    const p = salidaParamsWT(); const ref = findRef(refKey); if(!ref) return;
+    if(!confirm("¿Limpiar el WT de esta referencia y sus SO NUM?")) return;
+    const updates = {}; updates[wtRefPathBase(p.fecha,p.turno,p.horno) + `/${wtSafeKey(refKey)}/wtReferencia`] = null;
+    ref.items.forEach(it=>updates[wtPathBase(p.fecha,p.turno,p.horno) + `/soitems/${it.soKey}/wt`] = null);
+    await db.ref().update(updates);
+  };
+
+  async function fileToCompressedBlob(file){
+    const data = await new Promise((res,rej)=>{ const fr = new FileReader(); fr.onload=()=>res(fr.result); fr.onerror=rej; fr.readAsDataURL(file); });
+    const img = new Image(); await new Promise((res,rej)=>{ img.onload=res; img.onerror=rej; img.src=data; });
+    const max = 1280; let w = img.width, h = img.height;
+    if(Math.max(w,h) > max){ const scale = max / Math.max(w,h); w = Math.round(w*scale); h = Math.round(h*scale); }
+    const canvas = document.createElement("canvas"); canvas.width = w; canvas.height = h;
+    canvas.getContext("2d").drawImage(img,0,0,w,h);
+    return await new Promise(res=>canvas.toBlob(res,"image/jpeg",0.7));
+  }
+  async function blobToDataURL(blob){ return await new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=()=>res(fr.result); fr.onerror=rej; fr.readAsDataURL(blob); }); }
+
+  async function subirFotoReferenciaV6(p, ref, file, origen){
+    const fotoKey = db.ref().push().key;
+    const blob = await fileToCompressedBlob(file);
+    const baseMeta = {name:file.name||"foto.jpg", size:file.size||0, origen:origen||"", createdAt:new Date().toISOString(), canasta:ref.canasta, referencia:ref.referencia, refKey:ref.refKey};
+    if(DRIVE_WEBAPP_URL){
+      try{
+        const dataUrl = await blobToDataURL(blob);
+        const resp = await fetch(DRIVE_WEBAPP_URL, {method:"POST", body:JSON.stringify({filename:`${p.fecha}_${p.turno}_${p.horno}_${ref.referencia}_${fotoKey}.jpg`, mimeType:"image/jpeg", dataUrl, meta:baseMeta})});
+        const json = await resp.json();
+        if(json?.url) return {...baseMeta, url:json.url, driveFileId:json.fileId||"", storage:"drive"};
+      }catch(e){ console.warn("Drive no disponible, intento Firebase Storage", e); }
+    }
+    if(storage){
+      try{
+        const storagePath = `websterTempleFotos/${p.fecha}/${p.turno}/${wtSafeKey(p.horno)}/${wtSafeKey(ref.refKey)}/${fotoKey}.jpg`;
+        const snap = await storage.ref(storagePath).put(blob, {contentType:"image/jpeg"});
+        const url = await snap.ref.getDownloadURL();
+        return {...baseMeta, url, storagePath, storage:"firebase_storage"};
+      }catch(e){ console.warn("Firebase Storage no disponible, guardo respaldo en Realtime DB", e); }
+    }
+    return {...baseMeta, dataUrl: await blobToDataURL(blob), storage:"realtime_database_respaldo"};
+  }
+
+  window.guardarFotosReferenciaV6 = async function(refKey, files, origen){
+    const p = salidaParamsWT(); const ref = findRef(refKey); if(!ref) return alert("No encontré la referencia.");
+    const arr = Array.from(files || []); if(!arr.length) return;
+    setEstadoWT(`Guardando ${arr.length} foto(s)...`);
+    const refFotos = db.ref(wtRefPathBase(p.fecha,p.turno,p.horno) + `/${wtSafeKey(refKey)}/fotos`);
+    for(const file of arr){ const foto = await subirFotoReferenciaV6(p, ref, file, origen); await refFotos.push(foto); }
+    setEstadoWT(`Fotos guardadas para referencia ${ref.referencia}.`);
+  };
+
+  function activarRealtimeWT(fecha, turno, horno){
+    if(wtListenerRef) wtListenerRef.off();
+    wtListenerRef = db.ref(wtPathBase(fecha, turno, horno) + "/soitems");
+    wtListenerRef.on("value", snap=>{ wtSoMap = snap.val() || {}; salidaRawWT = salidaRawWT.map(normalizarItemCargaWT); renderSalidaWT(); });
+    db.ref(wtRefPathBase(fecha, turno, horno)).on("value", snap=>{ wtRefMap = snap.val() || {}; renderSalidaWT(); });
+  }
+
+  async function consultarSalidaWT(){
+    const {fecha, turno, horno} = salidaParamsWT();
+    if(!fecha || !turno || !horno) return alert("Selecciona fecha, turno y horno.");
+    setEstadoWT("Cargando información...");
+    await cargarFirebaseWT(fecha, turno, horno);
+    let items = await cargarCargaCompartidaWT(fecha, turno, horno);
+    if(items.length){
+      salidaRawWT = items;
+      renderSalidaWT();
+      setEstadoWT(`Carga tomada desde Firebase: ${items.length} SO NUM. No se llamó API en el celular.`);
+      activarRealtimeWT(fecha, turno, horno);
+      return;
+    }
+    setEstadoWT("Cargando información del horno...");
+    const json = await fetchSalidaApiWT(fecha, turno, horno);
+    items = extraerItemsSalidaWT(json, fecha, turno, horno);
+    salidaRawWT = items;
+    if(items.length) await guardarCargaCompartidaWT(fecha, turno, horno, items, "celular_api");
+    renderSalidaWT();
+    activarRealtimeWT(fecha, turno, horno);
+    setEstadoWT(items.length ? `${items.length} SO NUM cargadas y compartidas en Firebase.` : "No aparecieron registros para esa fecha, turno y horno.");
+  }
+
+  function bindSalidaWT(){
+    qsid("fechaSalidaWT") && (qsid("fechaSalidaWT").value = hoyISO());
+    qsid("btnConsultarSalidaWT")?.addEventListener("click",()=>consultarSalidaWT().catch(e=>{console.error(e); alert("Error consultando salida de hornos: " + (e.message||e)); setEstadoWT("Error en consulta.");}));
+    qsid("buscarSalidaWT")?.addEventListener("input",()=>renderSalidaWT());
+    document.querySelectorAll('.drawer .opt').forEach(opt=>{
+      const go = (ev)=>{ const target=opt.dataset.target; if(target==="salida-hornos"){ ev?.preventDefault?.(); window.irVistaMovilWT("salida-hornos"); } };
+      opt.addEventListener("touchend",go,{passive:false});
+      opt.addEventListener("pointerup",go);
+    });
+  }
+
+  window.addEventListener("error", ev=>{ const el=qsid("estadoSalidaWT"); if(el && qsid("view-salida-hornos") && !qsid("view-salida-hornos").classList.contains("hidden")) el.textContent = "Error en la app: " + (ev.message || "revisa consola"); });
+  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", bindSalidaWT); else bindSalidaWT();
+})();
+
+
+/* ==================== V8 móvil: navegación única + cámara directa sin mensajes */
+(function(){
+  function qsidV8(id){ return document.getElementById(id); }
+  function abrirInputFotoV8(refKey, camara){
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    if(camara) input.setAttribute('capture','environment');
+    if(!camara) input.multiple = true;
+    input.style.position = 'fixed'; input.style.left='-9999px'; input.style.top='-9999px'; input.style.opacity='0';
+    document.body.appendChild(input);
+    input.addEventListener('change', function(){
+      const files = input.files;
+      if(files && files.length && typeof window.guardarFotosReferenciaV6 === 'function'){
+        window.guardarFotosReferenciaV6(refKey, files, camara ? 'camara' : 'galeria');
+      }
+      setTimeout(()=>input.remove(), 1500);
+    }, {once:true});
+    try{
+      if(input.showPicker) input.showPicker();
+      else input.click();
+    }catch(e){ input.click(); }
+  }
+  window.abrirCamaraReferenciaV8 = function(refKey){ abrirInputFotoV8(refKey, true); };
+  window.cargarFotosReferenciaV8 = function(refKey){ abrirInputFotoV8(refKey, false); };
+
+  function instalarNavegacionDrawerV8(){
+    document.querySelectorAll('.drawer .opt').forEach(opt=>{
+      const handler = function(ev){
+        const target = opt.dataset.target;
+        if(!target || typeof window.irVistaMovilWT !== 'function') return;
+        ev.preventDefault(); ev.stopPropagation(); if(ev.stopImmediatePropagation) ev.stopImmediatePropagation();
+        window.irVistaMovilWT(target);
+      };
+      opt.addEventListener('click', handler, true);
+      opt.addEventListener('touchend', handler, {capture:true, passive:false});
+      opt.addEventListener('pointerup', handler, true);
+    });
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', instalarNavegacionDrawerV8);
+  else instalarNavegacionDrawerV8();
+})();
 
 </script>
 </body>
