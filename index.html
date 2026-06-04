@@ -264,6 +264,24 @@
 .cam-video-v11{width:100%;max-height:70vh;background:#000;display:block}
 .cam-actions-v11{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:10px}.cam-actions-v11 button{border-radius:10px;border:1px solid #333;padding:10px;font-weight:800}.cam-capture-v11{background:#00e5ff;color:#000}.cam-switch-v11{background:#1f2937;color:#fff}.cam-close-v11{background:#ef4444;color:#fff}
 
+
+
+/* ===== V14: visor privado de evidencias WT, sin abrir Google Drive ===== */
+.thumb-list{gap:8px!important;align-items:center!important;}
+.thumb-list img,.thumb-wt-box{width:58px;height:58px;object-fit:cover;border-radius:9px;border:1px solid #00e5ff;background:#0b0b0b;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;color:#bff7ff;font-size:11px;font-weight:900;text-align:center;flex:0 0 auto;}
+.thumb-wt-box{padding:4px;line-height:1.05;}
+.wt-photo-modal-v14{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:12000;display:flex;align-items:center;justify-content:center;padding:10px;}
+.wt-photo-viewer-v14{width:min(1180px,98vw);height:94vh;background:#111;border:1px solid #333;border-radius:14px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 18px 55px rgba(0,0,0,.7);}
+.wt-photo-head-v14{height:48px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid #222;padding:0 12px;background:#151515;}
+.wt-photo-title-v14{color:#00e5ff;font-weight:900;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.wt-photo-close-v14{background:#222;color:#fff;border:1px solid #444;border-radius:9px;padding:8px 12px;font-weight:900;}
+.wt-photo-body-v14{flex:1;min-height:0;background:#090909;display:flex;align-items:stretch;justify-content:center;}
+.wt-photo-body-v14 iframe{width:100%;height:100%;border:0;background:#090909;}
+.wt-photo-local-v14{width:100%;height:100%;overflow:auto;padding:14px;box-sizing:border-box;text-align:center;}
+.wt-photo-local-v14 img{max-width:96%;max-height:82vh;display:block;margin:0 auto 14px;border-radius:10px;border:1px solid #333;background:#000;}
+.wt-photo-local-v14 small{display:block;color:#aaa;margin-top:-8px;margin-bottom:14px;}
+.wt-no-share-v14,.wt-no-share-v14 *{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;}
+
 </style>
 </head>
 <body>
@@ -2142,11 +2160,13 @@ async function registrarActividad(accion, resultado, inicio = null, fin = null, 
   function renderReferenciaWT(ref){
     const wt = refWtValor(ref);
     const fcount = fotoCountRef(ref);
-    const thumbs = fotosRef(ref).map(f=>{
+    const thumbs = fotosRef(ref).map((f,i)=>{
       const src = wtFotoSrc(f);
-      const open = wtFotoOpenUrl(f) || src;
-      const openEnc = encodeURIComponent(open);
-      return src ? `<img onclick="window.verFotoWT(decodeURIComponent('${openEnc}'))" src="${esc(src)}" alt="foto">` : "";
+      const id = wtFirstNonEmpty(f.driveFileId, f.fileId, f.id);
+      if(src){
+        return `<img onclick="window.verFotosReferenciaWTV14('${esc(ref.refKey)}', ${i})" src="${esc(src)}" alt="foto" data-drive-id="${esc(id)}" onerror="window.cargarThumbDriveWTV14 && window.cargarThumbDriveWTV14(this)">`;
+      }
+      return `<button class="thumb-wt-box" type="button" onclick="window.verFotosReferenciaWTV14('${esc(ref.refKey)}', ${i})">📷<br>Foto ${i+1}</button>`;
     }).join("");
     const refDom = wtSafeKey(ref.refKey);
     return `
@@ -2200,7 +2220,53 @@ async function registrarActividad(accion, resultado, inicio = null, fin = null, 
 
   function findRef(refKey){ for(const c of agruparSalidaWT(salidaRawWT)){ for(const r of c.refs){ if(r.refKey === refKey) return r; } } return null; }
   window.toggleSoPanelV6 = refKey => { const el = qsid("sopanel_" + wtSafeKey(refKey)); if(el) el.classList.toggle("open"); };
-  window.verFotoWT = src => { if(src) window.open(src, "_blank"); };
+  window.verFotoWT = src => { if(src) window.verFotosReferenciaWTV14(null, 0, [{url:src, driveUrl:src}]); };
+
+  function wtFotoDriveId(f){ return wtFirstNonEmpty(f?.driveFileId, f?.fileId, f?.id); }
+  function wtFotosViewerUrlV14(fotos, startIndex){
+    const ids = (fotos || []).map(wtFotoDriveId).filter(Boolean);
+    if(!DRIVE_WEBAPP_URL || !ids.length) return "";
+    return DRIVE_WEBAPP_URL + "?action=viewer&ids=" + encodeURIComponent(ids.join(",")) + "&start=" + encodeURIComponent(startIndex || 0) + "&title=" + encodeURIComponent("Evidencias WT");
+  }
+  function wtLocalFotosHtmlV14(fotos){
+    const imgs = (fotos || []).map((f,i)=>{
+      const src = wtFirstNonEmpty(f?.dataUrl, f?.thumbDataUrl, f?.url, f?.previewUrl, f?.thumbnailUrl, f?.driveUrl);
+      return src ? `<img src="${esc(src)}" alt="Foto ${i+1}"><small>Foto ${i+1} · ${esc(f?.createdAt || '')}</small>` : '';
+    }).join('');
+    return `<div class="wt-photo-local-v14 wt-no-share-v14" oncontextmenu="return false">${imgs || '<p style="color:#ddd">No hay imagen disponible.</p>'}</div>`;
+  }
+  window.verFotosReferenciaWTV14 = function(refKey, startIndex, fotosDirectas){
+    const fotos = fotosDirectas || (refKey ? fotosRef(findRef(refKey) || {refKey}) : []);
+    if(!fotos || !fotos.length) return alert('No hay fotos para mostrar.');
+    const old = document.getElementById('wtPhotoModalV14'); if(old) old.remove();
+    const modal = document.createElement('div');
+    modal.id = 'wtPhotoModalV14';
+    modal.className = 'wt-photo-modal-v14 wt-no-share-v14';
+    modal.setAttribute('oncontextmenu','return false');
+    const viewerUrl = wtFotosViewerUrlV14(fotos, startIndex || 0);
+    modal.innerHTML = `<div class="wt-photo-viewer-v14"><div class="wt-photo-head-v14"><div class="wt-photo-title-v14">Evidencias WT · ${fotos.length} foto(s)</div><button class="wt-photo-close-v14" type="button">Cerrar</button></div><div class="wt-photo-body-v14">${viewerUrl ? `<iframe sandbox="allow-scripts allow-same-origin" src="${esc(viewerUrl)}"></iframe>` : wtLocalFotosHtmlV14(fotos)}</div></div>`;
+    document.body.appendChild(modal);
+    modal.querySelector('.wt-photo-close-v14').onclick = ()=>modal.remove();
+    modal.addEventListener('click', ev=>{ if(ev.target === modal) modal.remove(); });
+  };
+  window.cargarThumbDriveWTV14 = async function(img){
+    try{
+      const id = img && img.getAttribute('data-drive-id');
+      if(!id || !DRIVE_WEBAPP_URL) throw new Error('Sin ID');
+      img.onerror = null;
+      const resp = await fetch(DRIVE_WEBAPP_URL + '?action=dataUrl&fileId=' + encodeURIComponent(id));
+      const json = await resp.json();
+      if(json && json.ok && json.dataUrl){ img.src = json.dataUrl; }
+      else throw new Error(json.error || 'sin dataUrl');
+    }catch(e){
+      if(img){
+        const btn = document.createElement('button');
+        btn.className = 'thumb-wt-box'; btn.type = 'button'; btn.textContent = '📷 Foto';
+        btn.onclick = img.onclick;
+        img.replaceWith(btn);
+      }
+    }
+  };
 
   window.guardarWTReferenciaV6 = async function(refKey){
     const p = salidaParamsWT(); const ref = findRef(refKey); if(!ref) return alert("No encontré la referencia en pantalla.");
@@ -2255,6 +2321,20 @@ async function registrarActividad(accion, resultado, inicio = null, fin = null, 
     return await new Promise(res=>canvas.toBlob(res,"image/jpeg",0.55));
   }
   async function blobToDataURL(blob){ return await new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=()=>res(fr.result); fr.onerror=rej; fr.readAsDataURL(blob); }); }
+  async function blobToThumbDataURLV14(blob){
+    try{
+      const data = await blobToDataURL(blob);
+      const img = new Image();
+      await new Promise((res,rej)=>{ img.onload=res; img.onerror=rej; img.src=data; });
+      const size = 128;
+      const canvas = document.createElement('canvas'); canvas.width = size; canvas.height = size;
+      const ctx = canvas.getContext('2d'); ctx.fillStyle = '#111'; ctx.fillRect(0,0,size,size);
+      const scale = Math.max(size/img.width, size/img.height);
+      const w = img.width * scale, h = img.height * scale;
+      ctx.drawImage(img, (size-w)/2, (size-h)/2, w, h);
+      return canvas.toDataURL('image/jpeg', 0.45);
+    }catch(e){ return ''; }
+  }
 
   /* V13: Firebase no acepta undefined. Además Drive puede devolver distintos nombres de campo. */
   function wtFirstNonEmpty(...vals){
@@ -2279,6 +2359,8 @@ async function registrarActividad(accion, resultado, inicio = null, fin = null, 
     if(!f) return "";
     const id = wtFirstNonEmpty(f.driveFileId, f.fileId, f.id);
     return wtFirstNonEmpty(
+      f.thumbDataUrl,
+      f.dataUrl,
       f.thumbnailUrl,
       f.previewUrl,
       f.url,
@@ -2313,6 +2395,7 @@ async function registrarActividad(accion, resultado, inicio = null, fin = null, 
       throw new Error("Falta configurar DRIVE_WEBAPP_URL en el HTML móvil. Para no consumir cuota de Realtime Database, V12 no guarda fotos como base64 en Firebase.");
     }
     const dataUrl = await blobToDataURL(blob);
+    const thumbDataUrl = await blobToThumbDataURLV14(blob);
     const filename = `${p.fecha}_${p.turno}_${p.horno}_${ref.canasta}_${ref.referencia}_${fotoKey}.jpg`.replace(/[^a-zA-Z0-9_.-]+/g,"_");
     const payload = {
       action:"upload",
@@ -2337,6 +2420,7 @@ async function registrarActividad(accion, resultado, inicio = null, fin = null, 
       driveUrl,
       previewUrl,
       thumbnailUrl,
+      thumbDataUrl,
       downloadUrl: wtFirstNonEmpty(json.downloadUrl, json.webContentLink),
       driveFileId,
       driveFolderId: wtFirstNonEmpty(json.folderId, json.driveFolderId),
