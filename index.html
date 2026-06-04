@@ -1902,7 +1902,7 @@ async function registrarActividad(accion, resultado, inicio = null, fin = null, 
 /* ==================== V6 Salida de Hornos / WT digitado, fotos y carga compartida ==================== */
 (function(){
   const API_REPORTE_WT = "https://optima.tecnoglass.net/api/alutions_production/reporte-extruccion";
-  const DRIVE_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxYAw2MutjKL7g6k0gRAAfhnYIto12Nuftpn5jLjy3vW7ITrl_OF-nUit6xSA6glVjW/exec"; // V12: pega aquí el URL del Web App de Apps Script para Google Drive. Las fotos NO se guardan en Realtime Database para cuidar la cuota.
+  const DRIVE_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxYAw2MutjKL7g6k0gRAAfhnYIto12Nuftpn5jLjy3vW7ITrl_OF-nUit6xSA6glVjW/exec"; // V13: pega aquí el URL del Web App de Apps Script para Google Drive. Las fotos NO se guardan en Realtime Database para cuidar la cuota.
   const storage = (firebase.storage ? firebase.storage() : null);
   let salidaRawWT = [];
   let salidaGroupedWT = [];
@@ -2142,7 +2142,12 @@ async function registrarActividad(accion, resultado, inicio = null, fin = null, 
   function renderReferenciaWT(ref){
     const wt = refWtValor(ref);
     const fcount = fotoCountRef(ref);
-    const thumbs = fotosRef(ref).map(f=>`<img onclick="window.verFotoWT('${esc((f.url||f.dataUrl||'').replace(/'/g,'\\\''))}')" src="${esc(f.url||f.dataUrl||"")}" alt="foto">`).join("");
+    const thumbs = fotosRef(ref).map(f=>{
+      const src = wtFotoSrc(f);
+      const open = wtFotoOpenUrl(f) || src;
+      const openEnc = encodeURIComponent(open);
+      return src ? `<img onclick="window.verFotoWT(decodeURIComponent('${openEnc}'))" src="${esc(src)}" alt="foto">` : "";
+    }).join("");
     const refDom = wtSafeKey(ref.refKey);
     return `
       <div class="ref-card" data-refkey="${esc(ref.refKey)}">
@@ -2251,6 +2256,55 @@ async function registrarActividad(accion, resultado, inicio = null, fin = null, 
   }
   async function blobToDataURL(blob){ return await new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=()=>res(fr.result); fr.onerror=rej; fr.readAsDataURL(blob); }); }
 
+  /* V13: Firebase no acepta undefined. Además Drive puede devolver distintos nombres de campo. */
+  function wtFirstNonEmpty(...vals){
+    for(const v of vals){
+      if(v !== undefined && v !== null && String(v).trim() !== "") return v;
+    }
+    return "";
+  }
+  function wtCleanFirebaseValue(obj){
+    if(Array.isArray(obj)) return obj.map(wtCleanFirebaseValue).filter(v=>v !== undefined);
+    if(obj && typeof obj === "object"){
+      const out = {};
+      Object.keys(obj).forEach(k=>{
+        const v = wtCleanFirebaseValue(obj[k]);
+        if(v !== undefined) out[k] = v;
+      });
+      return out;
+    }
+    return obj === undefined ? undefined : obj;
+  }
+  function wtFotoSrc(f){
+    if(!f) return "";
+    const id = wtFirstNonEmpty(f.driveFileId, f.fileId, f.id);
+    return wtFirstNonEmpty(
+      f.thumbnailUrl,
+      f.previewUrl,
+      f.url,
+      f.driveUrl,
+      f.webViewLink,
+      f.webContentLink,
+      f.downloadUrl,
+      f.dataUrl,
+      id ? ("https://drive.google.com/thumbnail?id=" + encodeURIComponent(id) + "&sz=w1200") : ""
+    );
+  }
+  function wtFotoOpenUrl(f){
+    if(!f) return "";
+    const id = wtFirstNonEmpty(f.driveFileId, f.fileId, f.id);
+    return wtFirstNonEmpty(
+      f.driveUrl,
+      f.url,
+      f.previewUrl,
+      f.webViewLink,
+      f.downloadUrl,
+      f.thumbnailUrl,
+      f.dataUrl,
+      id ? ("https://drive.google.com/file/d/" + encodeURIComponent(id) + "/view") : ""
+    );
+  }
+
   async function subirFotoReferenciaV6(p, ref, file, origen){
     const fotoKey = db.ref().push().key;
     const blob = await fileToCompressedBlob(file);
@@ -2273,7 +2327,22 @@ async function registrarActividad(accion, resultado, inicio = null, fin = null, 
     let json = {};
     try{ json = JSON.parse(txtResp); }catch(e){ throw new Error("Drive no respondió JSON válido. Revisa la implementación del Apps Script."); }
     if(!json.ok) throw new Error(json.error || "Drive no guardó la foto.");
-    return {...baseMeta, url:json.previewUrl || json.thumbnailUrl || json.url, driveUrl:json.url || "", previewUrl:json.previewUrl || "", thumbnailUrl:json.thumbnailUrl || "", downloadUrl:json.downloadUrl || "", driveFileId:json.fileId||"", driveFolderId:json.folderId||"", storage:"google_drive"};
+    const driveFileId = wtFirstNonEmpty(json.fileId, json.id, json.driveFileId);
+    const driveUrl = wtFirstNonEmpty(json.driveUrl, json.url, json.webViewLink, driveFileId ? ("https://drive.google.com/file/d/" + driveFileId + "/view") : "");
+    const thumbnailUrl = wtFirstNonEmpty(json.thumbnailUrl, driveFileId ? ("https://drive.google.com/thumbnail?id=" + driveFileId + "&sz=w1200") : "");
+    const previewUrl = wtFirstNonEmpty(json.previewUrl, json.webContentLink, json.downloadUrl, json.url, thumbnailUrl, driveUrl);
+    const fotoObj = {
+      ...baseMeta,
+      url: wtFirstNonEmpty(previewUrl, thumbnailUrl, driveUrl),
+      driveUrl,
+      previewUrl,
+      thumbnailUrl,
+      downloadUrl: wtFirstNonEmpty(json.downloadUrl, json.webContentLink),
+      driveFileId,
+      driveFolderId: wtFirstNonEmpty(json.folderId, json.driveFolderId),
+      storage:"google_drive"
+    };
+    return wtCleanFirebaseValue(fotoObj);
   }
 
   window.guardarFotosReferenciaV6 = async function(refKey, files, origen){
@@ -2284,14 +2353,22 @@ async function registrarActividad(accion, resultado, inicio = null, fin = null, 
     let ok = 0, fail = 0;
     for(const file of arr){
       try{
-        const foto = await subirFotoReferenciaV6(p, ref, file, origen);
-        await refFotos.push(foto); ok++;
+        const foto = wtCleanFirebaseValue(await subirFotoReferenciaV6(p, ref, file, origen));
+        const newFotoRef = refFotos.push();
+        await newFotoRef.set(foto);
+        // Mostrar inmediatamente en el celular sin esperar el listener.
+        const keyRef = wtSafeKey(refKey);
+        wtRefMap[keyRef] = wtRefMap[keyRef] || {canasta:ref.canasta, referencia:ref.referencia};
+        wtRefMap[keyRef].fotos = wtRefMap[keyRef].fotos || {};
+        wtRefMap[keyRef].fotos[newFotoRef.key] = foto;
+        ok++;
       }catch(e){
         console.error("No se pudo guardar foto", e); fail++;
         alert("No se pudo guardar una foto: " + (e.message || e));
       }
     }
     await db.ref(wtRefPathBase(p.fecha,p.turno,p.horno) + `/${wtSafeKey(refKey)}`).update({canasta:ref.canasta, referencia:ref.referencia, updatedAt:new Date().toISOString()});
+    renderSalidaWT();
     setEstadoWT(`Fotos guardadas en Drive: ${ok}. Errores: ${fail}.`);
   };
 
