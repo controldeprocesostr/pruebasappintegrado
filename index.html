@@ -247,6 +247,23 @@
 .obs-so{grid-column:1 / -1;margin-top:6px}.obs-so textarea{width:100%;min-height:58px;border-radius:10px;border:1px solid #3b3b3b;background:#fff;color:#000;padding:8px;font-size:14px;resize:vertical}.obs-so small{display:block;color:#b8c7cf;margin-bottom:4px;font-weight:700}
 .cam-modal-v11{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:3000;display:flex;align-items:center;justify-content:center;padding:12px}.cam-box-v11{width:min(720px,96vw);background:#111;border:1px solid #333;border-radius:14px;padding:12px;color:#fff}.cam-video-v11{width:100%;max-height:70vh;background:#000;border-radius:12px;object-fit:cover}.cam-actions-v11{display:flex;gap:8px;margin-top:10px}.cam-actions-v11 button{flex:1;border:0;border-radius:10px;padding:12px;font-weight:900}.cam-capture-v11{background:#00e5ff;color:#000}.cam-close-v11{background:#222;color:#fff}
 
+
+/* ==================== V12: canastas más visibles + estado Drive ==================== */
+.canasta-card{border-width:4px!important;}
+.canasta-card:nth-child(6n+1){border-color:#00e5ff!important;box-shadow:0 0 0 1px rgba(0,229,255,.25),0 4px 14px rgba(0,0,0,.45)!important}
+.canasta-card:nth-child(6n+2){border-color:#22c55e!important;box-shadow:0 0 0 1px rgba(34,197,94,.22),0 4px 14px rgba(0,0,0,.45)!important}
+.canasta-card:nth-child(6n+3){border-color:#f59e0b!important;box-shadow:0 0 0 1px rgba(245,158,11,.22),0 4px 14px rgba(0,0,0,.45)!important}
+.canasta-card:nth-child(6n+4){border-color:#a78bfa!important;box-shadow:0 0 0 1px rgba(167,139,250,.22),0 4px 14px rgba(0,0,0,.45)!important}
+.canasta-card:nth-child(6n+5){border-color:#fb7185!important;box-shadow:0 0 0 1px rgba(251,113,133,.22),0 4px 14px rgba(0,0,0,.45)!important}
+.canasta-card:nth-child(6n){border-color:#38bdf8!important;box-shadow:0 0 0 1px rgba(56,189,248,.22),0 4px 14px rgba(0,0,0,.45)!important}
+.canasta-head{border-bottom:2px solid rgba(255,255,255,.18)!important;}
+.ref-card{border-left:5px solid rgba(0,229,255,.8)!important;}
+.drive-warning{background:#2a1700;border:1px solid #f59e0b;color:#ffedd5;border-radius:10px;padding:8px 10px;font-size:12px;margin-top:8px;}
+.cam-modal-v11{position:fixed;inset:0;background:rgba(0,0,0,.86);z-index:9999;display:flex;align-items:center;justify-content:center;padding:10px}
+.cam-box-v11{background:#111;border:1px solid #444;border-radius:14px;overflow:hidden;max-width:96vw;width:520px;color:#fff}
+.cam-video-v11{width:100%;max-height:70vh;background:#000;display:block}
+.cam-actions-v11{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:10px}.cam-actions-v11 button{border-radius:10px;border:1px solid #333;padding:10px;font-weight:800}.cam-capture-v11{background:#00e5ff;color:#000}.cam-switch-v11{background:#1f2937;color:#fff}.cam-close-v11{background:#ef4444;color:#fff}
+
 </style>
 </head>
 <body>
@@ -1885,7 +1902,7 @@ async function registrarActividad(accion, resultado, inicio = null, fin = null, 
 /* ==================== V6 Salida de Hornos / WT digitado, fotos y carga compartida ==================== */
 (function(){
   const API_REPORTE_WT = "https://optima.tecnoglass.net/api/alutions_production/reporte-extruccion";
-  const DRIVE_WEBAPP_URL = ""; // opcional: pega aquí el Web App URL de Apps Script si quieres que las fotos vayan a Drive.
+  const DRIVE_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxYAw2MutjKL7g6k0gRAAfhnYIto12Nuftpn5jLjy3vW7ITrl_OF-nUit6xSA6glVjW/exec"; // V12: pega aquí el URL del Web App de Apps Script para Google Drive. Las fotos NO se guardan en Realtime Database para cuidar la cuota.
   const storage = (firebase.storage ? firebase.storage() : null);
   let salidaRawWT = [];
   let salidaGroupedWT = [];
@@ -2224,44 +2241,58 @@ async function registrarActividad(accion, resultado, inicio = null, fin = null, 
   async function fileToCompressedBlob(file){
     const data = await new Promise((res,rej)=>{ const fr = new FileReader(); fr.onload=()=>res(fr.result); fr.onerror=rej; fr.readAsDataURL(file); });
     const img = new Image(); await new Promise((res,rej)=>{ img.onload=res; img.onerror=rej; img.src=data; });
-    const max = 1280; let w = img.width, h = img.height;
+    const max = 900; let w = img.width, h = img.height;
     if(Math.max(w,h) > max){ const scale = max / Math.max(w,h); w = Math.round(w*scale); h = Math.round(h*scale); }
     const canvas = document.createElement("canvas"); canvas.width = w; canvas.height = h;
-    canvas.getContext("2d").drawImage(img,0,0,w,h);
-    return await new Promise(res=>canvas.toBlob(res,"image/jpeg",0.7));
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#fff"; ctx.fillRect(0,0,w,h);
+    ctx.drawImage(img,0,0,w,h);
+    return await new Promise(res=>canvas.toBlob(res,"image/jpeg",0.55));
   }
   async function blobToDataURL(blob){ return await new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=()=>res(fr.result); fr.onerror=rej; fr.readAsDataURL(blob); }); }
 
   async function subirFotoReferenciaV6(p, ref, file, origen){
     const fotoKey = db.ref().push().key;
     const blob = await fileToCompressedBlob(file);
-    const baseMeta = {name:file.name||"foto.jpg", size:file.size||0, origen:origen||"", createdAt:new Date().toISOString(), canasta:ref.canasta, referencia:ref.referencia, refKey:ref.refKey};
-    if(DRIVE_WEBAPP_URL){
-      try{
-        const dataUrl = await blobToDataURL(blob);
-        const resp = await fetch(DRIVE_WEBAPP_URL, {method:"POST", body:JSON.stringify({filename:`${p.fecha}_${p.turno}_${p.horno}_${ref.referencia}_${fotoKey}.jpg`, mimeType:"image/jpeg", dataUrl, meta:baseMeta})});
-        const json = await resp.json();
-        if(json?.url) return {...baseMeta, url:json.url, driveFileId:json.fileId||"", storage:"drive"};
-      }catch(e){ console.warn("Drive no disponible, intento Firebase Storage", e); }
+    const baseMeta = {name:file.name||"foto.jpg", originalSize:file.size||0, compressedSize:blob.size||0, origen:origen||"", createdAt:new Date().toISOString(), canasta:ref.canasta, referencia:ref.referencia, refKey:ref.refKey};
+    if(!DRIVE_WEBAPP_URL){
+      throw new Error("Falta configurar DRIVE_WEBAPP_URL en el HTML móvil. Para no consumir cuota de Realtime Database, V12 no guarda fotos como base64 en Firebase.");
     }
-    if(storage){
-      try{
-        const storagePath = `websterTempleFotos/${p.fecha}/${p.turno}/${wtSafeKey(p.horno)}/${wtSafeKey(ref.refKey)}/${fotoKey}.jpg`;
-        const snap = await storage.ref(storagePath).put(blob, {contentType:"image/jpeg"});
-        const url = await snap.ref.getDownloadURL();
-        return {...baseMeta, url, storagePath, storage:"firebase_storage"};
-      }catch(e){ console.warn("Firebase Storage no disponible, guardo respaldo en Realtime DB", e); }
-    }
-    return {...baseMeta, dataUrl: await blobToDataURL(blob), storage:"realtime_database_respaldo"};
+    const dataUrl = await blobToDataURL(blob);
+    const filename = `${p.fecha}_${p.turno}_${p.horno}_${ref.canasta}_${ref.referencia}_${fotoKey}.jpg`.replace(/[^a-zA-Z0-9_.-]+/g,"_");
+    const payload = {
+      action:"upload",
+      filename,
+      mimeType:"image/jpeg",
+      dataUrl,
+      folderPath:["Evidencias WT", p.fecha, `Turno ${p.turno}`, p.horno, `Canasta ${ref.canasta}`, `Referencia ${ref.referencia}`],
+      meta:baseMeta
+    };
+    const resp = await fetch(DRIVE_WEBAPP_URL, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify(payload)});
+    const txtResp = await resp.text();
+    let json = {};
+    try{ json = JSON.parse(txtResp); }catch(e){ throw new Error("Drive no respondió JSON válido. Revisa la implementación del Apps Script."); }
+    if(!json.ok) throw new Error(json.error || "Drive no guardó la foto.");
+    return {...baseMeta, url:json.previewUrl || json.thumbnailUrl || json.url, driveUrl:json.url || "", previewUrl:json.previewUrl || "", thumbnailUrl:json.thumbnailUrl || "", downloadUrl:json.downloadUrl || "", driveFileId:json.fileId||"", driveFolderId:json.folderId||"", storage:"google_drive"};
   }
 
   window.guardarFotosReferenciaV6 = async function(refKey, files, origen){
     const p = salidaParamsWT(); const ref = findRef(refKey); if(!ref) return alert("No encontré la referencia.");
     const arr = Array.from(files || []); if(!arr.length) return;
-    setEstadoWT(`Guardando ${arr.length} foto(s)...`);
+    setEstadoWT(`Guardando ${arr.length} foto(s) en Google Drive...`);
     const refFotos = db.ref(wtRefPathBase(p.fecha,p.turno,p.horno) + `/${wtSafeKey(refKey)}/fotos`);
-    for(const file of arr){ const foto = await subirFotoReferenciaV6(p, ref, file, origen); await refFotos.push(foto); }
-    setEstadoWT(`Fotos guardadas para referencia ${ref.referencia}.`);
+    let ok = 0, fail = 0;
+    for(const file of arr){
+      try{
+        const foto = await subirFotoReferenciaV6(p, ref, file, origen);
+        await refFotos.push(foto); ok++;
+      }catch(e){
+        console.error("No se pudo guardar foto", e); fail++;
+        alert("No se pudo guardar una foto: " + (e.message || e));
+      }
+    }
+    await db.ref(wtRefPathBase(p.fecha,p.turno,p.horno) + `/${wtSafeKey(refKey)}`).update({canasta:ref.canasta, referencia:ref.referencia, updatedAt:new Date().toISOString()});
+    setEstadoWT(`Fotos guardadas en Drive: ${ok}. Errores: ${fail}.`);
   };
 
   function activarRealtimeWT(fecha, turno, horno){
@@ -2355,37 +2386,62 @@ async function registrarActividad(accion, resultado, inicio = null, fin = null, 
 
 
 
-/* ==================== V11: cámara trasera directa y fallback a selector ==================== */
+/* ==================== V12: cámara trasera preferida con selector de cámara y Drive ==================== */
 (function(){
-  function fallbackInputV11(refKey){
+  let currentStreamV12 = null;
+  async function stopStream(){ try{ currentStreamV12 && currentStreamV12.getTracks().forEach(t=>t.stop()); }catch(e){} currentStreamV12=null; }
+  function fallbackInputV12(refKey){
     const input=document.createElement('input'); input.type='file'; input.accept='image/*'; input.setAttribute('capture','environment');
     input.style.position='fixed'; input.style.left='-9999px'; document.body.appendChild(input);
-    input.addEventListener('change',()=>{ if(input.files&&input.files.length&&typeof window.guardarFotosReferenciaV6==='function') window.guardarFotosReferenciaV6(refKey,input.files,'camara_trasera_fallback'); setTimeout(()=>input.remove(),1000); },{once:true});
+    input.addEventListener('change',()=>{ if(input.files&&input.files.length&&typeof window.guardarFotosReferenciaV6==='function') window.guardarFotosReferenciaV6(refKey,input.files,'camara_selector_environment'); setTimeout(()=>input.remove(),1000); },{once:true});
     try{ input.showPicker ? input.showPicker() : input.click(); }catch(e){ input.click(); }
   }
+  async function abrirStreamPreferido(deviceId){
+    await stopStream();
+    const constraints = deviceId ? {video:{deviceId:{exact:deviceId}, width:{ideal:1280}, height:{ideal:720}}, audio:false} : {video:{facingMode:{ideal:'environment'}, width:{ideal:1280}, height:{ideal:720}}, audio:false};
+    currentStreamV12 = await navigator.mediaDevices.getUserMedia(constraints);
+    return currentStreamV12;
+  }
+  async function listarCamaras(){
+    try{ return (await navigator.mediaDevices.enumerateDevices()).filter(d=>d.kind==='videoinput'); }catch(e){ return []; }
+  }
+  function esTrasera(label){ return /back|rear|environment|trasera|posterior|atrás|atras/i.test(label||''); }
   window.abrirCamaraReferenciaV8 = async function(refKey){
-    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){ fallbackInputV11(refKey); return; }
-    let stream=null;
-    try{ stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:{exact:'environment'}}, audio:false}); }
-    catch(e1){ try{ stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}, audio:false}); } catch(e2){ console.warn('No abrió cámara trasera, fallback selector', e2); fallbackInputV11(refKey); return; } }
-    const modal=document.createElement('div'); modal.className='cam-modal-v11';
-    modal.innerHTML=`<div class="cam-box-v11"><video class="cam-video-v11" autoplay playsinline></video><div class="cam-actions-v11"><button class="cam-capture-v11" type="button">📷 Capturar foto</button><button class="cam-close-v11" type="button">Cerrar</button></div></div>`;
-    document.body.appendChild(modal);
-    const video=modal.querySelector('video'); video.srcObject=stream;
-    const stop=()=>{ try{ stream.getTracks().forEach(t=>t.stop()); }catch(e){} modal.remove(); };
-    modal.querySelector('.cam-close-v11').onclick=stop;
-    modal.querySelector('.cam-capture-v11').onclick=async()=>{
-      try{
-        const canvas=document.createElement('canvas'); canvas.width=video.videoWidth||1280; canvas.height=video.videoHeight||720;
-        canvas.getContext('2d').drawImage(video,0,0,canvas.width,canvas.height);
-        canvas.toBlob(blob=>{
-          if(!blob) return;
-          const file=new File([blob],`WT_${Date.now()}.jpg`,{type:'image/jpeg'});
-          if(typeof window.guardarFotosReferenciaV6==='function') window.guardarFotosReferenciaV6(refKey,[file],'camara_trasera_directa');
-          stop();
-        },'image/jpeg',0.82);
-      }catch(e){ console.error(e); stop(); fallbackInputV11(refKey); }
-    };
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){ fallbackInputV12(refKey); return; }
+    let modal=null;
+    try{
+      let stream = await abrirStreamPreferido(null);
+      let cams = await listarCamaras();
+      const back = cams.find(c=>esTrasera(c.label)) || cams[cams.length-1];
+      if(back && !esTrasera(stream.getVideoTracks()[0]?.label||'')){
+        try{ stream = await abrirStreamPreferido(back.deviceId); }catch(e){}
+      }
+      modal=document.createElement('div'); modal.className='cam-modal-v11';
+      modal.innerHTML=`<div class="cam-box-v11"><video class="cam-video-v11" autoplay playsinline></video><div class="cam-actions-v11"><button class="cam-capture-v11" type="button">📷 Capturar</button><button class="cam-switch-v11" type="button">Cambiar cámara</button><button class="cam-close-v11" type="button">Cerrar</button></div></div>`;
+      document.body.appendChild(modal);
+      const video=modal.querySelector('video'); video.srcObject=currentStreamV12;
+      const stop=async()=>{ await stopStream(); modal.remove(); };
+      modal.querySelector('.cam-close-v11').onclick=stop;
+      modal.querySelector('.cam-switch-v11').onclick=async()=>{
+        cams = await listarCamaras(); if(!cams.length) return;
+        const currentLabel = currentStreamV12?.getVideoTracks()?.[0]?.label || '';
+        let idx = cams.findIndex(c=>c.label===currentLabel);
+        const next = cams[(idx+1+cams.length)%cams.length] || cams[0];
+        const s = await abrirStreamPreferido(next.deviceId); video.srcObject=s;
+      };
+      modal.querySelector('.cam-capture-v11').onclick=async()=>{
+        try{
+          const canvas=document.createElement('canvas'); canvas.width=video.videoWidth||1280; canvas.height=video.videoHeight||720;
+          canvas.getContext('2d').drawImage(video,0,0,canvas.width,canvas.height);
+          canvas.toBlob(blob=>{
+            if(!blob) return;
+            const file=new File([blob],`WT_${Date.now()}.jpg`,{type:'image/jpeg'});
+            if(typeof window.guardarFotosReferenciaV6==='function') window.guardarFotosReferenciaV6(refKey,[file],'camara_trasera_directa');
+            stop();
+          },'image/jpeg',0.72);
+        }catch(e){ console.error(e); stop(); fallbackInputV12(refKey); }
+      };
+    }catch(e){ console.warn('No abrió cámara trasera, fallback selector', e); try{ modal&&modal.remove(); }catch(_){} await stopStream(); fallbackInputV12(refKey); }
   };
 })();
 
