@@ -239,7 +239,15 @@
 }
 
 
-  </style>
+  
+/* ===== V11: canastas resaltadas, observaciones por orden y cámara trasera directa ===== */
+.canasta-card{border:2px solid #144b56!important;border-left-width:10px!important;box-shadow:0 0 0 1px rgba(0,229,255,.12),0 6px 16px rgba(0,0,0,.35)!important;}
+.canasta-card:nth-child(8n+1){border-color:#00e5ff!important}.canasta-card:nth-child(8n+2){border-color:#10b981!important}.canasta-card:nth-child(8n+3){border-color:#f59e0b!important}.canasta-card:nth-child(8n+4){border-color:#8b5cf6!important}.canasta-card:nth-child(8n+5){border-color:#ef4444!important}.canasta-card:nth-child(8n+6){border-color:#22c55e!important}.canasta-card:nth-child(8n+7){border-color:#38bdf8!important}.canasta-card:nth-child(8n+8){border-color:#fb7185!important}
+.canasta-title{font-size:18px!important;letter-spacing:.2px}.canasta-head{border-bottom:1px solid rgba(255,255,255,.10);padding-bottom:8px;margin-bottom:8px}
+.obs-so{grid-column:1 / -1;margin-top:6px}.obs-so textarea{width:100%;min-height:58px;border-radius:10px;border:1px solid #3b3b3b;background:#fff;color:#000;padding:8px;font-size:14px;resize:vertical}.obs-so small{display:block;color:#b8c7cf;margin-bottom:4px;font-weight:700}
+.cam-modal-v11{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:3000;display:flex;align-items:center;justify-content:center;padding:12px}.cam-box-v11{width:min(720px,96vw);background:#111;border:1px solid #333;border-radius:14px;padding:12px;color:#fff}.cam-video-v11{width:100%;max-height:70vh;background:#000;border-radius:12px;object-fit:cover}.cam-actions-v11{display:flex;gap:8px;margin-top:10px}.cam-actions-v11 button{flex:1;border:0;border-radius:10px;padding:12px;font-weight:900}.cam-capture-v11{background:#00e5ff;color:#000}.cam-close-v11{background:#222;color:#fff}
+
+</style>
 </head>
 <body>
   <div class="wrap">
@@ -461,8 +469,8 @@
             <div>
               <label for="turnoSalidaWT">Turno</label>
               <select id="turnoSalidaWT">
-                <option value="1">Turno 1</option>
-                <option value="2">Turno 2</option>
+                <option value="1">Turno 1 día</option>
+                <option value="2">Turno 2 noche</option>
                 <option value="3">Turno 3</option>
               </select>
             </div>
@@ -1963,7 +1971,7 @@ async function registrarActividad(accion, resultado, inicio = null, fin = null, 
     const legacySoKey = wtSafeKey(soDisplay);
     const soKey = wtSafeKey(`${canasta}__${referencia}__${soDisplay}`);
     const saved = wtSoMap[soKey] || wtSoMap[legacySoKey] || {};
-    return {...it, canasta, referencia, refKey, soKey, legacySoKey, soDisplay, wt: saved.wt || it.wt || ""};
+    return {...it, canasta, referencia, refKey, soKey, legacySoKey, soDisplay, wt: saved.wt || it.wt || "", observacion: saved.observacion || it.observacion || ""};
   }
 
   async function cargarCargaCompartidaWT(fecha, turno, horno){
@@ -1979,7 +1987,7 @@ async function registrarActividad(accion, resultado, inicio = null, fin = null, 
       soDisplay: it.soDisplay, soitem: it.soitem, sonum: it.sonum,
       pzs: it.pzs, kg: it.kg, long: it.long, prensa: it.prensa,
       cliente: it.cliente, acabado: it.acabado, prio: it.prio,
-      aleacion: it.aleacion, temple: it.temple
+      aleacion: it.aleacion, temple: it.temple, observacion: it.observacion || ""
     }));
   }
 
@@ -2075,7 +2083,7 @@ async function registrarActividad(accion, resultado, inicio = null, fin = null, 
     const q = (qsid("buscarSalidaWT")?.value || "").toLowerCase().trim();
     if(!q) return salidaRawWT.slice();
     return salidaRawWT.filter(it=>[
-      it.canasta,it.referencia,it.soDisplay,it.sonum,it.soitem,it.pzs,it.kg,it.long,it.prensa,it.cliente,it.acabado,it.prio,it.aleacion,it.temple,it.wt
+      it.canasta,it.referencia,it.soDisplay,it.sonum,it.soitem,it.pzs,it.kg,it.long,it.prensa,it.cliente,it.acabado,it.prio,it.aleacion,it.temple,it.wt,it.observacion,(wtSoMap[it.soKey]||{}).observacion
     ].join(" ").toLowerCase().includes(q));
   }
 
@@ -2162,6 +2170,7 @@ async function registrarActividad(accion, resultado, inicio = null, fin = null, 
               <div class="sonum-main"><b>${esc(it.soDisplay)}</b><br><small>${esc(it.cliente)} · ${esc(it.acabado)}</small></div>
               <div><small>Kg/Pzs</small><br>${esc(it.kg)} / ${esc(it.pzs)}</div>
               <div><input id="wtso_${esc(it.soKey)}" inputmode="decimal" type="number" step="0.1" placeholder="WT" value="${esc((wtSoMap[it.soKey]||{}).wt || it.wt || wt)}" onchange="window.guardarWTSOitemV6('${esc(ref.refKey)}','${esc(it.soKey)}')"></div>
+              <div class="obs-so"><small>Observación / Reproceso de esta SO NUM</small><textarea id="obsso_${esc(wtSafeKey(it.soKey))}" placeholder="Ej: 5 piezas marcaron WT bajo, separar para reproceso..." onblur="window.guardarObservacionSOitemV11('${esc(ref.refKey)}','${esc(it.soKey)}')">${esc((wtSoMap[it.soKey]||{}).observacion || it.observacion || '')}</textarea></div>
             </div>`).join("")}
         </div>
       </div>`;
@@ -2189,8 +2198,19 @@ async function registrarActividad(accion, resultado, inicio = null, fin = null, 
     const p = salidaParamsWT(); const ref = findRef(refKey); if(!ref) return;
     const it = ref.items.find(x=>x.soKey===soKey); if(!it) return;
     const val = (qsid("wtso_" + soKey)?.value || "").trim();
-    await db.ref(wtPathBase(p.fecha,p.turno,p.horno) + `/soitems/${soKey}`).update({ wt:val, refKey, soKey, legacySoKey:it.legacySoKey || '', canasta:it.canasta, referencia:it.referencia, soDisplay:it.soDisplay, aleacion:it.aleacion, temple:it.temple, updatedAt:new Date().toISOString() });
+    const observacion = (qsid("obsso_" + wtSafeKey(soKey))?.value || "").trim();
+    await db.ref(wtPathBase(p.fecha,p.turno,p.horno) + `/soitems/${soKey}`).update({ wt:val, observacion, refKey, soKey, legacySoKey:it.legacySoKey || '', canasta:it.canasta, referencia:it.referencia, soDisplay:it.soDisplay, aleacion:it.aleacion, temple:it.temple, updatedAt:new Date().toISOString() });
     setEstadoWT(`Guardado WT ${val || "(vacío)"} para ${it.soDisplay}.`);
+  };
+
+
+  window.guardarObservacionSOitemV11 = async function(refKey, soKey){
+    const p = salidaParamsWT(); const ref = findRef(refKey); if(!ref) return;
+    const it = ref.items.find(x=>x.soKey===soKey); if(!it) return;
+    const observacion = (qsid("obsso_" + wtSafeKey(soKey))?.value || "").trim();
+    const val = (qsid("wtso_" + soKey)?.value || (wtSoMap[soKey]||{}).wt || it.wt || "").trim();
+    await db.ref(wtPathBase(p.fecha,p.turno,p.horno) + `/soitems/${soKey}`).update({ wt:val, observacion, refKey, soKey, legacySoKey:it.legacySoKey || '', canasta:it.canasta, referencia:it.referencia, soDisplay:it.soDisplay, aleacion:it.aleacion, temple:it.temple, updatedAt:new Date().toISOString() });
+    setEstadoWT(`Observación guardada para ${it.soDisplay}.`);
   };
 
   window.limpiarWTReferenciaV6 = async function(refKey){
@@ -2331,6 +2351,42 @@ async function registrarActividad(accion, resultado, inicio = null, fin = null, 
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', instalarNavegacionDrawerV8);
   else instalarNavegacionDrawerV8();
+})();
+
+
+
+/* ==================== V11: cámara trasera directa y fallback a selector ==================== */
+(function(){
+  function fallbackInputV11(refKey){
+    const input=document.createElement('input'); input.type='file'; input.accept='image/*'; input.setAttribute('capture','environment');
+    input.style.position='fixed'; input.style.left='-9999px'; document.body.appendChild(input);
+    input.addEventListener('change',()=>{ if(input.files&&input.files.length&&typeof window.guardarFotosReferenciaV6==='function') window.guardarFotosReferenciaV6(refKey,input.files,'camara_trasera_fallback'); setTimeout(()=>input.remove(),1000); },{once:true});
+    try{ input.showPicker ? input.showPicker() : input.click(); }catch(e){ input.click(); }
+  }
+  window.abrirCamaraReferenciaV8 = async function(refKey){
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){ fallbackInputV11(refKey); return; }
+    let stream=null;
+    try{ stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:{exact:'environment'}}, audio:false}); }
+    catch(e1){ try{ stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}, audio:false}); } catch(e2){ console.warn('No abrió cámara trasera, fallback selector', e2); fallbackInputV11(refKey); return; } }
+    const modal=document.createElement('div'); modal.className='cam-modal-v11';
+    modal.innerHTML=`<div class="cam-box-v11"><video class="cam-video-v11" autoplay playsinline></video><div class="cam-actions-v11"><button class="cam-capture-v11" type="button">📷 Capturar foto</button><button class="cam-close-v11" type="button">Cerrar</button></div></div>`;
+    document.body.appendChild(modal);
+    const video=modal.querySelector('video'); video.srcObject=stream;
+    const stop=()=>{ try{ stream.getTracks().forEach(t=>t.stop()); }catch(e){} modal.remove(); };
+    modal.querySelector('.cam-close-v11').onclick=stop;
+    modal.querySelector('.cam-capture-v11').onclick=async()=>{
+      try{
+        const canvas=document.createElement('canvas'); canvas.width=video.videoWidth||1280; canvas.height=video.videoHeight||720;
+        canvas.getContext('2d').drawImage(video,0,0,canvas.width,canvas.height);
+        canvas.toBlob(blob=>{
+          if(!blob) return;
+          const file=new File([blob],`WT_${Date.now()}.jpg`,{type:'image/jpeg'});
+          if(typeof window.guardarFotosReferenciaV6==='function') window.guardarFotosReferenciaV6(refKey,[file],'camara_trasera_directa');
+          stop();
+        },'image/jpeg',0.82);
+      }catch(e){ console.error(e); stop(); fallbackInputV11(refKey); }
+    };
+  };
 })();
 
 </script>
